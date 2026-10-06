@@ -478,7 +478,7 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
     <div class="sidebox"><h3>Ce am înțeles până acum</h3><p id="caseSideText">Pe măsură ce răspunzi, aici apare un rezumat simplu al situației tale.</p><div id="caseSummary" class="case-mini"></div></div>
   </aside>
 </main>
-<div class="footer">ActeRO · V1.0.16 · Ghidurile validate sunt susținute de surse oficiale verificate.</div>
+<div class="footer">ActeRO · V1.0.17 · Ghidurile validate sunt susținute de surse oficiale verificate.</div>
 <pre id="debug" class="debug hidden"></pre>
 </div>
 <script>
@@ -488,8 +488,59 @@ window.addEventListener('unhandledrejection',function(e){try{var box=document.ge
 </script>
 <script>
 const S = {
-  answers:{}, docs:{}, route:null, status:null, blockers:[], unknowns:[], history:[], current:'WELCOME', docQueue:[], docIndex:0, paymentUnlocked:false
+  answers:{}, docs:{}, route:null, status:null, blockers:[], unknowns:[], history:[], current:'WELCOME', docQueue:[], docIndex:0, paymentUnlocked:false, caseId:null
 };
+
+function createCaseId(){
+  try{
+    if(window.crypto&&typeof window.crypto.randomUUID==='function')return 'AR-'+window.crypto.randomUUID();
+  }catch(e){}
+  return 'AR-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,10).toUpperCase();
+}
+function caseStorageKey(id){return 'actero_case_'+String(id||'')}
+function persistCase(){
+  if(!S.caseId)return;
+  try{
+    const payload={
+      caseId:S.caseId,
+      answers:S.answers||{},
+      docs:S.docs||{},
+      route:S.route||null,
+      status:S.status||null,
+      blockers:S.blockers||[],
+      unknowns:S.unknowns||[],
+      current:S.current||'WELCOME',
+      updatedAt:new Date().toISOString()
+    };
+    localStorage.setItem(caseStorageKey(S.caseId),JSON.stringify(payload));
+    localStorage.setItem('actero_active_case',S.caseId);
+  }catch(e){}
+}
+function restoreCaseFromUrl(){
+  try{
+    const params=new URLSearchParams(window.location.search||'');
+    const id=params.get('case_id');
+    if(!id)return false;
+    const raw=localStorage.getItem(caseStorageKey(id));
+    if(!raw)return false;
+    const saved=JSON.parse(raw);
+    if(!saved||saved.caseId!==id)return false;
+    S.caseId=id;
+    S.answers=saved.answers||{};
+    S.docs=saved.docs||{};
+    S.route=saved.route||null;
+    S.status=saved.status||null;
+    S.blockers=saved.blockers||[];
+    S.unknowns=saved.unknowns||[];
+    S.history=[];
+    S.docQueue=[];
+    S.docIndex=0;
+    S.paymentUnlocked=false;
+    S.current=S.route?'RESULT':'WELCOME';
+    render(S.current);
+    return true;
+  }catch(e){return false}
+}
 const $ = id => document.getElementById(id);
 const screen=$('screen'), actions=$('actions'), backBtn=$('back'), continueBtn=$('continue'), fill=$('fill'), sectionLabel=$('sectionLabel'), progressText=$('progressText'), progressArea=$('progressArea'), newEval=$('newEval'), debug=$('debug'), caseSummary=$('caseSummary'), caseSideText=$('caseSideText');
 
@@ -536,10 +587,10 @@ function push(next){S.history.push(snapshot());S.current=next;render(next)}
 function replace(next){S.current=next;render(next)}
 function isInternalScreen(id){return ['AFTER_DOCS','ROUTE_COMMON'].includes(id)}
 function back(){if(!S.history.length)return;let snap=null;while(S.history.length){snap=S.history.pop();if(!isInternalScreen(snap.current))break}if(!snap)return;restore(snap);render(S.current)}
-function reset(){const appEl=document.querySelector('.app');if(appEl)appEl.classList.remove('guide-mode');S.answers={};S.docs={};S.route=null;S.status=null;S.blockers=[];S.unknowns=[];S.history=[];S.current='WELCOME';S.docQueue=[];S.docIndex=0;S.paymentUnlocked=false;render('WELCOME')}
+function reset(){const appEl=document.querySelector('.app');if(appEl)appEl.classList.remove('guide-mode');S.answers={};S.docs={};S.route=null;S.status=null;S.blockers=[];S.unknowns=[];S.history=[];S.current='WELCOME';S.docQueue=[];S.docIndex=0;S.paymentUnlocked=false;S.caseId=createCaseId();persistCase();render('WELCOME')}
 backBtn.onclick=back;newEval.onclick=reset;
 window.addEventListener('keydown',e=>{if(e.altKey&&e.key.toLowerCase()==='d'){debug.classList.toggle('hidden');updateDebug()}})
-function updateDebug(){try{syncOfficialDocumentsForCurrentGuide()}catch(e){console.warn('official-doc sync',e)}debug.textContent=JSON.stringify({screen:S.current,answers:S.answers,docs:S.docs,route:S.route,status:S.status,blockers:S.blockers,unknowns:S.unknowns},null,2)}
+function updateDebug(){try{syncOfficialDocumentsForCurrentGuide()}catch(e){console.warn('official-doc sync',e)}persistCase();debug.textContent=JSON.stringify({case_id:S.caseId,screen:S.current,answers:S.answers,docs:S.docs,route:S.route,status:S.status,blockers:S.blockers,unknowns:S.unknowns},null,2)}
 
 function stageFor(id){
  if(id==='WELCOME')return 0;
@@ -5379,7 +5430,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  default:return showStop('yellow','Evaluarea s-a oprit aici','Am întâlnit o combinație de răspunsuri pe care versiunea curentă nu o tratează încă.');
 }}
 window.__ACTERO_BOOTED=true;
-reset();
+if(!restoreCaseFromUrl())reset();
 </script>
 
 </body>
