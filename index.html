@@ -4994,10 +4994,10 @@ function showB2CHValidatedGuide(){
 }
 
 function paymentApiBase(){
-  return String(window.ACTERO_PAYMENT_API||'').trim().replace(/\\/+$/,'');
+  return String(window.ACTERO_PAYMENT_API||'').trim().replace(/\/+$/,'');
 }
 function paymentApiConfigured(){
-  return /^https:\\/\\//i.test(paymentApiBase());
+  return /^https:\/\//i.test(paymentApiBase());
 }
 function acteroReturnUrl(){
   const u=new URL(window.location.href);
