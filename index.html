@@ -470,7 +470,7 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
       <div class="journey"><span class="journey-step" data-stage="1">Despre tine</span><span class="journey-step" data-stage="2">Situația</span><span class="journey-step" data-stage="3">Actele</span><span class="journey-step" data-stage="4">Soluția</span></div>
       <div class="progress-meta"><span id="sectionLabel">Evaluare</span><span id="progressText">Început</span></div><div class="track"><div id="fill" class="fill"></div></div>
     </div>
-    <div id="screen"><div class="welcome" id="staticWelcomeFallback"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică traseul relevant și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="staticStartEval" type="button">Începe evaluarea &nbsp;→</button><span class="hero-note">Pregătim evaluarea…</span></div><div id="iosCompatError" style="display:none;margin-top:18px;padding:14px;border:1px solid #e4b9b3;border-radius:14px;background:#fff0ed;color:#8c332d;font-size:12px;line-height:1.5"></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> 10 țări disponibile</span><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> surse oficiale verificate</span></div></div></div>
+    <div id="screen"><div class="welcome" id="staticWelcomeFallback"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică traseul relevant și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="staticStartEval" type="button">Începe evaluarea &nbsp;→</button><span class="hero-note">Pregătim evaluarea…</span></div><div id="iosCompatError" style="display:none;margin-top:18px;padding:14px;border:1px solid #e4b9b3;border-radius:14px;background:#fff0ed;color:#8c332d;font-size:12px;line-height:1.5"></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> surse oficiale verificate</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div></div>
     <div id="actions" class="actions hidden"><button id="back" class="btn ghost">← Înapoi</button><button id="continue" class="btn primary hidden">Continuă</button></div>
   </section>
   <aside class="side">
@@ -483,8 +483,8 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
 </div>
 <script>
 window.__ACTERO_BOOTED=false;
-window.addEventListener('error',function(e){try{var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Eroare de compatibilitate: '+(e.message||'necunoscută')+(e.lineno?' · linia '+e.lineno:'');}var note=document.querySelector('#staticWelcomeFallback .hero-note');if(note)note.textContent='Aplicația nu a pornit complet pe acest browser.';}catch(_){}});
-window.addEventListener('unhandledrejection',function(e){try{var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Eroare JavaScript: '+String(e.reason||'promisiune respinsă');}}catch(_){}});
+window.addEventListener('error',function(e){try{console.error(e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}var note=document.querySelector('#staticWelcomeFallback .hero-note');if(note)note.textContent='Evaluarea nu s-a încărcat corect.';}catch(_){}});
+window.addEventListener('unhandledrejection',function(e){try{console.error(e&&e.reason?e.reason:e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}}catch(_){}});
 </script>
 <script>
 const S = {
@@ -605,17 +605,13 @@ function updateCaseSide(){
  const rows=[];
  const a=S.answers;
  if(a.residence_country_name)rows.push({label:'Țara de rezidență',value:`${flagEmoji(a.residence_country)} ${a.residence_country_name}`});
- if(a.goal&&goalNames[a.goal])rows.push({label:'Solicitare',value:goalNames[a.goal]});
- if(S.route&&routeNames[S.route]){
-   const routeReady=S.current==='RESULT'&&S.unknowns.length===0;
-   rows.push({label:'Status evaluare',value:routeReady?'Procedură identificată':'Evaluare în curs',status:routeReady});
- }
+ if(a.goal&&goalNames[a.goal])rows.push({label:'Ce vrei să rezolvi',value:goalNames[a.goal]});
  caseSummary.innerHTML=rows.map(x=>`<div class="case-summary-row"><span class="case-summary-label">${x.label}</span><strong class="case-summary-value ${x.status?'verified':''}">${x.value}</strong></div>`).join('');
- caseSideText.textContent=rows.length?'Datele de mai jos sunt folosite pentru identificarea traseului administrativ relevant.':'Rezumatul se completează pe măsură ce avansezi în evaluare.';
+ caseSideText.textContent=rows.length?'Aici rămâne un rezumat scurt al situației tale, pe baza răspunsurilor oferite.':'Rezumatul se completează pe măsură ce avansezi în evaluare.';
 }
 function welcome(){
  S.current='WELCOME';setChrome();
- screen.innerHTML=`<div class="welcome"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică traseul relevant și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="startEval">Începe evaluarea &nbsp;→</button><span class="hero-note">Nu trebuie să știi ce înseamnă CRDS, CEI sau alte denumiri administrative.</span></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> 10 țări disponibile</span><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> îți spunem clar când lipsește ceva</span></div></div>`;
+ screen.innerHTML=`<div class="welcome"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică traseul relevant și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="startEval">Începe evaluarea &nbsp;→</button><span class="hero-note">Nu trebuie să știi ce înseamnă CRDS, CEI sau alte denumiri administrative.</span></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> surse oficiale verificate</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div>`;
  $('startEval').onclick=()=>push('Q001');updateCaseSide();
 }
 function setChrome(label='Evaluare'){
@@ -1001,7 +997,7 @@ function showResult(forcePreview=false){
          <div class="paywall-item">Sursele oficiale aferente procedurii</div>
        </div>
        <div class="paywall-actions"><button id="unlockResult" class="btn primary">Accesează ghidul complet</button><button id="resultBack" class="btn secondary">Modifică răspunsurile</button></div>
-       <p class="payment-note">Plata online va fi disponibilă la lansare. În etapa de pre-lansare poți verifica structura completă a ghidului.</p>
+       <p class="payment-note">Plata online nu este activată încă. Până la activare, poți verifica structura completă a ghidului.</p>
      `:`
        <span class="status-pill yellow">Evaluare finalizată</span>
        <h2>Ghidul pentru această situație este încă în verificare.</h2>
@@ -1288,7 +1284,7 @@ function showB1ESValidatedGuide(){
     <div class="guide-hero">
       <span class="validated-route-badge"><i></i> Procedură verificată</span>
       <h1>Primul pașaport CRDS — Spania</h1>
-      <p>Acesta nu mai este text demo. Ghidul de mai jos este construit din surse oficiale DGP și eConsulat, cu regulile specifice Spaniei.</p>
+      <p>Ghidul de mai jos este construit din surse oficiale DGP și eConsulat, cu regulile specifice Spaniei.</p>
       <div class="guide-meta"><span>🇪🇸 Spania</span><span>Adult</span><span>Prima stabilire a domiciliului în străinătate</span></div>
     </div>
 
@@ -1349,7 +1345,7 @@ function showB1ESValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||spainPdf,route:'B1_FIRST_CRDS'})));
@@ -1558,7 +1554,7 @@ function showB1ITValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -1765,7 +1761,7 @@ function showB1DEValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -1968,7 +1964,7 @@ function showB1ATValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -2164,7 +2160,7 @@ function showB1FRValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -2342,7 +2338,7 @@ function showB1GBValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -2396,7 +2392,7 @@ function showB1BEValidatedGuide(){
         <section class="final-side-section"><div class="guide-eyebrow">Surse oficiale</div><h3>De unde vin regulile</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — documente CRDS</strong><span>Regula generală pentru dovada domiciliului.</span></a><a class="verified-source" href="${bePdf}" target="_blank" rel="noopener"><strong>Belgian Immigration Office — EU/EU+</strong><span>Modelele oficiale de carduri de ședere.</span></a><a class="verified-source" href="${belgium}" target="_blank" rel="noopener"><strong>Belgium.be — înregistrarea la comună</strong><span>Înregistrarea reședinței și National Register.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare</strong><span>Actele românești.</span></a><a class="verified-source" href="${ecFee}" target="_blank" rel="noopener"><strong>eConsulat — taxe</strong><span>Contravaloarea actuală.</span></a><a class="verified-source" href="${ecTime}" target="_blank" rel="noopener"><strong>eConsulat — termene</strong><span>Termen UE.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section>
       </aside>
     </div>
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||bePdf,route:'B1_FIRST_CRDS'})));
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
@@ -2430,7 +2426,7 @@ function showB1NLValidatedGuide(){
       <section class="final-side-section"><div class="guide-eyebrow">Surse oficiale locale</div><h3>BRP și dreptul de ședere UE</h3><div class="verified-source-list"><a class="verified-source" href="${ind}" target="_blank" rel="noopener"><strong>IND — cetățeni UE</strong><span>Nu este necesar permis de ședere în mod normal.</span></a><a class="verified-source" href="${brp}" target="_blank" rel="noopener"><strong>Government.nl — BRP</strong><span>Înregistrarea rezidenților la municipalitate.</span></a><a class="verified-source" href="${perm}" target="_blank" rel="noopener"><strong>IND — ședere permanentă EU/EEA</strong><span>Document permanent după îndeplinirea condițiilor.</span></a></div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Cost și timp</div><h3>Informații dinamice</h3><div class="dynamic-box"><strong>Consulat:</strong> 53 EUR / echivalent local<br><strong>UE:</strong> max. 45 zile lucrătoare<br><strong>Verificat:</strong> 5 octombrie 2026</div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regula CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — documente CRDS</strong><span>Dovada străină și traducerea „după caz”.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte</strong><span>Documentele necesare.</span></a><a class="verified-source" href="${ecFee}" target="_blank" rel="noopener"><strong>eConsulat — taxe</strong><span>Contravaloarea.</span></a><a class="verified-source" href="${ecTime}" target="_blank" rel="noopener"><strong>eConsulat — termene</strong><span>Termen UE.</span></a></div></section>
-    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
@@ -2463,7 +2459,7 @@ function showB1IEValidatedGuide(){
       <section class="final-side-section"><div class="guide-eyebrow">Surse Irlanda</div><h3>Ce dovedește sistemul local</h3><div class="verified-source-list"><a class="verified-source" href="${glossary}" target="_blank" rel="noopener"><strong>Irish Immigration — glossary</strong><span>EU national și Permanent Residence Certificate.</span></a><a class="verified-source" href="${registration}" target="_blank" rel="noopener"><strong>Irish Immigration — registration</strong><span>IRP/registration pentru persoane non-UE.</span></a><a class="verified-source" href="${gov}" target="_blank" rel="noopener"><strong>gov.ie — EU nationals</strong><span>Dreptul de a locui și lucra fără viză/permis de muncă.</span></a></div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Cost și timp</div><h3>Informații dinamice</h3><div class="dynamic-box"><strong>Consulat:</strong> 53 EUR / echivalent local<br><strong>Irlanda:</strong> max. 45 zile lucrătoare<br><strong>Verificat:</strong> 5 octombrie 2026</div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — documente CRDS</strong><span>Regula generală pentru dovada străină.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte</strong><span>Documentele necesare.</span></a><a class="verified-source" href="${ecFee}" target="_blank" rel="noopener"><strong>eConsulat — taxe</strong><span>Contravaloarea.</span></a><a class="verified-source" href="${ecTime}" target="_blank" rel="noopener"><strong>eConsulat — termene</strong><span>Termen UE.</span></a></div></section>
-    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
@@ -2609,7 +2605,7 @@ function showB1CHValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||semPdf,route:'B1_FIRST_CRDS'})));
@@ -2751,7 +2747,7 @@ function showB3ESValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||spainPdf,route:'B5_EXISTING_CRDS'})));
@@ -2894,7 +2890,7 @@ function showB3ITValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||italyPdf,route:'B5_EXISTING_CRDS'})));
@@ -3038,7 +3034,7 @@ function showB3DEValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||germanyPdf,route:'B5_EXISTING_CRDS'})));
@@ -3182,7 +3178,7 @@ function showB3ATValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||austriaPdf,route:'B5_EXISTING_CRDS'})));
@@ -3328,7 +3324,7 @@ function showB3FRValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||francePdf,route:'B5_EXISTING_CRDS'})));
@@ -3422,7 +3418,7 @@ function showB3RemainingValidatedGuide(code){
       <section class="final-side-section"><div class="guide-eyebrow">${cfg.sideTitle}</div><h3>Dovada domiciliului</h3><div class="verified-source-list">${cfg.sources}</div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regula pentru pașaport pierdut</h3><div class="verified-source-list"><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare CRDS</strong><span>Pierderea se declară la depunerea noii cereri; furtul cere dovadă de la poliție.</span></a><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni cu domiciliul în străinătate</strong><span>Documentele, termenele și regulile de ridicare.</span></a><a class="verified-source" href="${dgpDocs}" target="_blank" rel="noopener"><strong>DGP — documente CRDS</strong><span>Dovada din statul de domiciliu și regula traducerii „după caz”.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section>
       <section class="final-side-section"><div class="guide-eyebrow">Cost și timp</div><h3>Informații dinamice</h3><div class="dynamic-box"><strong>Consulat:</strong> 53 EUR / echivalent local<br><strong>${cfg.name}:</strong> max. ${cfg.term}<br><strong>România:</strong> 265 lei<br><strong>Verificat:</strong> 5 octombrie 2026</div></section>
-    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
+    </aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
 function showB3GBValidatedGuide(){return showB3RemainingValidatedGuide('GB')}
@@ -3472,7 +3468,7 @@ function showB4ValidatedGuide(){
     <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">6</div><div><h3>Depune personal pentru pașaportul electronic</h3><p>La depunere se preiau datele biometrice, cu excepțiile prevăzute de procedură.</p></div></div></div>
     <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">7</div><div><h3>Verifică taxa și termenul</h3><p>eConsulat publică în prezent <strong>53 EUR</strong> sau echivalentul local.</p><div class="dynamic-box"><strong>${cfg.name}:</strong> termen legal maxim ${cfg.term}.<br><strong>România:</strong> DGP publică 265 lei pentru pașaport. Valorile se reverifică înainte de plată.</div></div></div></div>
     <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">8</div><div><h3>Ridică noul pașaport CRDS</h3><p>Noul document păstrează ${cfg.name} ca stat de domiciliu. Dacă nu ai un document românesc valabil la ridicare, identitatea poate fi stabilită și prin alte documente disponibile și verificările în evidențe.</p></div></div></div>
-  </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Ce trebuie să fie pregătit</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Dovada din ${cfg.name}</div><h3>Surse country-specific</h3><div class="verified-source-list">${cfg.sources}</div></section><section class="final-side-section"><div class="guide-eyebrow">Regula furtului</div><h3>Sursa românească</h3><div class="verified-source-list"><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare CRDS</strong><span>Furtul cere dovadă de la poliție + traducere autorizată; pierderea se declară la depunere.</span></a><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Documente, termene și reguli de ridicare.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section><section class="final-side-section"><div class="guide-eyebrow">Cost și timp</div><h3>Informații dinamice</h3><div class="dynamic-box"><strong>Consulat:</strong> 53 EUR / echivalent local<br><strong>${cfg.name}:</strong> max. ${cfg.term}<br><strong>România:</strong> 265 lei</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
+  </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Ce trebuie să fie pregătit</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Dovada din ${cfg.name}</div><h3>Surse country-specific</h3><div class="verified-source-list">${cfg.sources}</div></section><section class="final-side-section"><div class="guide-eyebrow">Regula furtului</div><h3>Sursa românească</h3><div class="verified-source-list"><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare CRDS</strong><span>Furtul cere dovadă de la poliție + traducere autorizată; pierderea se declară la depunere.</span></a><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Documente, termene și reguli de ridicare.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section><section class="final-side-section"><div class="guide-eyebrow">Cost și timp</div><h3>Informații dinamice</h3><div class="dynamic-box"><strong>Consulat:</strong> 53 EUR / echivalent local<br><strong>${cfg.name}:</strong> max. ${cfg.term}<br><strong>România:</strong> 265 lei</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
 
@@ -3515,7 +3511,7 @@ function showB5VariantGuide(mode){
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">6</div><div><h3>Depune personal</h3><p>Pașaportul electronic se solicită personal, cu preluarea datelor biometrice.</p></div></div></div>
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">7</div><div><h3>Verifică taxa și termenul</h3><p>eConsulat publică în prezent 53 EUR sau echivalent local.</p><div class="dynamic-box"><strong>${cfg.name}:</strong> termen legal maxim ${cfg.term}.<br><strong>România:</strong> DGP publică 265 lei pentru pașaport.</div></div></div></div>
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">8</div><div><h3>Ridică noul pașaport și închide schimbarea</h3><p>Noul document trebuie să reflecte datele și statul de domiciliu corecte la data emiterii.</p></div></div></div>
- </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Ce trebuie pregătit</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Dovada din ${cfg.name}</div><h3>Sursa country-specific</h3><div class="verified-source-list"><a class="verified-source" href="${cfg.source}" target="_blank" rel="noopener"><strong>Sursa oficială pentru ${cfg.name}</strong><span>Dovada locală folosită pentru CRDS.</span></a></div></section><section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regula CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Datele trebuie să corespundă documentelor; schimbările de identificare impun înlocuirea documentului.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare</strong><span>Pașaport anterior, stare civilă și reguli pentru document deteriorat.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
+ </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Ce trebuie pregătit</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Dovada din ${cfg.name}</div><h3>Sursa country-specific</h3><div class="verified-source-list"><a class="verified-source" href="${cfg.source}" target="_blank" rel="noopener"><strong>Sursa oficială pentru ${cfg.name}</strong><span>Dovada locală folosită pentru CRDS.</span></a></div></section><section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regula CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Datele trebuie să corespundă documentelor; schimbările de identificare impun înlocuirea documentului.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare</strong><span>Pașaport anterior, stare civilă și reguli pentru document deteriorat.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
  $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
 
@@ -3546,7 +3542,7 @@ function showB5MovedCountryCompositeGuide(){
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">6</div><div><h3>Depune personal</h3><p>Pașaportul electronic se solicită personal și presupune biometrie.</p></div></div></div>
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">7</div><div><h3>Verifică taxa și termenul pentru noua țară</h3><p>eConsulat publică în prezent 53 EUR sau echivalent local.</p><div class="dynamic-box"><strong>${cfg.name}:</strong> termen legal maxim ${cfg.term}.<br><strong>România:</strong> DGP publică 265 lei.</div></div></div></div>
  <div class="real-guide-step"><div class="real-guide-step-head"><div class="real-guide-step-no">8</div><div><h3>Ridică noul CRDS</h3><p>Noul pașaport trebuie să reflecte ${cfg.name} ca stat de domiciliu și datele tale actuale.</p></div></div></div>
- </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Două probleme, un singur dosar</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Noua țară</div><h3>Sursa oficială pentru ${cfg.name}</h3><div class="verified-source-list"><a class="verified-source" href="${cfg.source}" target="_blank" rel="noopener"><strong>Dovada locală — ${cfg.name}</strong><span>Documentele/registrul oficial relevant.</span></a></div></section><section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regulile CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Stat de domiciliu, documente și termene.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare</strong><span>Pierderea, furtul, deteriorarea și starea civilă.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
+ </section><aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist-ul tău</div><h3>Două probleme, un singur dosar</h3><div class="personal-checklist">${checklist}</div></section><section class="final-side-section"><div class="guide-eyebrow">Noua țară</div><h3>Sursa oficială pentru ${cfg.name}</h3><div class="verified-source-list"><a class="verified-source" href="${cfg.source}" target="_blank" rel="noopener"><strong>Dovada locală — ${cfg.name}</strong><span>Documentele/registrul oficial relevant.</span></a></div></section><section class="final-side-section"><div class="guide-eyebrow">Surse românești</div><h3>Regulile CRDS</h3><div class="verified-source-list"><a class="verified-source" href="${dgp}" target="_blank" rel="noopener"><strong>DGP — cetățeni CRDS</strong><span>Stat de domiciliu, documente și termene.</span></a><a class="verified-source" href="${ecDocs}" target="_blank" rel="noopener"><strong>eConsulat — acte necesare</strong><span>Pierderea, furtul, deteriorarea și starea civilă.</span></a></div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section></aside></div><div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
  $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
 function showB2ESValidatedGuide(){
@@ -3730,7 +3726,7 @@ function showB2ESValidatedGuide(){
     </div>
 
     <div class="guide-actions" style="margin-top:18px">
-      <button class="btn primary" id="backToPreview">Înapoi la preview</button>
+      <button class="btn primary" id="backToPreview">Înapoi la evaluare</button>
       <button class="btn secondary" id="newGuideEval">Evaluare nouă</button>
     </div>
   </div>`;
@@ -3895,7 +3891,7 @@ function showB2ITValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||italyPdf,route:'B5_EXISTING_CRDS'})));
@@ -4030,7 +4026,7 @@ function showB2DEValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||germanyPdf,route:'B5_EXISTING_CRDS'})));
@@ -4184,7 +4180,7 @@ function showB2ATValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||austriaPdf,route:'B5_EXISTING_CRDS'})));
@@ -4347,7 +4343,7 @@ function showB2FRValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||francePdf,route:'B5_EXISTING_CRDS'})));
@@ -4489,7 +4485,7 @@ function showB2GBValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||ukPdf,route:'B5_EXISTING_CRDS'})));
@@ -4625,7 +4621,7 @@ function showB2BEValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||bePdf,route:'B5_EXISTING_CRDS'})));
@@ -4750,7 +4746,7 @@ function showB2NLValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   $('backToPreview').onclick=()=>showResult(true);
@@ -4874,7 +4870,7 @@ function showB2IEValidatedGuide(){
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   $('backToPreview').onclick=()=>showResult(true);
@@ -4988,7 +4984,7 @@ function showB2CHValidatedGuide(){
         </div><div class="guide-date">Surse reverificate: 5 octombrie 2026.</div></section>
       </aside>
     </div>
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
@@ -5004,7 +5000,7 @@ function showCheckout(){
       <span class="status-pill green">Evaluare finalizată</span>
       <h1>Accesează ghidul personalizat</h1>
       <p>Ghidul reunește procedura aplicabilă, lista documentelor, pașii personalizați și sursele oficiale relevante pentru cazul tău.</p>
-      <div class="checkout-price"><strong>Acces la ghidul personalizat</strong><span>Plată unică · disponibilă la lansare</span></div>
+      <div class="checkout-price"><strong>Acces la ghidul personalizat</strong><span>Plată unică · plata online nu este activată încă</span></div>
       <div class="paywall-grid">
         <div class="paywall-item">Procedura aplicabilă</div>
         <div class="paywall-item">Pași personalizați</div>
@@ -5013,7 +5009,7 @@ function showCheckout(){
       </div>
       <button id="demoPay" class="btn primary" style="width:100%">Previzualizează ghidul</button>
       <button id="checkoutBack" class="btn secondary" style="width:100%;margin-top:9px">Înapoi</button>
-      <div class="checkout-secure"><span>🔒</span><span>Plata online nu este activă în etapa de pre-lansare. Previzualizarea deschide ghidul fără a procesa o plată.</span></div>
+      <div class="checkout-secure"><span>🔒</span><span>Plata online nu este activată încă. Poți deschide ghidul pentru verificare fără a procesa o plată.</span></div>
     </div>
   </div>`;
   $('demoPay').onclick=()=>{S.paymentUnlocked=true;showPaidGuide()};
@@ -5044,7 +5040,7 @@ function showValidatedCoreGuide(cfg){
     <section class="final-guide-intro"><div class="guide-eyebrow">Pe scurt</div><h2>${cfg.introTitle}</h2><p>${cfg.intro}</p>${cfg.outcome?`<div class="outcome-card"><b>Rezultatul urmărit</b><span>${cfg.outcome}</span></div>`:''}</section>
     <div class="final-guide-main"><section class="final-steps-panel"><div class="final-steps-head"><div class="guide-eyebrow">Pașii tăi</div><h2>Ce ai de făcut, în ordine</h2><p>Pașii sunt separați de documente ca să poți executa procedura fără să amesteci etapele.</p></div>${steps}${warnings}</section>
     <aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist</div><h3>Documente și condiții</h3><div class="personal-checklist">${docs}</div></section>${forms?`<section class="final-side-section"><div class="guide-eyebrow">Servicii / formulare</div><h3>Unde intri efectiv</h3>${forms}</section>`:''}<section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Surse oficiale verificate</h3><div class="source-list">${sources}</div></section></aside></div>
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
   hydrateOfficialDocPreviews(screen);
   document.querySelectorAll('[data-doc-open]').forEach(el=>{if(el.dataset.viewerBound!=='1'){el.dataset.viewerBound='1';el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||'',route:S.route}))}});
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
@@ -5315,14 +5311,14 @@ function showPaidGuide(){
     ? `Locuiești în <strong>Spania</strong>, iar din răspunsurile tale domiciliul oficial este încă în <strong>România</strong>. Traseul tău nu este doar o simplă reînnoire de acte: este procedura prin care domiciliul oficial este mutat în Spania.`
     : routeValidated
       ? `Din răspunsurile tale, traseul potrivit este <strong>${title}</strong>. Mai jos îl ai pus în ordine, fără să fie amestecat cu informații care nu îți sunt utile.`
-      : `Din răspunsurile tale, traseul administrativ este <strong>${title}</strong>. Pagina finală este disponibilă, dar pașii specifici pentru această combinație de țară și situație sunt încă în validare și nu îi prezentăm ca procedură confirmată.`;
+      : `Din răspunsurile tale, traseul administrativ este <strong>${title}</strong>. Am identificat traseul administrativ, însă pașii specifici pentru această combinație de țară și situație sunt încă în curs de verificare și nu îi prezentăm ca procedură confirmată.`;
 
   const outcomeText=demoSpain
     ? `La final, documentele românești trebuie să reflecte domiciliul oficial din Spania.`
     : `La final, scopul este să închizi procedura potrivită cazului tău și să știi clar ce urmează după fiecare pas.`;
 
   const steps=demoSpain ? [
-    {title:'Confirmă dovada pe care o folosești din Spania',body:'Trebuie stabilit ce document spaniol dovedește rezidența sau dreptul tău relevant. Asta este baza pe care se verifică dacă poți continua pe această procedură.',note:'În versiunea validată, ActeRO îți arată exact ce document spaniol este acceptat și în ce formă.'},
+    {title:'Confirmă dovada pe care o folosești din Spania',body:'Trebuie stabilit ce document spaniol dovedește rezidența sau dreptul tău relevant. Asta este baza pe care se verifică dacă poți continua pe această procedură.',note:'În ghidul verificat, ActeRO îți arată exact ce document spaniol este acceptat și în ce formă.'},
     {title:'Pregătește actele românești relevante',body:'Verifici pașaportul, actul de identitate și actele de stare civilă care se aplică situației tale. Nu toate trebuie să fie valabile în același fel pentru toate procedurile.',note:'În dreapta vezi ce documente ai declarat și statusul lor.'},
     {title:'Rezolvă eventualele blocaje înainte de depunere',body:'Dacă apare o problemă de identitate, stare civilă, adresă sau document lipsă, o rezolvi înainte de programarea finală. Asta te ajută să nu ajungi la depunere cu dosarul incomplet.',note:'Dacă nu există blockere, treci direct la următorul pas.'},
     {title:'Fă programarea și depune cererea',body:'După ce baza și documentele sunt în regulă, folosești serviciul oficial indicat de ghid pentru programare și depunere. Ghidul final trebuie să îți spună ce alegi și ce iei cu tine.',note:'Nu afișăm un formular generic dacă procedura se face printr-un serviciu online oficial.'},
@@ -5333,9 +5329,9 @@ function showPaidGuide(){
     {title:'Rezolvă ce te poate bloca',body:'Orice lipsă sau neconcordanță este explicată separat înainte să ajungi la depunere.',note:'Nu descoperi problemele abia la ghișeu.'},
     {title:'Depune cererea și finalizează procedura',body:'Urmezi instituția, programarea și pașii finali indicați de ghid.',note:'Formularele oficiale apar numai dacă sunt relevante pentru traseul tău.'}
   ] : [
-    {title:'Verifică rezumatul cazului tău',body:'Confirmă că țara, domiciliul și situația documentului sunt cele pe care le-ai declarat. Aceste informații stabilesc traseul administrativ.',note:'Pagina finală rămâne disponibilă chiar dacă procedura specifică este încă în validare.'},
+    {title:'Verifică rezumatul cazului tău',body:'Confirmă că țara, domiciliul și situația documentului sunt cele pe care le-ai declarat. Aceste informații stabilesc traseul administrativ.',note:'Rezumatul evaluării rămâne disponibil chiar dacă procedura specifică este încă în curs de verificare.'},
     {title:'Păstrează documentele declarate în evaluare',body:'În coloana din dreapta vezi documentele pe care le-ai indicat și starea lor. Nu presupunem alte documente până când procedura țării nu este validată.',note:'Nu prezentăm o listă procedurală neverificată drept checklist oficial.'},
-    {title:'Așteaptă validarea procedurii înainte de depunere',body:'Pașii administrativi exacți pentru această combinație nu sunt încă marcați ca verificați în versiunea curentă.',note:'ActeRO nu inventează pași doar pentru a umple pagina finală.'}
+    {title:'Așteaptă validarea procedurii înainte de depunere',body:'Pașii administrativi exacți pentru această combinație sunt încă în curs de verificare pe surse oficiale.',note:'Nu afișăm pași administrativi până când nu sunt verificați pe surse oficiale.'}
   ];
 
   const formatFor=(label)=>{
@@ -5385,7 +5381,7 @@ function showPaidGuide(){
   const issueHtml=issues.length?issues.map(x=>`<div class="final-issue">${x}</div>`).join(''):`<div class="final-issue" style="background:#eef8f2;border-color:#d8ebde;color:#28563d">Nu am detectat un blocker care să schimbe traseul.</div>`;
 
   screen.innerHTML=`<div class="guide-shell final-guide-wrap">
-    <div class="guide-hero"><span class="guide-demo"><i></i> ${routeValidated?'Ghid verificat':'Rezultat final · în validare'}</span><h1>${title}</h1><p>Tot rezultatul este organizat în două coloane: <strong style="color:#fff">pașii în stânga</strong>, iar <strong style="color:#fff">documentele și sursele în dreapta</strong>.</p><div class="guide-meta"><span>${flagEmoji(a.residence_country)} ${country}</span><span>Pași numerotați</span><span>Documente relevante</span></div></div>
+    <div class="guide-hero"><span class="guide-demo"><i></i> ${routeValidated?'Ghid verificat':'Procedură în curs de verificare'}</span><h1>${title}</h1><p>Tot rezultatul este organizat în două coloane: <strong style="color:#fff">pașii în stânga</strong>, iar <strong style="color:#fff">documentele și sursele în dreapta</strong>.</p><div class="guide-meta"><span>${flagEmoji(a.residence_country)} ${country}</span><span>Pași numerotați</span><span>Documente relevante</span></div></div>
 
     <section class="final-guide-intro"><div class="guide-eyebrow">Pe scurt</div><h2>Ce se întâmplă în cazul tău</h2><p>${situationText}</p><div class="outcome-card"><b>Ce urmărești la final</b><span>${outcomeText}</span></div></section>
 
@@ -5397,13 +5393,13 @@ function showPaidGuide(){
 
       <aside class="final-sidebar">
         <section class="final-side-section"><div class="guide-eyebrow">Documentele tale</div><h3>Ce ai declarat în evaluare</h3><p>Pentru fiecare vezi clar ce este, formatul și statusul.</p><div class="personal-docs">${personalDocs}</div></section>
-        <section class="final-side-section"><div class="guide-eyebrow">Formulare oficiale</div><h3>Ce folosești efectiv</h3><p>Aici apar numai formularele sau serviciile oficiale relevante pentru ruta ta.</p><div class="final-official-docs">${officialDocs||'<div class="final-issue">Ruta aceasta nu are încă un formular oficial integrat în demo.</div>'}</div></section>
+        <section class="final-side-section"><div class="guide-eyebrow">Formulare oficiale</div><h3>Ce folosești efectiv</h3><p>Aici apar numai formularele sau serviciile oficiale relevante pentru ruta ta.</p><div class="final-official-docs">${officialDocs||'<div class="final-issue">Nu afișăm încă un formular oficial pentru această procedură până la finalizarea verificării.</div>'}</div></section>
         <section class="final-side-section"><div class="guide-eyebrow">Puncte de rezolvat</div><h3>Ce te poate bloca</h3>${issueHtml}</section>
-        <section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Pe ce se bazează ghidul</h3><div class="final-source"><i>✓</i><div><strong>Autoritatea română relevantă</strong><span>MAI / DGP / DGEP / eConsulat, după procedură.</span></div></div><div class="final-source"><i>↻</i><div><strong>Ultima verificare</strong><span>Data exactă va apărea în versiunea comercială.</span></div></div></section>
+        <section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Pe ce se bazează ghidul</h3><div class="final-source"><i>✓</i><div><strong>Autoritatea română relevantă</strong><span>MAI / DGP / DGEP / eConsulat, după procedură.</span></div></div><div class="final-source"><i>↻</i><div><strong>Ultima verificare</strong><span>Verificarea procedurii este în curs.</span></div></div></section>
       </aside>
     </div>
 
-    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la preview</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
+    <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div>
   </div>`;
 
   document.querySelectorAll('[data-doc-open]').forEach(el=>el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||routeNames[S.route]||'Document oficial',url:el.dataset.docUrl||d1Print,route:S.route})));
@@ -5419,9 +5415,9 @@ officialDocObserver.observe(screen,{childList:true,subtree:true});
 function render(id){S.current=id;const appEl=document.querySelector('.app');if(appEl)appEl.classList.toggle('guide-mode',id==='PAID_GUIDE');switch(id){
  case'WELCOME':return welcome();
  case'Q001':return q001();case'Q002':return q002();case'Q003':return q003();case'Q004':return q004();case'Q005':return q005();case'Q006':return q006();case'AFTER_DOCS':return afterDocs();case'Q007':return q007();case'Q008':return q008();case'ROUTE_COMMON':return routeCommon();case'Q010':return q010();case'Q011':return q011();case'Q050':return q050();case'Q051':return q051();case'Q052':return q052();case'Q020':return q020();case'Q030':return q030();case'Q031':return q031();case'Q032':return q032();case'Q060':return q060();case'Q101':return q101();case'Q102':return q102();case'Q103':return q103();case'Q105':return q105();case'Q106':return q106();case'Q108':return q108();case'Q109':return q109();case'Q107':return q107();case'Q120':return q120();case'Q121':return q121();case'Q122':return q122();case'Q123':return q123();case'Q124':return q124();case'Q125':return q125();case'Q201':return q201();case'Q202':return q202();case'Q203':return q203();case'Q204':return q204();case'Q205':return q205();case'Q301':return q301();case'Q401':return q401();case'Q410':return q410();case'Q411':return q411();case'Q412':return q412();case'Q420':return q420();case'Q421':return q421();case'Q040':return q040();case'Q041':return q041();case'RESULT':return showResult();case'CHECKOUT':return showCheckout();case'PAID_GUIDE':return showPaidGuide();
- case'STOP_MINOR':return showStop('red','ActeRO V1 este momentan pentru adulți','Versiunea actuală nu acoperă încă procedurile pentru persoane sub 18 ani. Nu continuăm cu întrebări care ar putea duce la un traseu greșit.');
+ case'STOP_MINOR':return showStop('red','ActeRO este momentan disponibil pentru persoane de 18 ani sau peste','Procedurile pentru minori nu sunt încă incluse. Oprim evaluarea aici pentru a nu indica un traseu care s-ar putea să nu se aplice.');
  case'STOP_NONCITIZEN':return showStop('red','Momentan, ActeRO te poate ajuta doar dacă ești cetățean român.','Extindem treptat situațiile acoperite.');
- case'STOP_COUNTRY_UNSUPPORTED':return showStop('yellow','Țara ta nu este încă acoperită de ActeRO','Versiunea V1 acoperă momentan Italia, Germania, Spania, Regatul Unit, Austria, Belgia, Franța, Țările de Jos, Irlanda și Elveția.','Extindem lista treptat, pe baza cererii reale.');
+ case'STOP_COUNTRY_UNSUPPORTED':return showStop('yellow','Țara ta nu este încă acoperită de ActeRO','ActeRO acoperă în prezent Italia, Germania, Spania, Regatul Unit, Austria, Belgia, Franța, Țările de Jos, Irlanda și Elveția.','Extindem lista treptat, pe baza cererii reale.');
  case'STOP_CITIZENSHIP_UNKNOWN':return showStop('yellow','Trebuie să clarificăm cetățenia înainte să continuăm','Nu are sens să îți arătăm un „rezultat” când încă nu știm dacă procedurile ActeRO ți se aplică.','Dacă ai pașaport românesc, carte de identitate românească sau certificat de cetățenie, asta poate ajuta la clarificare.');
  case'STOP_DOMICILE_UNKNOWN':return showStop('yellow','Trebuie să clarificăm domiciliul oficial','Domiciliul oficial schimbă procedura, iar ActeRO nu va presupune răspunsul.');
  case'STOP_TRAVEL_ALREADY_RO':return showStop('yellow','Ești deja în România','Ai ales că trebuie să ajungi urgent în România, dar apoi ai indicat că te afli deja în România. Modifică unul dintre răspunsuri ca să continuăm.');
@@ -5429,7 +5425,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  case'STOP_ORIENTATION':return showStop('yellow','Încă nu avem destule informații','Am încercat să restrângem situația prin câteva întrebări simple, dar încă nu putem alege o procedură fără să ghicim.','Poți modifica răspunsurile sau relua evaluarea după ce verifici ce document ori rezultat urmărești.');
  case'STOP_CH_G':return showStop('yellow','Permisul G nu arată că domiciliul tău principal este în Elveția','Permisul G este pentru navetiști transfrontalieri care locuiesc în alt stat și lucrează în Elveția. Pentru un CRDS cu domiciliul în Elveția trebuie să clarificăm mai întâi unde este, de fapt, domiciliul tău principal.','Nu îți cerem plata și nu continuăm cu un ghid care ar putea porni de la o premisă greșită.');
  case'STOP_CH_G_RENEW':return showStop('yellow','Permisul G intră în conflict cu domiciliul CRDS în Elveția','Permisul G este pentru navetiști transfrontalieri care au domiciliul principal în alt stat și lucrează în Elveția. Trebuie clarificat dacă domiciliul tău oficial CRDS mai trebuie să rămână în Elveția.','Nu îți cerem plata pentru reînnoirea CRDS Elveția până nu clarificăm acest punct.');
- default:return showStop('yellow','Evaluarea s-a oprit aici','Am întâlnit o combinație de răspunsuri pe care versiunea curentă nu o tratează încă.');
+ default:return showStop('yellow','Evaluarea s-a oprit aici','Combinația de răspunsuri oferită nu este încă acoperită suficient de clar pentru a continua în siguranță.');
 }}
 window.__ACTERO_BOOTED=true;
 if(!restoreCaseFromUrl())reset();
