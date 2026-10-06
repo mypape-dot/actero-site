@@ -1,0 +1,17 @@
+name = "actero-payments"
+main = "worker.js"
+compatibility_date = "2026-10-06"
+
+# Create a KV namespace, then replace this value with the returned ID.
+[[kv_namespaces]]
+binding = "ACTERO_ACCESS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+SHOPIFY_STORE_DOMAIN = "REPLACE_WITH_STORE.myshopify.com"
+SHOPIFY_VARIANT_GID = "gid://shopify/ProductVariant/REPLACE_WITH_VARIANT_ID"
+ALLOWED_ORIGINS = "https://mypape-dot.github.io,http://localhost:8788"
+
+# Keep these out of Git:
+# wrangler secret put SHOPIFY_STOREFRONT_TOKEN
+# wrangler secret put SHOPIFY_WEBHOOK_SECRET
