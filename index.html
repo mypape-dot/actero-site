@@ -1242,7 +1242,6 @@ function openOfficialDocViewer({title,url,route}){
   // Legacy caller compatibility only. New UI uses plain <a> links, avoiding popup blockers.
   window.location.href=target;
 }
-function closeOfficialDocViewer(){const modal=$('officialDocModal');if(modal){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}document.documentElement.style.overflow=''}
 window.addEventListener('DOMContentLoaded',()=>hydrateOfficialDocPreviews(document));
 
 
