@@ -478,7 +478,7 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
     <div class="sidebox"><h3>Ce am înțeles până acum</h3><p id="caseSideText">Pe măsură ce răspunzi, aici apare un rezumat simplu al situației tale.</p><div id="caseSummary" class="case-mini"></div></div>
   </aside>
 </main>
-<div class="footer">ActeRO · prototip V1.0.15 · Informațiile finale vor fi susținute de surse oficiale verificate.</div>
+<div class="footer">ActeRO · V1.0.16 · Ghidurile validate sunt susținute de surse oficiale verificate.</div>
 <pre id="debug" class="debug hidden"></pre>
 </div>
 <script>
@@ -643,7 +643,7 @@ function q031(){choose({kicker:'Motivul urgenței',title:'De ce trebuie să cont
  ],key:'travel_urgent_basis',next:v=>v==='TOURISM'?'RESULT':domicileState()==='UNKNOWN'?'Q032':'RESULT'})}
 function q032(){choose({kicker:'Domiciliul oficial',title:'Ai domiciliul oficial în România sau în străinătate?',lead:'Lista de documente pentru pașaportul temporar diferă în funcție de domiciliul oficial, nu de locul în care te afli acum.',opts:[{value:'YES',label:'În străinătate',sub:'Am avut / am pașaport CRDS.'},{value:'NO',label:'În România'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ever_crds',next:'RESULT'})}
 function q101(){choose({kicker:'Domiciliu în străinătate',title:`Ce situație îți permite să locuiești legal în ${S.answers.residence_country_name||'țara respectivă'}?`,lead:'Este suficient să identificăm o bază relevantă; nu te întrebăm despre toate variantele posibile.',opts:[{value:'RESIDENCE',label:'Am permis / drept de ședere'},{value:'PERMANENT',label:'Am rezidență permanentă / pe termen lung'},{value:'EU',label:'Am document oficial de rezidență ca cetățean UE'},{value:'WORK',label:'Am drept de muncă'},{value:'STUDY',label:'Studiez / urmez pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Am și cetățenia țării'},{value:'OTHER',label:'Altă situație'},{value:'UNKNOWN',label:'Nu știu'}],key:'foreign_basis',next:v=>v==='UNKNOWN'?'Q105':'Q102'})}
-function q102(){choose({kicker:'Dovadă',title:'Ai un document oficial care dovedește această situație?',lead:'Nu trebuie să îl încarci în prototip. Verificăm doar dacă îl ai.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>{if(v==='YES'&&S.answers.residence_country==='CH'&&S.answers.foreign_basis!=='CITIZEN')return'Q109';return'Q103'}})}
+function q102(){choose({kicker:'Dovadă',title:'Ai un document oficial care dovedește această situație?',lead:'Nu trebuie să îl încarci aici. Verificăm doar dacă îl ai.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>{if(v==='YES'&&S.answers.residence_country==='CH'&&S.answers.foreign_basis!=='CITIZEN')return'Q109';return'Q103'}})}
 function q103(){choose({kicker:'Documente',title:'Ai certificatul românesc de naștere în original și neplastifiat?',lead:'Întrebarea apare doar pentru această procedură.',opts:[{value:'READY',label:'Da'},{value:'PLASTIFIED',label:'Este plastifiat'},{value:'MISSING',label:'Nu îl mai am'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'birth_cert',next:'Q040'})}
 function q105(){choose({kicker:'Document din străinătate',title:`Ai în ${S.answers.residence_country_name||'țara în care locuiești'} un document oficial legat de rezidență, ședere, muncă, studii sau cetățenie?`,lead:'E în regulă dacă nu știi denumirea exactă. Încercăm mai întâi să aflăm dacă există un document relevant.',opts:[{value:'YES',label:'Da, am un astfel de document'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_document_generic',next:v=>{if(v==='YES'){S.answers.foreign_proof='YES';return'Q108'}if(v==='NO'){S.answers.foreign_proof='NO';return'Q103'}S.answers.foreign_proof='UNKNOWN';return'Q103'}})}
 function q108(){choose({kicker:'Tipul documentului',title:'La ce se referă documentul pe care îl ai?',lead:'Nu trebuie să știi denumirea juridică. Alege varianta care îl descrie cel mai bine.',opts:[{value:'RESIDENCE',label:'Drept de ședere / rezidență'},{value:'PERMANENT',label:'Rezidență permanentă / pe termen lung'},{value:'WORK',label:'Drept de muncă'},{value:'STUDY',label:'Studii / pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Cetățenia țării în care locuiesc'},{value:'UNKNOWN',label:'Tot nu sunt sigur'}],key:'foreign_basis',next:v=>S.answers.residence_country==='CH'&&v!=='CITIZEN'?'Q109':'Q103'})}
@@ -948,7 +948,7 @@ function showResult(forcePreview=false){
          <div class="paywall-item">Sursele oficiale verificate</div>
        </div>
        <div class="paywall-actions"><button id="unlockResult" class="btn primary">Deblochează rezultatul și pașii</button><button id="resultBack" class="btn secondary">Modifică răspunsurile</button></div>
-       <p class="payment-note">Plată unică pentru acest ghid. Prețul și procesatorul real de plată vor fi conectate la checkout; în această versiune prototip plata este simulată pentru testarea fluxului.</p>
+       <p class="payment-note">Plată unică pentru acest ghid. Checkout-ul real va fi conectat în pasul următor; în această versiune de test plata este simulată pentru verificarea fluxului.</p>
      `:`
        <span class="status-pill yellow">Procedură identificată</span>
        <h2>Ghidul pentru acest caz nu este încă disponibil la plată.</h2>
@@ -4960,7 +4960,7 @@ function showCheckout(){
       </div>
       <button id="demoPay" class="btn primary" style="width:100%">Simulează plata reușită</button>
       <button id="checkoutBack" class="btn secondary" style="width:100%;margin-top:9px">Înapoi</button>
-      <div class="checkout-secure"><span>🔒</span><span>Prototip: nu se procesează bani reali. Butonul simulează confirmarea plății ca să putem testa ce vede utilizatorul după checkout.</span></div>
+      <div class="checkout-secure"><span>🔒</span><span>Versiune de test: nu se procesează bani reali. Butonul simulează confirmarea plății ca să putem verifica exact ce vede utilizatorul după checkout.</span></div>
     </div>
   </div>`;
   $('demoPay').onclick=()=>{S.paymentUnlocked=true;showPaidGuide()};
@@ -5282,7 +5282,7 @@ function showPaidGuide(){
   ] : [
     {title:'Verifică rezumatul cazului tău',body:'Confirmă că țara, domiciliul și situația documentului sunt cele pe care le-ai declarat. Aceste informații stabilesc traseul administrativ.',note:'Pagina finală rămâne disponibilă chiar dacă procedura specifică este încă în validare.'},
     {title:'Păstrează documentele declarate în evaluare',body:'În coloana din dreapta vezi documentele pe care le-ai indicat și starea lor. Nu presupunem alte documente până când procedura țării nu este validată.',note:'Nu prezentăm o listă procedurală neverificată drept checklist oficial.'},
-    {title:'Așteaptă validarea procedurii înainte de depunere',body:'Pașii administrativi exacți pentru această combinație nu sunt încă marcați ca verificați în prototip.',note:'ActeRO nu inventează pași doar pentru a umple pagina finală.'}
+    {title:'Așteaptă validarea procedurii înainte de depunere',body:'Pașii administrativi exacți pentru această combinație nu sunt încă marcați ca verificați în versiunea curentă.',note:'ActeRO nu inventează pași doar pentru a umple pagina finală.'}
   ];
 
   const formatFor=(label)=>{
@@ -5376,7 +5376,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  case'STOP_ORIENTATION':return showStop('yellow','Încă nu avem destule informații','Am încercat să restrângem situația prin câteva întrebări simple, dar încă nu putem alege o procedură fără să ghicim.','Poți modifica răspunsurile sau relua evaluarea după ce verifici ce document ori rezultat urmărești.');
  case'STOP_CH_G':return showStop('yellow','Permisul G nu arată că domiciliul tău principal este în Elveția','Permisul G este pentru navetiști transfrontalieri care locuiesc în alt stat și lucrează în Elveția. Pentru un CRDS cu domiciliul în Elveția trebuie să clarificăm mai întâi unde este, de fapt, domiciliul tău principal.','Nu îți cerem plata și nu continuăm cu un ghid care ar putea porni de la o premisă greșită.');
  case'STOP_CH_G_RENEW':return showStop('yellow','Permisul G intră în conflict cu domiciliul CRDS în Elveția','Permisul G este pentru navetiști transfrontalieri care au domiciliul principal în alt stat și lucrează în Elveția. Trebuie clarificat dacă domiciliul tău oficial CRDS mai trebuie să rămână în Elveția.','Nu îți cerem plata pentru reînnoirea CRDS Elveția până nu clarificăm acest punct.');
- default:return showStop('yellow','Evaluarea s-a oprit aici','Am întâlnit o combinație de răspunsuri pe care prototipul nu o tratează încă.');
+ default:return showStop('yellow','Evaluarea s-a oprit aici','Am întâlnit o combinație de răspunsuri pe care versiunea curentă nu o tratează încă.');
 }}
 window.__ACTERO_BOOTED=true;
 reset();
