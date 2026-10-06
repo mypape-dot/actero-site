@@ -483,6 +483,8 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
 </div>
 <script>
 window.__ACTERO_BOOTED=false;
+// Set this to the deployed ActeRO payment Worker URL when payments go live.
+window.ACTERO_PAYMENT_API=window.ACTERO_PAYMENT_API||'';
 window.addEventListener('error',function(e){try{console.error(e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}var note=document.querySelector('#staticWelcomeFallback .hero-note');if(note)note.textContent='Evaluarea nu s-a încărcat corect.';}catch(_){}});
 window.addEventListener('unhandledrejection',function(e){try{console.error(e&&e.reason?e.reason:e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}}catch(_){}});
 </script>
@@ -1011,6 +1013,7 @@ function showResult(forcePreview=false){
  if($('unlockResult'))$('unlockResult').onclick=()=>showCheckout();
  $('resultBack').onclick=back;
  updateDebug();
+ if(paymentApiConfigured())maybeAutoUnlockPaidGuide();
 }
 
 function docGuideItems(){
@@ -4990,34 +4993,123 @@ function showB2CHValidatedGuide(){
   $('backToPreview').onclick=()=>showResult(true);$('newGuideEval').onclick=reset;updateDebug();
 }
 
+function paymentApiBase(){
+  return String(window.ACTERO_PAYMENT_API||'').trim().replace(/\\/+$/,'');
+}
+function paymentApiConfigured(){
+  return /^https:\\/\\//i.test(paymentApiBase());
+}
+function acteroReturnUrl(){
+  const u=new URL(window.location.href);
+  u.hash='';
+  u.search='';
+  if(S.caseId)u.searchParams.set('case_id',S.caseId);
+  return u.toString();
+}
+async function fetchPaidAccess(){
+  if(!paymentApiConfigured()||!S.caseId)return false;
+  try{
+    const res=await fetch(paymentApiBase()+'/access?case_id='+encodeURIComponent(S.caseId),{
+      method:'GET',
+      headers:{'Accept':'application/json'}
+    });
+    if(!res.ok)return false;
+    const data=await res.json();
+    return !!(data&&data.paid);
+  }catch(e){
+    console.warn('ActeRO payment status check failed',e);
+    return false;
+  }
+}
+async function maybeAutoUnlockPaidGuide(){
+  if(S.paymentUnlocked||!paymentApiConfigured()||!S.caseId||!S.route||!hasValidatedPaidGuide())return false;
+  const paid=await fetchPaidAccess();
+  if(paid&&S.current==='RESULT'){
+    S.paymentUnlocked=true;
+    showPaidGuide();
+    return true;
+  }
+  return false;
+}
+async function startShopifyCheckout(button){
+  if(!paymentApiConfigured()||!S.caseId)return;
+  const original=button?button.textContent:'';
+  if(button){button.disabled=true;button.textContent='Pregătim plata…'}
+  try{
+    persistCase();
+    const returnUrl=acteroReturnUrl();
+    try{history.replaceState(null,'',returnUrl)}catch(e){}
+    const res=await fetch(paymentApiBase()+'/checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        case_id:S.caseId,
+        route:S.route||'',
+        country:(S.answers&&S.answers.residence_country)||'',
+        return_url:returnUrl
+      })
+    });
+    const data=await res.json().catch(()=>null);
+    if(!res.ok||!data||!data.checkoutUrl)throw new Error((data&&data.error)||'checkout_creation_failed');
+    window.location.assign(data.checkoutUrl);
+  }catch(e){
+    console.error('ActeRO checkout error',e);
+    const box=$('checkoutError');
+    if(box){box.classList.remove('hidden');box.textContent='Nu am putut deschide plata. Încearcă din nou.'}
+    if(button){button.disabled=false;button.textContent=original}
+  }
+}
+async function verifyPaymentNow(button){
+  const original=button?button.textContent:'';
+  if(button){button.disabled=true;button.textContent='Verificăm plata…'}
+  const paid=await fetchPaidAccess();
+  if(paid){
+    S.paymentUnlocked=true;
+    showPaidGuide();
+    return;
+  }
+  const box=$('checkoutError');
+  if(box){box.classList.remove('hidden');box.textContent='Plata nu este confirmată încă. Dacă tocmai ai plătit, încearcă din nou după ce Shopify finalizează comanda.'}
+  if(button){button.disabled=false;button.textContent=original}
+}
 function showCheckout(){
   if(!hasValidatedPaidGuide())return showResult(true);
   S.current='CHECKOUT';
   const appEl=document.querySelector('.app');
   if(appEl)appEl.classList.remove('guide-mode');
   setChrome();
+  const live=paymentApiConfigured();
   screen.innerHTML=`<div class="checkout-shell">
     <div class="checkout-card">
       <span class="status-pill green">Evaluare finalizată</span>
       <h1>Accesează ghidul personalizat</h1>
       <p>Ghidul reunește procedura aplicabilă, lista documentelor, pașii personalizați și sursele oficiale relevante pentru cazul tău.</p>
-      <div class="checkout-price"><strong>Acces la ghidul personalizat</strong><span>Plată unică · plata online nu este activată încă</span></div>
+      <div class="checkout-price"><strong>Acces la ghidul personalizat</strong><span>${live?'Plată unică · procesată securizat prin Shopify':'Plata online nu este activată încă'}</span></div>
       <div class="paywall-grid">
         <div class="paywall-item">Procedura aplicabilă</div>
         <div class="paywall-item">Pași personalizați</div>
         <div class="paywall-item">Lista documentelor</div>
         <div class="paywall-item">Surse oficiale verificate</div>
       </div>
-      <button id="demoPay" class="btn primary" style="width:100%">Previzualizează ghidul</button>
+      ${live
+        ?`<button id="shopifyPay" class="btn primary" style="width:100%">Continuă la plata securizată</button>
+           <button id="checkPayment" class="btn secondary" style="width:100%;margin-top:9px">Am plătit — verifică accesul</button>`
+        :`<button id="demoPay" class="btn primary" style="width:100%">Previzualizează ghidul</button>`}
       <button id="checkoutBack" class="btn secondary" style="width:100%;margin-top:9px">Înapoi</button>
-      <div class="checkout-secure"><span>🔒</span><span>Plata online nu este activată încă. Poți deschide ghidul pentru verificare fără a procesa o plată.</span></div>
+      <div id="checkoutError" class="final-issue hidden" style="margin-top:12px"></div>
+      <div class="checkout-secure"><span>🔒</span><span>${live?'Accesul se deblochează numai după confirmarea plății de către Shopify.':'Mod QA: nu se procesează nicio plată.'}</span></div>
     </div>
   </div>`;
-  $('demoPay').onclick=()=>{S.paymentUnlocked=true;showPaidGuide()};
+  if(live){
+    $('shopifyPay').onclick=()=>startShopifyCheckout($('shopifyPay'));
+    $('checkPayment').onclick=()=>verifyPaymentNow($('checkPayment'));
+    fetchPaidAccess().then(paid=>{if(paid&&S.current==='CHECKOUT'){S.paymentUnlocked=true;showPaidGuide()}});
+  }else{
+    $('demoPay').onclick=()=>{S.paymentUnlocked=true;showPaidGuide()};
+  }
   $('checkoutBack').onclick=()=>showResult(true);
   updateDebug();
 }
-
 
 function coreChecklistItem(title,status,note,tone='ok'){
   return `<div class="personal-check"><div class="pc-top"><strong>${title}</strong><span class="pc-status ${tone==='ok'?'ok':'warn'}">${status}</span></div><p>${note}</p></div>`;
