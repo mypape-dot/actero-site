@@ -441,6 +441,120 @@ a.final-official-preview:focus-visible{outline:3px solid rgba(49,95,221,.22);out
   .final-doc-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
   .final-doc-actions a.doc-open-direct,.final-doc-actions a.doc-download-direct{width:100%;min-height:44px}
 }
+
+/* ===== Standalone ActeRO paywall (keyed on the rendered .paywall-screen, so no JS state to keep in sync) ===== */
+html:has(.paywall-screen){background:#050c1a}
+body:has(.paywall-screen){background:
+  radial-gradient(52rem 30rem at 50% -6%,rgba(38,132,255,.30),transparent 62%),
+  radial-gradient(34rem 26rem at 92% 38%,rgba(0,196,255,.10),transparent 66%),
+  radial-gradient(30rem 24rem at 4% 78%,rgba(49,95,221,.16),transparent 66%),
+  linear-gradient(180deg,#050c1a 0%,#07142b 52%,#040a16 100%);background-attachment:fixed}
+body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rgba(140,190,255,.55) .55px,transparent .55px)}
+.app:has(.paywall-screen) .topbar{position:static;height:58px;background:transparent;border-bottom:0;backdrop-filter:none}
+.app:has(.paywall-screen) .topinner{width:min(800px,calc(100% - 32px));justify-content:flex-end}
+.app:has(.paywall-screen) .topbar .brand{display:none}
+.app:has(.paywall-screen) .new-eval{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.13);color:#b6c9ea}
+.app:has(.paywall-screen) .new-eval:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.22)}
+.app:has(.paywall-screen) .side{display:none!important}
+.app:has(.paywall-screen) .wrap{display:block;width:min(800px,calc(100% - 32px));max-width:800px;padding:10px 0 34px}
+.app:has(.paywall-screen) .card{background:none;border:0;box-shadow:none;border-radius:0;overflow:visible}
+.app:has(.paywall-screen) .card:before{display:none}
+.app:has(.paywall-screen) .footer{color:rgba(160,185,225,.5)}
+.result.paywall-screen{padding:0;animation:screenIn .3s ease}
+
+.paywall-screen .paywall-card{--pw-pad:44px;margin:0 auto;max-width:800px;padding:46px var(--pw-pad) 38px;border-radius:34px;border:1px solid rgba(96,160,255,.22);
+  background:linear-gradient(165deg,rgba(17,40,76,.94) 0%,rgba(9,23,48,.97) 52%,rgba(6,16,35,.98) 100%);
+  box-shadow:0 44px 120px rgba(0,0,0,.55),0 0 90px rgba(40,130,255,.13),inset 0 1px 0 rgba(255,255,255,.07)}
+.paywall-screen .paywall-card:before{width:420px;height:420px;right:auto;left:50%;top:-250px;transform:translateX(-50%);background:radial-gradient(circle,rgba(46,140,255,.34),rgba(46,140,255,0) 66%)}
+.paywall-screen .paywall-card:after{display:none}
+.paywall-screen .paywall-top{text-align:center}
+.paywall-screen .paywall-brandline{justify-content:center;margin-bottom:22px;font-size:16px}
+.paywall-screen .paywall-brandmark{width:42px;height:42px;border-radius:14px;font-size:12px}
+.paywall-screen .paywall-card h2{max-width:none;margin:0 0 14px;font-size:clamp(34px,6.2vw,52px);line-height:1.02;font-weight:860;letter-spacing:-.05em;text-align:center;text-wrap:balance;
+  background:linear-gradient(180deg,#fff 30%,#bcd6ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.paywall-screen .paywall-copy{max-width:560px;margin:0 auto;text-align:center;color:#9db5da;font-size:17px;line-height:1.55}
+
+.paywall-screen .paywall-features{gap:14px;margin:34px 0 34px}
+.paywall-screen .paywall-feature{padding:0;border:0;background:none;border-radius:0;color:#d4e2fa;font-size:13.5px;line-height:1.35;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:12px}
+.paywall-screen .paywall-feature-icon{width:58px;height:58px;margin:0;border-radius:50%;color:#5fc8ff;
+  background:radial-gradient(circle at 30% 22%,rgba(80,170,255,.30),rgba(18,48,96,.62) 70%);border:1px solid rgba(110,185,255,.30);box-shadow:0 0 28px rgba(40,140,255,.20),inset 0 1px 0 rgba(255,255,255,.10)}
+.paywall-screen .paywall-feature-icon svg{display:block}
+
+.paywall-screen .paywall-reviews-head{flex-direction:column;align-items:center;gap:5px;margin:0 0 14px;text-align:center}
+.paywall-screen .paywall-reviews-head strong{font-size:14px;letter-spacing:.01em;color:#fff}
+.paywall-screen .paywall-reviews-head span{font-size:11px;color:rgba(170,195,235,.62)}
+.paywall-screen .paywall-reviews-window{margin:0 calc(var(--pw-pad)*-1);padding:2px 0 8px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}
+.paywall-screen .paywall-review-track{animation-duration:56s}
+.paywall-screen .paywall-review-set{gap:12px;padding:0 12px 0 0}
+.paywall-screen .paywall-review-card{width:262px;min-height:138px;border-radius:20px;background:rgba(255,255,255,.97);padding:17px 18px;box-shadow:0 16px 38px rgba(0,0,0,.34);display:flex;flex-direction:column}
+.paywall-screen .paywall-review-card p{flex:1}
+.paywall-screen .paywall-review-card small{margin-top:12px;color:#8a95a8}
+.paywall-screen .paywall-review-dots{gap:6px;margin:14px 0 28px}
+.paywall-screen .paywall-review-dots i{width:6px;height:6px;background:rgba(255,255,255,.20);animation:pwDot 56s linear infinite}
+.paywall-screen .paywall-review-dots i:first-child{width:6px;border-radius:50%;background:rgba(255,255,255,.20)}
+.paywall-screen .paywall-review-dots i:nth-child(2){animation-delay:6.2222s}
+.paywall-screen .paywall-review-dots i:nth-child(3){animation-delay:12.4444s}
+.paywall-screen .paywall-review-dots i:nth-child(4){animation-delay:18.6667s}
+.paywall-screen .paywall-review-dots i:nth-child(5){animation-delay:24.8889s}
+.paywall-screen .paywall-review-dots i:nth-child(6){animation-delay:31.1111s}
+.paywall-screen .paywall-review-dots i:nth-child(7){animation-delay:37.3333s}
+.paywall-screen .paywall-review-dots i:nth-child(8){animation-delay:43.5556s}
+.paywall-screen .paywall-review-dots i:nth-child(9){animation-delay:49.7778s}
+@keyframes pwDot{0%,11.1%{width:20px;border-radius:999px;background:#3fa0ff}11.2%,100%{width:6px;border-radius:50%;background:rgba(255,255,255,.20)}}
+
+.paywall-screen .paywall-cta.paywall-cta-main{min-height:68px;padding:14px 22px!important;border-radius:22px!important;justify-content:center!important;gap:12px!important;font-size:19px!important;font-weight:850;letter-spacing:-.015em;
+  background:linear-gradient(100deg,#2c63f0 0%,#1b8cff 55%,#16b4ff 100%)!important;border:1px solid rgba(255,255,255,.22)!important;
+  box-shadow:0 18px 46px rgba(34,126,255,.46),0 0 0 1px rgba(80,160,255,.18),inset 0 1px 0 rgba(255,255,255,.28)!important;
+  transition:transform .22s ease,box-shadow .22s ease,filter .22s ease}
+.paywall-screen .paywall-cta-label{text-align:center;font-weight:850;white-space:nowrap}
+.paywall-screen .paywall-cta-arrow{display:inline-block;font-weight:800;transition:transform .22s ease}
+@media(hover:hover){
+  .paywall-screen .paywall-cta.paywall-cta-main:hover{transform:translateY(-3px);filter:brightness(1.07);box-shadow:0 24px 60px rgba(34,126,255,.58),0 0 0 1px rgba(110,185,255,.34),inset 0 1px 0 rgba(255,255,255,.34)!important}
+  .paywall-screen .paywall-cta.paywall-cta-main:hover .paywall-cta-arrow{transform:translateX(5px)}
+}
+.paywall-screen .paywall-cta.paywall-cta-main:active{transform:translateY(0) scale(.99)}
+.paywall-screen .paywall-cta.paywall-cta-main:focus-visible{outline:3px solid rgba(120,200,255,.7);outline-offset:3px}
+
+.paywall-screen .paywall-assure{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;color:#a9bfe3;font-size:13px;line-height:1.3;font-weight:650;text-align:center}
+.paywall-screen .paywall-assure span{display:flex;align-items:center;justify-content:center;gap:7px;padding:4px 8px}
+.paywall-screen .paywall-assure span+span{border-left:1px solid rgba(150,185,240,.20)}
+.paywall-screen .paywall-assure b{font-weight:400;font-size:14px}
+.paywall-screen .paywall-assure span:last-child b{color:#78d4ae;font-weight:900}
+
+.paywall-screen .status-pill{margin-bottom:14px}
+.paywall-screen .paywall-card>p{color:#9db5da}
+.paywall-screen .paywall-secondary{color:#dbe7fb!important;border-color:rgba(255,255,255,.16)!important}
+
+@media(max-width:640px){
+  .app:has(.paywall-screen) .topbar{height:50px}
+  .app:has(.paywall-screen) .topinner{width:calc(100% - 20px)}
+  .app:has(.paywall-screen) .wrap{width:calc(100% - 16px);padding:4px 0 26px}
+  .paywall-screen .paywall-card{--pw-pad:18px;padding:30px var(--pw-pad) 26px;border-radius:26px}
+  .paywall-screen .paywall-brandline{margin-bottom:18px}
+  .paywall-screen .paywall-card h2{font-size:clamp(31px,9.4vw,40px)}
+  .paywall-screen .paywall-copy{font-size:15px}
+  .paywall-screen .paywall-features{gap:6px;margin:26px 0 26px}
+  .paywall-screen .paywall-feature{font-size:11px;gap:9px}
+  .paywall-screen .paywall-feature-icon{width:48px;height:48px}
+  .paywall-screen .paywall-feature-icon svg{width:21px;height:21px}
+  .paywall-screen .paywall-review-card{width:218px;min-height:132px;padding:15px 16px;border-radius:18px}
+  .paywall-screen .paywall-review-card p{font-size:12.5px}
+  .paywall-screen .paywall-review-dots{margin:12px 0 22px}
+  .paywall-screen .paywall-cta.paywall-cta-main{min-height:62px;font-size:clamp(14px,4.1vw,16.5px)!important;padding:12px 10px!important;border-radius:20px!important;gap:7px!important}
+  .paywall-screen .paywall-assure{font-size:11px;margin-top:16px}
+  .paywall-screen .paywall-assure span{gap:5px;padding:4px 4px;flex-direction:column}
+  .paywall-screen .paywall-assure b{font-size:15px}
+}
+@media(max-width:360px){
+  .paywall-screen .paywall-cta.paywall-cta-main{font-size:14px!important;gap:5px!important}
+  .paywall-screen .paywall-feature{font-size:10.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .paywall-screen .paywall-review-dots i{animation:none}
+  .paywall-screen .paywall-review-dots i:first-child{width:20px;border-radius:999px;background:#3fa0ff}
+  .paywall-screen .paywall-cta.paywall-cta-main,.paywall-screen .paywall-cta-arrow{transition:none}
+}
+/* ===== /Standalone ActeRO paywall ===== */
 </style>
 
 <style id="v1013-doc-fix">
@@ -972,45 +1086,44 @@ function showResult(forcePreview=false){
  // the exact route, procedural result, document list or steps.
  const validated=hasValidatedPaidGuide();
  const live=paymentApiConfigured();
- screen.innerHTML=`<div class="result">
-   <div class="result-hero">
-     <span class="status-pill green">Evaluare finalizată</span>
-     <h1>Ghidul tău este pregătit.</h1>
-     <p class="sub">Am identificat procedura relevantă pentru situația ta. Deblochează ghidul complet pentru pașii exacți, documentele necesare și sursele oficiale aferente.</p>
-   </div>
-
-   <div class="result-story">
-     <div class="big"><strong>Traseul a fost identificat.</strong> Nu mai sunt necesare alte răspunsuri pentru acest caz.</div>
-     <div class="small">Înainte de plată îți arătăm ce conține ghidul, fără să dezvăluim procedura completă.</div>
-   </div>
-
+ const pwIcon={
+   fresh:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4v4.5h-4.5"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg>',
+   steps:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="6.5" r="1.6"/><circle cx="5.5" cy="12" r="1.6"/><circle cx="5.5" cy="17.5" r="1.6"/><path d="M10.5 6.5H20M10.5 12H20M10.5 17.5H17"/></svg>',
+   clear:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5h9.5a4 4 0 0 1 4 4v3a4 4 0 0 1-4 4H11l-4.2 3v-3H5a2.5 2.5 0 0 1-2.5-2.5v-4.5a4 4 0 0 1 2.5-3.9Z" transform="translate(1 -1)"/><path d="M8.5 10.5h6M8.5 13.5h3.5"/></svg>'
+ };
+ screen.innerHTML=`<div class="result paywall-screen">
    <div class="paywall-card">
      ${validated?`
        <div class="paywall-top">
          <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
-         <span class="paywall-kicker">Ghid pregătit</span>
          <h2>Deblochează ghidul complet</h2>
          <p class="paywall-copy">Rezolvă situația ta mai rapid, fără drumuri inutile și fără neclarități.</p>
        </div>
 
        <div class="paywall-features">
-         <div class="paywall-feature"><div class="paywall-feature-icon">✓</div>Informații actualizate</div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">→</div>Explicații pas cu pas</div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">◇</div>Scris pe înțelesul tuturor</div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.fresh}</div><span>Informații actualizate</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.steps}</div><span>Explicații pas cu pas</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.clear}</div><span>Scris pe înțelesul tuturor</span></div>
        </div>
 
-       <div class="paywall-reviews-head"><strong>Exemple de feedback</strong><span>9 mesaje · carusel automat</span></div>
-       <div class="paywall-reviews-window" aria-label="Exemple de feedback pentru prezentarea paywall-ului">
+       <div class="paywall-reviews-head"><strong>Exemple de feedback</strong><span>Mesaje ilustrative, nu recenzii verificate ale clienților.</span></div>
+       <div class="paywall-reviews-window" aria-label="Exemple ilustrative de feedback">
          <div class="paywall-review-track">${paywallReviewCards()}</div>
        </div>
        <div class="paywall-review-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
        <div class="paywall-actions">
-         <button id="unlockResult" class="btn primary paywall-cta"><span>Deblochează ghidul complet</span><strong>49 lei</strong></button>
+         <button id="unlockResult" class="btn primary paywall-cta paywall-cta-main"><span class="paywall-cta-label">Deblochează ghidul complet – 49 lei</span><span class="paywall-cta-arrow" aria-hidden="true">→</span></button>
        </div>
-       <div class="paywall-trust"><span>Plată unică</span><span>Ghid personalizat</span><span>Fără abonament</span></div>
-       <a href="#" id="resultBack" class="paywall-text-link">Modifică răspunsurile</a>
+       <div class="paywall-assure">
+         <span><b aria-hidden="true">🔒</b>Plată securizată</span>
+         <span><b aria-hidden="true">⚡</b>Acces instant</span>
+         <span><b aria-hidden="true">✓</b>Fără abonament</span>
+       </div>
      `:`
+       <div class="paywall-top">
+         <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
+       </div>
        <span class="status-pill yellow">Evaluare finalizată</span>
        <h2>Ghidul pentru această situație este încă în verificare.</h2>
        <p>Accesul cu plată este activat doar pentru traseele validate pe surse oficiale. Răspunsurile tale rămân păstrate în sesiunea curentă.</p>
@@ -1019,24 +1132,25 @@ function showResult(forcePreview=false){
    </div>
  </div>`;
  if($('unlockResult'))$('unlockResult').onclick=()=>showCheckout();
- $('resultBack').onclick=back;
+ if($('resultBack'))$('resultBack').onclick=back;
  updateDebug();
  if(paymentApiConfigured())maybeAutoUnlockPaidGuide();
 }
 
 const PAYWALL_FEEDBACK=[
-  'Acest ghid mi-a salvat o grămadă de timp.',
-  'Am scăpat de neclarități și am știut exact ce am de făcut.',
-  'Totul a fost explicat clar, pas cu pas.',
-  'M-a ajutat să evit drumuri inutile.',
-  'Am găsit rapid documentele de care aveam nevoie.',
-  'Mi-a fost clar unde trebuie să depun actele.',
-  'Am rezolvat mult mai repede decât mă așteptam.',
-  'Exact genul de ghid pe care îl căutam.',
-  'Foarte clar și ușor de urmărit.'
+  'Acest ghid mi-ar fi economisit o grămadă de timp.',
+  'Informațiile sunt puse într-o ordine mult mai ușor de urmărit.',
+  'Pașii sunt explicați clar, fără termeni complicați.',
+  'Știi ce documente trebuie pregătite înainte să începi.',
+  'Ajută la eliminarea neclarităților dintre diferitele proceduri.',
+  'Totul este organizat într-un singur loc.',
+  'Este mult mai ușor să înțelegi ce ai de făcut pas cu pas.',
+  'Nu mai trebuie să cauți informația în zece locuri diferite.',
+  'Îți arată traseul administrativ într-un mod simplu.'
 ];
+// Illustrative copy only: these are NOT customer reviews and must stay labelled as examples.
 function paywallReviewCards(){
-  const cards=PAYWALL_FEEDBACK.map((text,i)=>`<article class="paywall-review-card"><div class="paywall-review-stars" aria-label="5 stele">★★★★★</div><p>„${text}”</p><small>Exemplu de feedback · ${String(i+1).padStart(2,'0')}</small></article>`).join('');
+  const cards=PAYWALL_FEEDBACK.map(text=>`<article class="paywall-review-card"><div class="paywall-review-stars" aria-hidden="true">★★★★★</div><p>„${text}”</p><small>Exemplu de feedback</small></article>`).join('');
   return `<div class="paywall-review-set">${cards}</div><div class="paywall-review-set" aria-hidden="true">${cards}</div>`;
 }
 
