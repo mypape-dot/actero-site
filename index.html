@@ -635,6 +635,7 @@ function persistCase(){
       status:S.status||null,
       blockers:S.blockers||[],
       unknowns:S.unknowns||[],
+      clarified:S.clarified||{},
       current:S.current||'WELCOME',
       updatedAt:new Date().toISOString()
     };
@@ -658,12 +659,44 @@ function restoreCaseFromUrl(){
     S.status=saved.status||null;
     S.blockers=saved.blockers||[];
     S.unknowns=saved.unknowns||[];
+    S.clarified=(saved.clarified&&typeof saved.clarified==='object')?saved.clarified:{};
     S.history=[];
     S.docQueue=[];
     S.docIndex=0;
     S.paymentUnlocked=false;
     S.current=S.route?'RESULT':'WELCOME';
     render(S.current);
+    return true;
+  }catch(e){return false}
+}
+// Refresh without ?case_id=: restore the active saved case, but only when it already reached a result.
+// paymentUnlocked is never read from storage; the paywall + fetchPaidAccess() decide about the paid guide.
+function restoreActiveCase(){
+  try{
+    const params=new URLSearchParams(window.location.search||'');
+    if(params.get('case_id'))return false; // the URL case has priority (handled by restoreCaseFromUrl)
+    const id=localStorage.getItem('actero_active_case');
+    if(!id)return false;
+    const raw=localStorage.getItem(caseStorageKey(id));
+    if(!raw)return false;
+    const saved=JSON.parse(raw);
+    if(!saved||saved.caseId!==id||!saved.answers||typeof saved.answers!=='object')return false;
+    if(!saved.route||typeof routeNames==='undefined'||!routeNames[saved.route])return false;
+    if(!['RESULT','CHECKOUT','PAID_GUIDE'].includes(saved.current))return false; // mid-questionnaire: keep the normal start
+    S.caseId=id;
+    S.answers=saved.answers;
+    S.docs=saved.docs||{};
+    S.route=saved.route;
+    S.status=saved.status||null;
+    S.blockers=Array.isArray(saved.blockers)?saved.blockers:[];
+    S.unknowns=Array.isArray(saved.unknowns)?saved.unknowns:[];
+    S.clarified=(saved.clarified&&typeof saved.clarified==='object')?saved.clarified:{};
+    S.history=[];
+    S.docQueue=[];
+    S.docIndex=0;
+    S.paymentUnlocked=false; // never trusted from localStorage
+    S.current='RESULT';      // also for a saved PAID_GUIDE: the paywall decides
+    render('RESULT');
     return true;
   }catch(e){return false}
 }
@@ -5657,7 +5690,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  default:return showStop('yellow','Evaluarea s-a oprit aici','Combinația de răspunsuri oferită nu este încă acoperită suficient de clar pentru a continua în siguranță.');
 }}
 window.__ACTERO_BOOTED=true;
-if(!restoreCaseFromUrl())reset();
+if(!restoreCaseFromUrl()&&!restoreActiveCase())reset();
 </script>
 
 </body>
