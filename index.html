@@ -624,9 +624,31 @@ function createCaseId(){
   return 'AR-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,10).toUpperCase();
 }
 function caseStorageKey(id){return 'actero_case_'+String(id||'')}
+// ---- Refresh persistence -------------------------------------------------
+// Only screens listed here may be resumed from localStorage; anything else is ignored (never rendered blindly).
+const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q020','Q030','Q031','Q032','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
+const INTERNAL_SCREENS=new Set(['AFTER_DOCS','ROUTE_COMMON']);
+const STOP_SCREENS=new Set(['STOP_RED','STOP_YELLOW']);
+const PAYWALL_SCREENS=new Set(['RESULT','CHECKOUT','PAID_GUIDE']);
+const RESUME_DOC_KEYS=['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'];
+function isResumableScreen(id){return typeof id==='string'&&(id==='WELCOME'||QUESTION_SCREENS.has(id)||INTERNAL_SCREENS.has(id)||STOP_SCREENS.has(id)||PAYWALL_SCREENS.has(id))}
+function isPlainObj(o){return o!==null&&typeof o==='object'&&!Array.isArray(o)}
+function validSnapshot(x){
+  return isPlainObj(x)&&isPlainObj(x.answers)&&isPlainObj(x.docs)&&(x.route==null||typeof x.route==='string')&&(x.status==null||typeof x.status==='string')
+    &&Array.isArray(x.blockers)&&Array.isArray(x.unknowns)&&Array.isArray(x.docQueue)&&x.docQueue.every(d=>RESUME_DOC_KEYS.includes(d))
+    &&Number.isInteger(x.docIndex)&&x.docIndex>=0&&x.docIndex<=x.docQueue.length&&isResumableScreen(x.current);
+}
+// A malformed history is dropped as a whole (Back then simply has nothing to go back to).
+function sanitizeHistory(h){
+  if(!Array.isArray(h)||h.length>200)return [];
+  for(const x of h){if(!validSnapshot(x))return []}
+  return h.map(x=>({answers:x.answers,docs:x.docs,route:x.route==null?null:x.route,status:x.status==null?null:x.status,blockers:x.blockers,unknowns:x.unknowns,docQueue:x.docQueue,docIndex:x.docIndex,current:x.current}));
+}
+let _lastPersisted='';
 function persistCase(){
   if(!S.caseId)return;
   try{
+    // paymentUnlocked is deliberately NOT stored: unlocking only ever comes from the payment check.
     const payload={
       caseId:S.caseId,
       answers:S.answers||{},
@@ -636,11 +658,19 @@ function persistCase(){
       blockers:S.blockers||[],
       unknowns:S.unknowns||[],
       clarified:S.clarified||{},
-      current:S.current||'WELCOME',
-      updatedAt:new Date().toISOString()
+      history:Array.isArray(S.history)?S.history:[],
+      docQueue:Array.isArray(S.docQueue)?S.docQueue:[],
+      docIndex:Number.isInteger(S.docIndex)?S.docIndex:0,
+      autoSkip:!!S.autoSkip,
+      skipTarget:typeof S.skipTarget==='string'?S.skipTarget:null,
+      current:S.current||'WELCOME'
     };
+    const body=JSON.stringify(payload);
+    if(body===_lastPersisted&&localStorage.getItem('actero_active_case')===S.caseId)return; // nothing changed
+    payload.updatedAt=new Date().toISOString();
     localStorage.setItem(caseStorageKey(S.caseId),JSON.stringify(payload));
     localStorage.setItem('actero_active_case',S.caseId);
+    _lastPersisted=body;
   }catch(e){}
 }
 function restoreCaseFromUrl(){
@@ -669,8 +699,9 @@ function restoreCaseFromUrl(){
     return true;
   }catch(e){return false}
 }
-// Refresh without ?case_id=: restore the active saved case, but only when it already reached a result.
-// paymentUnlocked is never read from storage; the paywall + fetchPaidAccess() decide about the paid guide.
+// Refresh without ?case_id=: resume the active saved case at the same logical step.
+// paymentUnlocked is never read from storage; a saved PAID_GUIDE/CHECKOUT comes back as the paywall (RESULT)
+// and only fetchPaidAccess()/maybeAutoUnlockPaidGuide() can unlock the guide.
 function restoreActiveCase(){
   try{
     const params=new URLSearchParams(window.location.search||'');
@@ -680,23 +711,40 @@ function restoreActiveCase(){
     const raw=localStorage.getItem(caseStorageKey(id));
     if(!raw)return false;
     const saved=JSON.parse(raw);
-    if(!saved||saved.caseId!==id||!saved.answers||typeof saved.answers!=='object')return false;
-    if(!saved.route||typeof routeNames==='undefined'||!routeNames[saved.route])return false;
-    if(!['RESULT','CHECKOUT','PAID_GUIDE'].includes(saved.current))return false; // mid-questionnaire: keep the normal start
+    if(!isPlainObj(saved)||saved.caseId!==id||!isPlainObj(saved.answers))return false;
+    const cur=saved.current;
+    if(!isResumableScreen(cur))return false;
+    const route=saved.route==null?null:saved.route;
+    if(route!==null&&(typeof route!=='string'||typeof routeNames==='undefined'||!routeNames[route]))return false;
+    if(PAYWALL_SCREENS.has(cur)&&!route)return false;
+    if(saved.status!=null&&typeof saved.status!=='string')return false;
+    if(saved.docs!=null&&!isPlainObj(saved.docs))return false;
+    const history=sanitizeHistory(saved.history);
+    if(STOP_SCREENS.has(cur)&&!history.length)return false; // a stop screen is resumed by stepping back from it
+    let queue=Array.isArray(saved.docQueue)&&saved.docQueue.every(d=>RESUME_DOC_KEYS.includes(d))?saved.docQueue:[];
+    let idx=Number.isInteger(saved.docIndex)&&saved.docIndex>=0&&saved.docIndex<=queue.length?saved.docIndex:0;
+    if(cur==='Q006'&&(!queue.length||idx>=queue.length))return false;
+    let skipTarget=typeof saved.skipTarget==='string'&&isResumableScreen(saved.skipTarget)?saved.skipTarget:null;
+    const autoSkip=!!saved.autoSkip&&!!skipTarget;
+    if(!autoSkip)skipTarget=null;
     S.caseId=id;
     S.answers=saved.answers;
     S.docs=saved.docs||{};
-    S.route=saved.route;
+    S.route=route;
     S.status=saved.status||null;
     S.blockers=Array.isArray(saved.blockers)?saved.blockers:[];
     S.unknowns=Array.isArray(saved.unknowns)?saved.unknowns:[];
-    S.clarified=(saved.clarified&&typeof saved.clarified==='object')?saved.clarified:{};
-    S.history=[];
-    S.docQueue=[];
-    S.docIndex=0;
+    S.clarified=isPlainObj(saved.clarified)?saved.clarified:{};
+    S.history=history;
+    S.docQueue=queue;
+    S.docIndex=idx;
+    S.autoSkip=autoSkip;
+    S.skipTarget=skipTarget;
     S.paymentUnlocked=false; // never trusted from localStorage
-    S.current='RESULT';      // also for a saved PAID_GUIDE: the paywall decides
-    render('RESULT');
+    if(STOP_SCREENS.has(cur)){S.current=cur;back();return true}
+    const target=PAYWALL_SCREENS.has(cur)?'RESULT':cur; // PAID_GUIDE/CHECKOUT -> paywall first
+    S.current=target;
+    render(target);
     return true;
   }catch(e){return false}
 }
@@ -742,10 +790,10 @@ const statusLabels={VALID:'valabil',EXPIRED:'expirat',EXPIRING:'aproape de expir
 function clone(obj){return JSON.parse(JSON.stringify(obj))}
 function snapshot(){return {answers:clone(S.answers),docs:clone(S.docs),route:S.route,status:S.status,blockers:clone(S.blockers),unknowns:clone(S.unknowns),docQueue:clone(S.docQueue),docIndex:S.docIndex,current:S.current}}
 function restore(s){S.answers=s.answers;S.docs=s.docs;S.route=s.route;S.status=s.status;S.blockers=s.blockers;S.unknowns=s.unknowns;S.docQueue=s.docQueue;S.docIndex=s.docIndex;S.current=s.current}
-function push(next){S.history.push(snapshot());S.current=next;render(next)}
-function replace(next){S.current=next;render(next)}
+function push(next){S.history.push(snapshot());S.current=next;render(next);persistCase()}
+function replace(next){S.current=next;render(next);persistCase()}
 function isInternalScreen(id){return ['AFTER_DOCS','ROUTE_COMMON'].includes(id)}
-function back(){S.autoSkip=false;if(!S.history.length)return;let snap=null;while(S.history.length){snap=S.history.pop();if(!isInternalScreen(snap.current))break}if(!snap)return;restore(snap);render(S.current)}
+function back(){S.autoSkip=false;if(!S.history.length)return;let snap=null;while(S.history.length){snap=S.history.pop();if(!isInternalScreen(snap.current))break}if(!snap)return;restore(snap);render(S.current);persistCase()}
 function reset(){const appEl=document.querySelector('.app');if(appEl)appEl.classList.remove('guide-mode');S.answers={};S.docs={};S.route=null;S.status=null;S.blockers=[];S.unknowns=[];S.history=[];S.current='WELCOME';S.docQueue=[];S.docIndex=0;S.paymentUnlocked=false;S.autoSkip=false;S.skipTarget=null;S.clarified={};S.caseId=createCaseId();persistCase();render('WELCOME')}
 backBtn.onclick=back;newEval.onclick=reset;
 window.addEventListener('keydown',e=>{if(e.altKey&&e.key.toLowerCase()==='d'){debug.classList.toggle('hidden');updateDebug()}})
@@ -792,7 +840,7 @@ function showStop(kind,title,body,mini=''){S.current='STOP_'+kind.toUpperCase();
 
 function q001(){choose({kicker:'01 · Despre tine',title:'Ca să nu te plimbăm prin întrebări inutile: ai 18 ani sau mai mult?',lead:'După asta intrăm direct în situația ta.',opts:[{value:'YES',label:'Da, am 18 ani sau mai mult'},{value:'NO',label:'Nu încă'}],key:'age',next:v=>v==='YES'?'Q002':'STOP_MINOR'})}
 function q002(){choose({kicker:'01 · Despre tine',title:'Mai confirmăm un singur lucru: ești cetățean român?',lead:'Asta decide dacă ActeRO îți poate identifica procedura potrivită dintre cele românești.',opts:[{value:'YES',label:'Da, sunt cetățean român'},{value:'REACQUIRED',label:'Am dobândit / redobândit cetățenia'},{value:'NO',label:'Nu sunt cetățean român'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'citizenship',next:v=>v==='YES'||v==='REACQUIRED'?'Q003':v==='NO'?'STOP_NONCITIZEN':'STOP_CITIZENSHIP_UNKNOWN'})}
-function q003(){setChrome('Țara');let selected=S.answers.residence_country||'';screen.innerHTML=header('01 · Despre tine','Unde locuiești de fapt acum?','Alege țara în care îți desfășori viața de zi cu zi. O vacanță sau o ședere scurtă nu contează aici.')+`<input class="search" id="search" placeholder="Caută țara…" autocomplete="off"><div class="country-list" id="countryList"></div></div>`;const list=$('countryList'),input=$('search');function draw(q=''){const arr=countries.filter(c=>c.name.toLowerCase().includes(q.toLowerCase()));list.innerHTML=arr.map(c=>`<div class="country ${selected===c.code?'active':''}" data-code="${c.code}"><span class="country-main"><span class="flag">${flagEmoji(c.code)}</span><span>${c.name}</span></span><span>${selected===c.code?'✓':''}</span></div>`).join('');list.querySelectorAll('.country').forEach(el=>el.onclick=()=>{selected=el.dataset.code;const c=countries.find(x=>x.code===selected);S.answers.residence_country=selected;S.answers.residence_country_name=c?c.name:selected;draw(input.value);setTimeout(()=>push(selected==='OTHER'?'STOP_COUNTRY_UNSUPPORTED':'Q004'),120)})}draw();input.oninput=()=>draw(input.value)}
+function q003(){setChrome('Țara');let selected=S.answers.residence_country||'';screen.innerHTML=header('01 · Despre tine','Unde locuiești de fapt acum?','Alege țara în care îți desfășori viața de zi cu zi. O vacanță sau o ședere scurtă nu contează aici.')+`<input class="search" id="search" placeholder="Caută țara…" autocomplete="off"><div class="country-list" id="countryList"></div></div>`;const list=$('countryList'),input=$('search');function draw(q=''){const arr=countries.filter(c=>c.name.toLowerCase().includes(q.toLowerCase()));list.innerHTML=arr.map(c=>`<div class="country ${selected===c.code?'active':''}" data-code="${c.code}"><span class="country-main"><span class="flag">${flagEmoji(c.code)}</span><span>${c.name}</span></span><span>${selected===c.code?'✓':''}</span></div>`).join('');list.querySelectorAll('.country').forEach(el=>el.onclick=()=>{selected=el.dataset.code;const c=countries.find(x=>x.code===selected);S.answers.residence_country=selected;S.answers.residence_country_name=c?c.name:selected;persistCase();draw(input.value);setTimeout(()=>push(selected==='OTHER'?'STOP_COUNTRY_UNSUPPORTED':'Q004'),120)})}draw();input.oninput=()=>draw(input.value)}
 function q004(){choose({kicker:'02 · Situația ta',title:'Ce încerci să rezolvi acum?',lead:'Nu te preocupa de numele procedurii. Alege rezultatul pe care îl vrei, iar noi alegem procedura potrivită.',opts:[
 {value:'ID_PROBLEM',label:'Am o problemă cu buletinul / cartea de identitate',sub:'A expirat, e pierdut, deteriorat sau pur și simplu am nevoie de unul nou.'},
 {value:'ESTABLISH_FOREIGN_DOMICILE',label:'Vreau ca domiciliul meu oficial să fie în țara în care locuiesc',sub:'Locuiesc în străinătate și vreau ca actele românești să reflecte asta.'},
@@ -5689,6 +5737,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  case'STOP_CH_G_RENEW':return showStop('yellow','Permisul G intră în conflict cu domiciliul CRDS în Elveția','Permisul G este pentru navetiști transfrontalieri care au domiciliul principal în alt stat și lucrează în Elveția. Trebuie clarificat dacă domiciliul tău oficial CRDS mai trebuie să rămână în Elveția.','Nu îți cerem plata pentru reînnoirea CRDS Elveția până nu clarificăm acest punct.');
  default:return showStop('yellow','Evaluarea s-a oprit aici','Combinația de răspunsuri oferită nu este încă acoperită suficient de clar pentru a continua în siguranță.');
 }}
+window.addEventListener('pagehide',()=>persistCase());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistCase()});
 window.__ACTERO_BOOTED=true;
 if(!restoreCaseFromUrl()&&!restoreActiveCase())reset();
 </script>
