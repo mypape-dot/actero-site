@@ -82,7 +82,7 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
  const fromUrl=params.get('case_id');
  const validId=s=>typeof s==='string'&&/^AR-[0-9a-f-]{36}$/i.test(s);
  let stored;try{stored=localStorage.getItem('actero_active_case')}catch(e){}
- const caseId=validId(fromUrl)?fromUrl:validId(stored)?stored:null;
+ const caseId=fromUrl ? (validId(fromUrl)?fromUrl:null) : (validId(stored)?stored:null);
  let token='';try{if(caseId)token=localStorage.getItem('actero_access_'+caseId)||''}catch(e){}
  let count=0,working=false,paid=false;
  const WAIT_MAX=10;
@@ -90,7 +90,7 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
    $('heading').textContent=title;$('lead').textContent=body;$('statusMessage').textContent=msg;
    $('statusIcon').className='status-ring '+(kind==='ok'?'positive':kind==='missing'?'muted':'');
    $('statusIcon').innerHTML=kind==='ok'?ICON_OK:kind==='pending'?'<div class="spinner"></div>':ICON_HELP;
-   $('openGuide').disabled=kind!=='ok';$('retry').hidden=kind==='pending';
+   $('openGuide').disabled=kind!=='ok';$('retry').hidden=kind==='pending'||!caseId||!token;
    $('eyebrow').textContent=kind==='ok'?'Plata confirmată · Acces disponibil':'ActeRO · Acces securizat';
  }
  function failMissing(){state('missing','Nu găsim evaluarea ta','Pentru a verifica plata avem nevoie de sesiunea în care ai completat chestionarul. Deschide această pagină în același browser și pe același dispozitiv.','Nu efectua o a doua plată înainte să verificăm comanda.');}
