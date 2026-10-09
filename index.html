@@ -1617,19 +1617,35 @@ function guideKeyForCurrent(){
 }
 let loadedPaidGuideKey=null,loadedPaidCaseId=null;
 async function loadProtectedPaidGuide(){
-  const key=guideKeyForCurrent();
-  if(!paymentApiConfigured()||!S.caseId||!key){S.paymentUnlocked=false;return false}
+  const key=guideKeyForCurrent(),token=accessTokenForCase();
+  if(!paymentApiConfigured()||!S.caseId||!key||!token){S.paymentUnlocked=false;return false}
   if(loadedPaidGuideKey===key&&loadedPaidCaseId===S.caseId){S.paymentUnlocked=true;showPaidGuide();return true}
-  const src=paymentApiBase()+'/guide-script?case_id='+encodeURIComponent(S.caseId)+'&guide_key='+encodeURIComponent(key);
-  return await new Promise(resolve=>{
-    const tag=document.createElement('script');
-    tag.async=true;
-    tag.crossOrigin='anonymous';
-    tag.src=src;
-    tag.onload=()=>{loadedPaidGuideKey=key;loadedPaidCaseId=S.caseId;S.paymentUnlocked=true;showPaidGuide();resolve(true)};
-    tag.onerror=()=>{tag.remove();S.paymentUnlocked=false;const box=$('checkoutError');if(box){box.classList.remove('hidden');box.textContent='Accesul nu a putut fi confirmat pentru această procedură. Încearcă din nou sau contactează suportul.'}resolve(false)};
-    document.head.appendChild(tag);
-  });
+  try {
+    const src=paymentApiBase()+'/guide-script?case_id='+encodeURIComponent(S.caseId)+'&guide_key='+encodeURIComponent(key);
+    const response=await fetch(src,{headers:{'X-Actero-Access-Token':token},cache:'no-store'});
+    if(!response.ok)throw new Error('guide_denied');
+    const js=await response.text();
+    const objectUrl=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));
+    const loaded=await new Promise(resolve=>{
+      const tag=document.createElement('script');
+      tag.src=objectUrl;
+      tag.onload=()=>{tag.remove();resolve(true)};
+      tag.onerror=()=>{tag.remove();resolve(false)};
+      document.head.appendChild(tag);
+    });
+    URL.revokeObjectURL(objectUrl);
+    if(!loaded)throw new Error('guide_script_failed');
+    loadedPaidGuideKey=key;loadedPaidCaseId=S.caseId;S.paymentUnlocked=true;showPaidGuide();return true;
+  }catch(e){
+    console.warn('Protected ActeRO guide unavailable',e);
+    S.paymentUnlocked=false;
+    const box=$('checkoutError');
+    if(box){box.classList.remove('hidden');box.textContent='Accesul nu a putut fi confirmat pentru această procedură. Încearcă din nou sau contactează suportul.'}
+    return false;
+  }
+}
+function accessTokenForCase(){
+  try{return localStorage.getItem('actero_access_'+S.caseId)||''}catch(e){return ''}
 }
 
 function paymentApiBase(){
@@ -1646,11 +1662,11 @@ function acteroReturnUrl(){
   return u.toString();
 }
 async function fetchPaidAccess(){
-  if(!paymentApiConfigured()||!S.caseId)return false;
+  if(!paymentApiConfigured()||!S.caseId||!accessTokenForCase())return false;
   try{
     const res=await fetch(paymentApiBase()+'/access?case_id='+encodeURIComponent(S.caseId),{
       method:'GET',
-      headers:{'Accept':'application/json'}
+      headers:{'Accept':'application/json','X-Actero-Access-Token':accessTokenForCase()}
     });
     if(!res.ok)return false;
     const data=await res.json();
@@ -1683,12 +1699,14 @@ async function startShopifyCheckout(button){
       body:JSON.stringify({
         case_id:S.caseId,
         route:S.route||'',
+        guide_key:guideKeyForCurrent(),
         country:(S.answers&&S.answers.residence_country)||'',
         return_url:returnUrl
       })
     });
     const data=await res.json().catch(()=>null);
-    if(!res.ok||!data||!data.checkoutUrl)throw new Error((data&&data.error)||'checkout_creation_failed');
+    if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)throw new Error((data&&data.error)||'checkout_creation_failed');
+    localStorage.setItem('actero_access_'+S.caseId,data.accessToken);
     window.location.assign(data.checkoutUrl);
   }catch(e){
     console.error('ActeRO checkout error',e);
