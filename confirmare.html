@@ -115,7 +115,7 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
    }catch(e){working=false;state('missing','Verificarea nu este disponibilă momentan','Nu putem confirma accesul în acest moment. Încearcă din nou peste câteva secunde.','Nu efectua o a doua plată.');}
  }
  $('retry').addEventListener('click',()=>{if(!caseId||!token){failMissing();return} count=0;state('pending','Verificăm plata ta','Cerem din nou confirmarea de la Shopify.');check()});
- $('openGuide').addEventListener('click',()=>{if(!paid||!caseId)return;const url=new URL('./',location.href);url.searchParams.set('case_id',caseId);location.assign(url.toString())});
+ $('openGuide').addEventListener('click',()=>{if(!paid||!caseId)return;const url=new URL('./',location.href);url.searchParams.set('case_id',caseId);url.searchParams.set('open_guide','1');location.assign(url.toString())});
  check();
 })();
 </script>
