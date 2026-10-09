@@ -1655,9 +1655,7 @@ function paymentApiConfigured(){
   return /^https:\/\//i.test(paymentApiBase());
 }
 function acteroReturnUrl(){
-  const u=new URL(window.location.href);
-  u.hash='';
-  u.search='';
+  const u=new URL('./confirmare.html',window.location.href);
   if(S.caseId)u.searchParams.set('case_id',S.caseId);
   return u.toString();
 }
@@ -1680,7 +1678,9 @@ async function maybeAutoUnlockPaidGuide(){
   if(S.paymentUnlocked||!paymentApiConfigured()||!S.caseId||!S.route||!hasValidatedPaidGuide())return false;
   const paid=await fetchPaidAccess();
   if(paid&&S.current==='RESULT'){
-    await loadProtectedPaidGuide();
+    const params=new URLSearchParams(window.location.search);
+    if(params.get('open_guide')==='1')await loadProtectedPaidGuide();
+    else window.location.assign(acteroReturnUrl());
     return true;
   }
   return false;
@@ -1692,7 +1692,6 @@ async function startShopifyCheckout(button){
   try{
     persistCase();
     const returnUrl=acteroReturnUrl();
-    try{history.replaceState(null,'',returnUrl)}catch(e){}
     const res=await fetch(paymentApiBase()+'/checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
@@ -1726,7 +1725,7 @@ async function verifyPaymentNow(button){
   if(button){button.disabled=true;button.textContent='Verificăm plata…'}
   const paid=await fetchPaidAccess();
   if(paid){
-    await loadProtectedPaidGuide();
+    window.location.assign(acteroReturnUrl());
     return;
   }
   const box=$('checkoutError');
