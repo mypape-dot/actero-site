@@ -1,6 +1,6 @@
 # ActeRO 0.5 payment staging — do not merge
 
-Checkout is **disabled** in the deployed Worker 0.4.0 and main GitHub Pages remains unchanged.
+Checkout remains **disabled** in the deployed Worker 0.5.0. Its payment webhook has passed basic signed/unsigned tests, but no end-to-end order. Main GitHub Pages remains unchanged.
 
 The 0.5.0 implementation prepared outside the public repository adds:
 - checkout-scoped D1 intents and high-entropy access tokens (stored hashed in D1);
