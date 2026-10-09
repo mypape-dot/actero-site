@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f0e8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Accesează ghidul tău — ActeRO</title>
+<style>
+:root{--canvas:#f4f0e8;--paper:#fffdf9;--ink:#122033;--muted:#6d7785;--navy:#10233f;--blue:#315fdd;--line:rgba(18,32,51,.10);--green:#19805d}
+*{box-sizing:border-box}
+html{background:var(--canvas)}
+body{margin:0;min-height:100svh;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(ellipse at 10% 0%,#fffdf8 0,transparent 55%),radial-gradient(ellipse at 100% 100%,#e9effc 0,transparent 50%),var(--canvas)}
+header{width:min(1050px,calc(100% - 42px));height:100px;margin:auto;display:flex;align-items:center;justify-content:space-between}
+.brand{display:inline-flex;align-items:center;gap:11px;text-decoration:none;color:var(--navy);font-weight:820;font-size:22px;letter-spacing:-.8px}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:14px;letter-spacing:-.6px}
+header .note{color:var(--muted);font-size:12px;font-weight:650;letter-spacing:.02em}
+main{width:min(720px,calc(100% - 36px));margin:18px auto 70px}
+.card{background:var(--paper);border:1px solid rgba(18,32,51,.09);box-shadow:0 22px 90px rgba(18,32,51,.09);border-radius:28px;overflow:hidden}
+.topbar{height:5px;background:linear-gradient(90deg,#10233f,#315fdd,#a2b6ff)}
+.body{padding:clamp(25px,6vw,62px) clamp(22px,6vw,63px) 44px;text-align:center}
+.status-ring{width:81px;height:81px;display:grid;place-items:center;margin:0 auto 22px;border:1px solid rgba(49,95,221,.19);border-radius:23px;background:#f0f4ff;color:var(--blue)}
+.status-ring svg{width:42px;height:42px}
+.status-ring.positive{color:var(--green);background:#eaf7f1;border-color:rgba(25,128,93,.16)}
+.status-ring.muted{color:#8b98aa;background:#f3f5f8;border-color:#e6eaf0}
+.eyebrow{display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);font-weight:800;margin:0 0 14px}
+h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margin:0 auto 17px;max-width:540px;color:var(--navy)}
+.lead{font-size:16px;line-height:1.75;color:#5e6b7c;max-width:490px;margin:0 auto}
+.details{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:32px 0 28px;text-align:left}
+.detail{background:#f8faff;border:1px solid rgba(49,95,221,.08);padding:17px 13px;border-radius:15px;min-height:82px;display:flex;gap:9px;align-items:flex-start}
+.detail svg{flex:none;width:18px;height:18px;stroke:var(--blue);margin-top:2px}
+.detail span{font-size:12px;font-weight:670;line-height:1.5;color:#344660}
+.action{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:60px;border:0;border-radius:15px;background:var(--navy);color:#fff;font-size:15px;font-weight:750;cursor:pointer;box-shadow:0 11px 25px rgba(16,35,63,.16);padding:14px 20px}
+.action:hover{background:#193963}
+.action:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.action svg{width:18px;height:18px}
+.secondary{display:inline-block;margin-top:18px;color:#566883;font-size:13px;font-weight:650;text-decoration:underline;text-underline-offset:3px;background:transparent;border:0;cursor:pointer}
+.caption{font-size:12px;line-height:1.6;color:#8993a1;max-width:410px;margin:19px auto 0}
+.message{font-size:13px;color:#61718a;min-height:21px;margin-top:12px}
+.foot{text-align:center;margin-top:23px;color:#7d8796;font-size:12px;line-height:1.6}
+.foot a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.spinner{width:29px;height:29px;border:3px solid #d8e0fa;border-top-color:#315fdd;border-radius:50%;animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:540px){header{height:79px}header .note{font-size:11px}main{margin-top:4px}.details{grid-template-columns:1fr}.detail{min-height:48px;padding:12px 14px;align-items:center}.body{padding-bottom:32px}}
+@media(prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
+</style>
+</head>
+<body>
+<header>
+ <a class="brand" href="./" aria-label="ActeRO — Prima pagină"><span class="logo">AR</span> ActeRO</a>
+ <span class="note">Ghiduri pentru românii din diaspora</span>
+</header>
+<main>
+ <section class="card" aria-labelledby="heading">
+  <div class="topbar"></div>
+  <div class="body">
+   <div class="status-ring" id="statusIcon" aria-hidden="true"><div class="spinner"></div></div>
+   <p class="eyebrow" id="eyebrow">ActeRO · Acces securizat</p>
+   <h1 id="heading">Verificăm plata ta</h1>
+   <p class="lead" id="lead">Așteptăm confirmarea de la Shopify. De regulă, durează câteva secunde. Nu închide această pagină.</p>
+   <div class="details" aria-label="Ce conține ghidul">
+    <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4z"/><path d="M16 3v5h4M8 12h8M8 16h6"/></svg><span>Pași explicați clar</span></div>
+    <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 2h10a3 3 0 0 1 3 3v12M6 10h7M6 14h7"/></svg><span>Documente și formulare</span></div>
+    <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></svg><span>Pentru situația ta</span></div>
+   </div>
+   <button class="action" id="openGuide" type="button" disabled>Vreau să văd ghidul personalizat <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+   <div class="message" id="statusMessage" role="status" aria-live="polite"></div>
+   <button class="secondary" id="retry" type="button" hidden>Verifică din nou plata</button>
+   <p class="caption">Ghidul se deschide numai după confirmarea plății de către Shopify și verificarea accesului în Cloudflare.</p>
+  </div>
+ </section>
+ <p class="foot">Ai închis pagina din greșeală? Revino din același browser sau <a href="./">continuă evaluarea ActeRO</a>.</p>
+</main>
+<script>
+'use strict';
+(function(){
+ const API='https://actero.actedsro.workers.dev';
+ const $=id=>document.getElementById(id);
+ const ICON_OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></svg>';
+ const ICON_HELP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg>';
+ const params=new URLSearchParams(location.search);
+ const fromUrl=params.get('case_id');
+ const validId=s=>typeof s==='string'&&/^AR-[0-9a-f-]{36}$/i.test(s);
+ let stored;try{stored=localStorage.getItem('actero_active_case')}catch(e){}
+ const caseId=fromUrl ? (validId(fromUrl)?fromUrl:null) : (validId(stored)?stored:null);
+ let token='';try{if(caseId)token=localStorage.getItem('actero_access_'+caseId)||''}catch(e){}
+ let count=0,working=false,paid=false;
+ const WAIT_MAX=10;
+ function state(kind,title,body,msg=''){
+   $('heading').textContent=title;$('lead').textContent=body;$('statusMessage').textContent=msg;
+   $('statusIcon').className='status-ring '+(kind==='ok'?'positive':kind==='missing'?'muted':'');
+   $('statusIcon').innerHTML=kind==='ok'?ICON_OK:kind==='pending'?'<div class="spinner"></div>':ICON_HELP;
+   $('openGuide').disabled=kind!=='ok';$('retry').hidden=kind==='pending'||!caseId||!token;
+   $('eyebrow').textContent=kind==='ok'?'Plata confirmată · Acces disponibil':'ActeRO · Acces securizat';
+ }
+ function failMissing(){state('missing','Nu găsim evaluarea ta','Pentru a verifica plata avem nevoie de sesiunea în care ai completat chestionarul. Deschide această pagină în același browser și pe același dispozitiv.','Nu efectua o a doua plată înainte să verificăm comanda.');}
+ async function check(){
+   if(working||paid)return;
+   if(!caseId||!token){failMissing();return}
+   working=true;
+   if(count===0)state('pending','Verificăm plata ta','Așteptăm confirmarea de la Shopify. De regulă, durează câteva secunde.');
+   try{
+     const response=await fetch(API+'/access?case_id='+encodeURIComponent(caseId),{method:'GET',headers:{'Accept':'application/json','X-Actero-Access-Token':token},cache:'no-store'});
+     if(!response.ok)throw Error('access_unavailable');
+     const data=await response.json();
+     if(data&&data.ok===true&&data.paid===true){
+       paid=true;state('ok','Plata ta a fost confirmată!','Ghidul personalizat ActeRO este pregătit. Îți mulțumim!','Poți continua acum către pașii și documentele pentru situația ta.');
+       working=false;return;
+     }
+     count++;
+     if(count>=WAIT_MAX){state('missing','Încă așteptăm confirmarea','Dacă tocmai ai efectuat plata, este posibil ca Shopify să finalizeze procesarea în câteva momente. Poți verifica din nou fără să plătești încă o dată.');working=false;return}
+     state('pending','Verificăm plata ta','Așteptăm confirmarea de la Shopify. Nu trebuie să plătești din nou.','Verificarea se reia automat.');
+     working=false;
+     window.setTimeout(check,3500);
+   }catch(e){working=false;state('missing','Verificarea nu este disponibilă momentan','Nu putem confirma accesul în acest moment. Încearcă din nou peste câteva secunde.','Nu efectua o a doua plată.');}
+ }
+ $('retry').addEventListener('click',()=>{if(!caseId||!token){failMissing();return} count=0;state('pending','Verificăm plata ta','Cerem din nou confirmarea de la Shopify.');check()});
+ $('openGuide').addEventListener('click',()=>{if(!paid||!caseId)return;const url=new URL('./',location.href);url.searchParams.set('case_id',caseId);url.searchParams.set('open_guide','1');location.assign(url.toString())});
+ check();
+})();
+</script>
+</body>
+</html>
