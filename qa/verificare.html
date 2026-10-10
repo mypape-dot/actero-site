@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Verificarea rutei — ActeRO QA</title>
+<style>
+:root{color-scheme:light;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#f5f2ec;color:#10233f}
+.banner{background:#10233f;color:#fff;text-align:center;padding:12px 18px;font-size:13px;font-weight:700}
+main{max-width:840px;margin:50px auto;padding:0 20px}
+.card{background:white;border:1px solid #e1e6f0;border-radius:22px;padding:32px;box-shadow:0 16px 60px rgba(16,35,63,.07)}
+h1{font-size:clamp(25px,4vw,36px);letter-spacing:-.03em;margin:0 0 12px}
+p{line-height:1.55;color:#526175}
+.info{background:#eff4ff;border-radius:14px;padding:18px;margin:24px 0;display:grid;grid-template-columns:1fr 1fr;gap:15px}
+small{display:block;color:#69798f;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:11px;margin-bottom:7px}
+.value{font-size:17px;overflow-wrap:anywhere;font-weight:750}
+h2{font-size:18px;margin:24px 0 12px}
+pre{background:#f4f7fa;color:#25364b;border:1px solid #e1e7ed;border-radius:14px;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:13px}
+a{color:#315fdd}
+button{border:0;background:#10233f;color:white;padding:12px 18px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px}
+#error{display:none;padding:17px;border-radius:12px;background:#fff4df;color:#734511;margin-top:16px}
+@media(max-width:650px){main{margin:24px auto}.card{padding:22px}.info{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="banner">ActeRO · VERSIUNE DE TEST · Diagnostic local — fără plăți</div>
+<main><div class="card">
+<h1>Verificarea ghidului selectat</h1>
+<p>Aici vezi ruta și răspunsurile folosite în ultima evaluare de test din acest browser. Nu trimitem aceste informații către server.</p>
+<div id="result" hidden>
+<div class="info">
+<div><small>Ruta identificată</small><div id="route" class="value">—</div></div>
+<div><small>Varianta de ghid</small><div id="guide" class="value">—</div></div>
+<div><small>Țara de reședință</small><div id="country" class="value">—</div></div>
+<div><small>Ultimul ecran salvat</small><div id="screen" class="value">—</div></div>
+</div>
+<h2>Răspunsurile chestionarului</h2>
+<p>Poți trimite o captură pentru verificare. Ascunde eventualele informații personale.</p>
+<pre id="answers"></pre>
+</div>
+<div id="error" role="alert"></div>
+<p><a href="./">Înapoi la versiunea de test ActeRO</a></p>
+<button id="refresh" type="button">Reîncarcă datele salvate</button>
+</div></main>
+<script>
+(function(){
+"use strict";
+const codes=['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'];
+const names={IT:'Italia',ES:'Spania',DE:'Germania',AT:'Austria',FR:'Franța',GB:'Regatul Unit',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda',CH:'Elveția'};
+const $=id=>document.getElementById(id);
+function guideKey(route,a){
+  const c=a.residence_country;
+  if(route==='B1_FIRST_CRDS')return codes.includes(c)?'B1_'+c:null;
+  if(route==='B5_EXISTING_CRDS'){
+    if(a.same_country==='NO')return 'B5_MOVED';
+    if(a.same_country!=='YES')return null;
+    if(a.b5case==='STOLEN')return 'B5_STOLEN';
+    if(a.b5case==='DAMAGED')return 'B5_DAMAGED';
+    if(a.b5case==='DATA_CHANGE')return 'B5_DATA_CHANGE';
+    if(a.b5case==='RENEWAL'||a.b5case==='LOST')return codes.includes(c)?'B5_'+a.b5case+'_'+c:null;
+    return null;
+  }
+  return ['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(route)?route:null;
+}
+function show(){
+  $('error').style.display='none';$('result').hidden=true;
+  try{
+    const caseId=localStorage.getItem('actero_qa_active_case');
+    if(!caseId)throw Error('Nu există o evaluare de test salvată în acest browser.');
+    const raw=localStorage.getItem('actero_qa_case_'+caseId);
+    if(!raw)throw Error('Nu găsim răspunsurile evaluării salvate.');
+    const saved=JSON.parse(raw);
+    if(!saved||saved.caseId!==caseId||!saved.answers||typeof saved.answers!=='object')throw Error('Datele de test salvate sunt incomplete.');
+    const a=saved.answers,route=saved.route||'Nedefinit',key=guideKey(saved.route,a)||'Nedefinit';
+    $('route').textContent=route;$('guide').textContent=key;
+    $('country').textContent=names[a.residence_country]||a.residence_country||'Nespecificată';
+    $('screen').textContent=saved.current||'Necunoscut';
+    // No case ID, access token, or purchase data are ever displayed.
+    const filtered={};
+    for(const [k,v] of Object.entries(a)){
+      if(/(^|_)(name|email|phone|address|street|postal|zip|passport_number|id_number|cnp|token|password)($|_)/i.test(k))continue;
+      filtered[k]=v;
+    }
+    $('answers').textContent=JSON.stringify(filtered,null,2);
+    $('result').hidden=false;
+  }catch(e){
+    $('error').textContent=e.message||'Nu putem citi evaluarea.';
+    $('error').style.display='block';
+  }
+}
+$('refresh').addEventListener('click',show);
+show();
+})();
+</script>
+</body>
+</html>
