@@ -82,9 +82,9 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
  const params=new URLSearchParams(location.search);
  const fromUrl=params.get('case_id');
  const validId=s=>typeof s==='string'&&/^AR-[0-9a-f-]{36}$/i.test(s);
- let stored;try{stored=localStorage.getItem('actero_active_case')}catch(e){}
+ let stored;try{stored=localStorage.getItem('actero_qa_active_case')}catch(e){}
  const caseId=fromUrl ? (validId(fromUrl)?fromUrl:null) : (validId(stored)?stored:null);
- let token='';try{if(caseId)token=localStorage.getItem('actero_access_'+caseId)||''}catch(e){}
+ let token='';try{if(caseId)token=localStorage.getItem('actero_qa_access_'+caseId)||''}catch(e){}
  let count=0,working=false,paid=false;
  const WAIT_MAX=10;
  function state(kind,title,body,msg=''){
