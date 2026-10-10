@@ -624,7 +624,7 @@ function createCaseId(){
   }catch(e){}
   return 'AR-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,10).toUpperCase();
 }
-function caseStorageKey(id){return 'actero_case_'+String(id||'')}
+function caseStorageKey(id){return 'actero_qa_case_'+String(id||'')}
 // ---- Refresh persistence -------------------------------------------------
 // Only screens listed here may be resumed from localStorage; anything else is ignored (never rendered blindly).
 const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q020','Q030','Q031','Q032','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
@@ -667,10 +667,10 @@ function persistCase(){
       current:S.current||'WELCOME'
     };
     const body=JSON.stringify(payload);
-    if(body===_lastPersisted&&localStorage.getItem('actero_active_case')===S.caseId)return; // nothing changed
+    if(body===_lastPersisted&&localStorage.getItem('actero_qa_active_case')===S.caseId)return; // nothing changed
     payload.updatedAt=new Date().toISOString();
     localStorage.setItem(caseStorageKey(S.caseId),JSON.stringify(payload));
-    localStorage.setItem('actero_active_case',S.caseId);
+    localStorage.setItem('actero_qa_active_case',S.caseId);
     _lastPersisted=body;
   }catch(e){}
 }
@@ -707,7 +707,7 @@ function restoreActiveCase(){
   try{
     const params=new URLSearchParams(window.location.search||'');
     if(params.get('case_id'))return false; // the URL case has priority (handled by restoreCaseFromUrl)
-    const id=localStorage.getItem('actero_active_case');
+    const id=localStorage.getItem('actero_qa_active_case');
     if(!id)return false;
     const raw=localStorage.getItem(caseStorageKey(id));
     if(!raw)return false;
@@ -1646,7 +1646,7 @@ async function loadProtectedPaidGuide(){
   }
 }
 function accessTokenForCase(){
-  try{return localStorage.getItem('actero_access_'+S.caseId)||''}catch(e){return ''}
+  try{return localStorage.getItem('actero_qa_access_'+S.caseId)||''}catch(e){return ''}
 }
 
 function paymentApiBase(){
@@ -1706,7 +1706,7 @@ async function startShopifyCheckout(button){
     });
     const data=await res.json().catch(()=>null);
     if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)throw new Error((data&&data.error)||'checkout_creation_failed');
-    localStorage.setItem('actero_access_'+S.caseId,data.accessToken);
+    localStorage.setItem('actero_qa_access_'+S.caseId,data.accessToken);
     window.location.assign(data.checkoutUrl);
   }catch(e){
     console.error('ActeRO checkout error',e);
