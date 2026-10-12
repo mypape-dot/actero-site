@@ -1704,7 +1704,16 @@ async function startShopifyCheckout(button){
         route:S.route||'',
         guide_key:guideKeyForCurrent(),
         country:(S.answers&&S.answers.residence_country)||'',
-        return_url:acteroReturnUrl()
+        return_url:acteroReturnUrl(),
+        // A paid guide relies on these answers. Save a bounded snapshot in D1 so
+        // a buyer can recover it from another device after Shopify email verification.
+        case_state:{
+          route:S.route||'',
+          answers:S.answers||{},
+          docs:S.docs||{},
+          status:S.status||null,
+          clarified:S.clarified||{}
+        }
       })
     });
     const data=await res.json().catch(()=>null);
