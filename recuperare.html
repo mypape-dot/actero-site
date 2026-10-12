@@ -40,14 +40,16 @@ button{width:100%;margin-top:24px;border:0;border-radius:13px;background:linear-
   <div class="message" id="message" role="status" aria-live="polite"></div>
   <p class="foot">Linkul de recuperare expiră după 30 de minute și poate fi folosit o singură dată. Dacă nu primești un email, verifică Spam și contactează suportul. Nu plăti încă o dată.</p>
 </main>
+<script src="./actero-config.js"></script>
 <script>
 'use strict';
 (function(){
- const API=String(window.ACTERO_PAYMENT_API||'https://actero.actedsro.workers.dev').replace(/\/+$/,'');
+ const API=String(window.ACTERO_PAYMENT_API||'').trim().replace(/\/+$/,'');
  const $=id=>document.getElementById(id);
  const token=new URLSearchParams(location.hash.slice(1)).get('token');
  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
  async function consume(t){
+   if(!/^https:\/\//i.test(API)){$('message').textContent='Recuperarea accesului nu este activă în această versiune de test. Linkul nu a fost consumat.';return}
    $('requestSection').hidden=true;$('consumeSection').hidden=false;
    if(!/^[a-f0-9]{64}$/.test(t)){$('message').textContent='Linkul este invalid. Solicită unul nou.';return}
    // Never consume a one-time token unless this browser can actually store the new access.
@@ -75,7 +77,9 @@ button{width:100%;margin-top:24px;border:0;border-radius:13px;background:linear-
    }
  }
  $('recoveryForm').addEventListener('submit',async e=>{
-   e.preventDefault();const btn=$('send');btn.disabled=true;
+   e.preventDefault();const btn=$('send');
+   if(!/^https:\/\//i.test(API)){$('message').textContent='Recuperarea accesului nu este disponibilă în această versiune. Nu efectua altă plată.';return}
+   btn.disabled=true;
    try{
      const response=await fetch(API+'/recover/request',{method:'POST',headers:{'Content-Type':'application/json'},
        body:JSON.stringify({email:$('email').value.trim(),order_name:$('order').value.trim()}),cache:'no-store'});
