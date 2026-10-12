@@ -16,6 +16,11 @@
 - Nu publica Worker-ul F-03 înainte de migrația 005: `/checkout` și webhook-ul ar încerca să folosească noile coloane.
 - Nu aplica 005 de două ori, deoarece include `ALTER TABLE`. Nu îl lansa pe D1 de producție fără verificarea schemei reale.
 
+## Important: Worker-ul are acum un modul separat
+Fișierul `cloudflare/worker.js` importă `./recovery.js`. Pentru testarea pe Cloudflare trebuie publicate **ambele** fișiere folosind o configurare Wrangler/ES module care rezolvă importul. Nu copia doar conținutul `worker.js` în editorul single-file Cloudflare: importul ar lipsi și Worker-ul nu ar porni.
+
+Pentru staging, folosește o configurație cu binding-ul `DB` către **baza existentă de test**, după verificarea schemei și aplicarea migrațiilor, nu spre baza live. Ține `SHOPIFY_CHECKOUT_ENABLED=false` până la testul controlat.
+
 ## Configurare Cloudflare — numai secrete și variabile de mediu
 - `RECOVERY_REQUIRED=true`: **obligatoriu înainte de a permite cumpărături reale**; refuză checkout dacă lipsește starea evaluării sau configurația email.
 - `RECOVERY_EMAIL_PEPPER`: secret generat aleator, cel puțin 32 caractere. Păstrează-l, pentru că schimbarea lui face inutilizabile hashurile vechi până la reimport/recuperare manuală.
