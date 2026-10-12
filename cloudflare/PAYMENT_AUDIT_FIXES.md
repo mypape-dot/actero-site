@@ -1,4 +1,4 @@
-# ActeRO — F-02 / F-04 / F-05 / F-07 fixes (STAGING ONLY)
+# ActeRO — F-02 / F-03 / F-04 / F-05 / F-07 fixes (STAGING ONLY)
 
 **NOT DEPLOYED. Do not merge or enable real payments.** This branch starts from PR #2 (Worker 0.5.0). The original public `main`, Cloudflare deployment and Shopify store have not been changed by these fixes.
 
@@ -15,6 +15,14 @@
 - A `needs_review` event triggers a private Discord-compatible alert. Configure Cloudflare secret `PAYMENT_ALERT_WEBHOOK_URL` with a private, operator-controlled webhook URL. **Do not commit or paste the URL.** If alert delivery fails, backend returns 503 to request Shopify retry. Incident remains in D1.
 - `POST /checkout` now requires alert URL configuration in addition to the previous checkout feature flag, DB and HMAC secret.
 - **Manual resolution still required:** `needs_review` does not automatically grant access or issue a refund. Check corresponding Shopify orders and incident log.
+
+## F-03 — email-based recovery of purchased guide
+- `005-recovery.sql` adds a bounded evaluation snapshot, keyed email hash, and one-time recovery link records.
+- A paid order's Shopify-verified email and order name are required to request recovery. `/recover/request` returns the same generic response for known or unknown orders.
+- Resend sends a 30-minute, 256-bit one-time link. `/recover/consume` rotates the access token and returns the exact saved evaluation. Revoked orders cannot recover.
+- A new `recuperare.html` page handles email requests, browser-state restoration, and redirects into the protected guide.
+- **Recovery is staging code only:** emails cannot be sent without verified sender/provider keys, and `RECOVERY_REQUIRED=true` must be set before taking real payments.
+- Tests: **15/15** dedicated Node/D1 regression, **6/6** simulated recovery-page checks; plus **61/61** extended local regression checks. See `RECOVERY_STAGING.md`.
 
 ## F-04 — refunds, cancelled orders and payment disputes
 - Adds `004-revocations.sql` (revocation timestamps, order-level tombstones, revocation events) and three HMAC-verified Shopify webhook handlers.
@@ -35,7 +43,7 @@ A Node 22+ SQLite-in-memory harness reconstructed the basic D1 schema, applied m
 1. Inspect deployed Worker and D1 schema/migrations, then test against a separate staging Worker.
 2. Run frontend and backend together in a staging browser using actual D1 (the local functions and isolated tests passed, but no integration deploy has occurred).
 3. Configure/test the alert secret; verify a real Shopify Test Mode `orders/paid` payload, then test page -> checkout -> webhook -> guide.
-4. Resolve F-01 (paid content public), F-03 (cross-device recovery), F-06 (rate limits / unowned initial checkout), test F-04 on real staging webhooks, and independently retest F-07 in the deployed questionnaire.
+4. Resolve F-01 (paid content public), validate F-03 against a real email provider in staging, F-06 (rate limits / unowned initial checkout), test F-04 on real staging webhooks, and independently retest F-07 in the deployed questionnaire.
 5. Do not assume initial `case_id` proves case ownership. An attacker aware of the case ID before the first checkout can still preempt creation. A server-issued case session is a future defense.
 
 **Review-only branch:** no SQL migration, Worker deployment, GitHub Pages publication or Shopify setting was changed by this patch.
