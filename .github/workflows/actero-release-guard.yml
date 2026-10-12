@@ -29,6 +29,8 @@ jobs:
         run: node --test cloudflare/tests/protected-guide-access.test.mjs
       - name: Verify checkout disabled by default in public previews
         run: node --test cloudflare/tests/public-runtime-config.test.mjs
+      - name: Verify questionnaire status history and travel routing
+        run: node --test cloudflare/tests/quiz-history.test.mjs
       - name: Backend and client regression tests
         run: >
           node --test
