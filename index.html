@@ -1691,11 +1691,31 @@ async function startShopifyCheckout(button){
   if(button){button.disabled=true;button.textContent='Pregătim plata…'}
   try{
     persistCase();
-    // On a repeat checkout, prove ownership of the pending case with the existing token.
-    // case_id alone must not be treated as a secret or as authentication.
+    // A new checkout must be owned by a server-issued evaluation session.
+    // Older pending checkouts can still be retried with their existing paid-access token.
     const previousToken=accessTokenForCase();
+    let sessionToken='';
+    try{sessionToken=localStorage.getItem('actero_session_'+S.caseId)||''}catch(e){}
+    if(!previousToken&&!sessionToken){
+      const sessionResponse=await fetch(paymentApiBase()+'/session',{
+        method:'POST',headers:{'Accept':'application/json'}
+      });
+      const session=await sessionResponse.json().catch(()=>null);
+      if(!sessionResponse.ok||!session?.ok||
+         !/^AR-[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(session.case_id||'')||
+         !/^[a-f0-9]{64}$/.test(session.session_token||''))
+        throw new Error(session?.error||'session_creation_failed');
+      // Keep the server's case ID and its secret together before attempting checkout.
+      localStorage.setItem('actero_session_'+session.case_id,session.session_token);
+      S.caseId=session.case_id;
+      persistCase();
+      if(!localStorage.getItem(caseStorageKey(S.caseId)))
+        throw new Error('local_storage_unavailable');
+      sessionToken=session.session_token;
+    }
     const headers={'Content-Type':'application/json','Accept':'application/json'};
     if(previousToken)headers['X-Actero-Access-Token']=previousToken;
+    if(sessionToken)headers['X-Actero-Session-Token']=sessionToken;
     const res=await fetch(paymentApiBase()+'/checkout',{
       method:'POST',
       headers,
@@ -1726,7 +1746,11 @@ async function startShopifyCheckout(button){
     console.error('ActeRO checkout error',e);
     const box=$('checkoutError');
     const code=e&&e.message;
-    const message=code==='case_in_progress'
+    const message=code==='session_required'
+      ?'Sesiunea acestei evaluări a expirat sau nu mai poate fi verificată. Reia evaluarea înainte să încerci plata. Nu plăti din nou dacă ai făcut deja o comandă.'
+      :code==='too_many_requests'
+      ?'Au fost prea multe încercări într-un interval scurt. Încearcă din nou mai târziu; nu repeta plata.'
+      :code==='case_in_progress'
       ?'Există deja o încercare de plată pentru această evaluare într-un alt browser sau fără tokenul inițial. Revino la browserul în care ai început sau pornește o evaluare nouă. Nu plăti din nou.'
       :code==='case_route_changed'
       ?'Ai modificat răspunsurile după inițierea plății. Pentru procedura nouă, începe o evaluare nouă. Dacă ai plătit deja, contactează suportul.'
