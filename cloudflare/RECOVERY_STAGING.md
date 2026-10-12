@@ -38,7 +38,7 @@ node --test cloudflare/tests/checkout-frontend.test.mjs
 node --test cloudflare/tests/swiss-loop.test.mjs
 node --no-warnings cloudflare/tests/recovery-page.test.mjs
 ```
-- Local: **59/59** verificări extinse (F-02/F-04/F-05/F-03), **13/13** verificări dedicate F-03 pe Worker/D1, **6/6** teste browser-simulat pentru pagina de recuperare.
+- Local: **61/61** verificări extinse (F-02/F-04/F-05/F-03), **15/15** verificări dedicate F-03 pe Worker/D1, **6/6** teste browser-simulat pentru pagina de recuperare.
 - Acestea sunt simulări locale, **nu** confirmări că emailurile sau D1 și Shopify în producție funcționează. Fă un test real în staging cu un email deținut de comerciant înainte de lansare.
 
 ## Riscuri rămase
@@ -47,6 +47,6 @@ node --no-warnings cloudflare/tests/recovery-page.test.mjs
 - **F-15:** GitHub Pages folosește o origine comună cu alte proiecte ale contului. Recomandat domeniu propriu și CSP.
 - **F-16:** lipsesc testul real Shopify Test Mode -> webhook semnat -> D1 -> recovery email -> ghid pe alt dispozitiv, cu erori și retry.
 - **GDPR:** evaluările includ răspunsuri despre acte și domiciliu. Sunt stocate în D1 numai pentru recuperare. Stabilește temeiul, informarea, retenția, ștergerea și accesul la date înainte de lansare. Furnizorul de email prelucrează adresa la trimitere; monitorizează ratele de eșec și bounces.
-- **Livrare email:** providerul poate accepta API-ul fără ca mesajul să ajungă. Monitorizare și suport manual obligatorii; acum erorile providerului sunt logate, dar nu există alertă separată automată.
+- **Livrare email:** providerul poate accepta API-ul fără ca mesajul să ajungă. Monitorizare și suport manual obligatorii; erorile providerului sunt înregistrate și se încearcă trimiterea unei alerte prin canalul existent. Verifică în staging și livrarea alertelor; în cazul unui eșec al ambelor canale este necesar suport manual.
 - Dacă pagina de recuperare primește răspuns pozitiv dar stocarea clientului eșuează după consum, utilizatorul trebuie să ceară un link nou; verificarea preventivă reduce, nu elimină complet, riscul.
 - Linkul permite recuperarea oricărei persoane care are acces la mailbox; protecția contului de email rămâne responsabilitatea cumpărătorului.
