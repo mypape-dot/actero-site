@@ -1,3 +1,4 @@
+import {recoverRequest,recoverConsume,buyerEmail,buyerEmailHash,serializeCaseState,recoveryConfigured} from './recovery.js';
 // ActeRO payment integration staging. Shopify test orders only until merchant review.
 // NEVER publish a paid access grant from a browser redirect or unchecked webhook body.
 const ORIGIN = 'https://mypape-dot.github.io';
@@ -129,6 +130,9 @@ export default {
     if(request.method==='GET'&&path==='/')return reply(request,{ok:true,service:'ActeRO API',status:'online'});
     if(request.method==='GET'&&path==='/health')return reply(request,{ok:true,service:'actero-api',version:'0.5.0',checkout_enabled:env.SHOPIFY_CHECKOUT_ENABLED==='true'});
 
+    if(request.method==='POST'&&path==='/recover/request')return recoverRequest(request,env);
+    if(request.method==='POST'&&path==='/recover/consume')return recoverConsume(request,env);
+
     // Checkout link is disabled by default, even if the product happens to become active.
     if(request.method==='POST'&&path==='/checkout'){
       if(forbiddenOrigin(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
@@ -137,6 +141,10 @@ export default {
       const caseId=data?.case_id,route=data?.route,guideKey=data?.guide_key;
       if(!isCase(caseId)||!isRoute(route)||!isKey(guideKey))return reply(request,{ok:false,error:'invalid_case'},400);
       if(!(env.DB && env.SHOPIFY_WEBHOOK_SECRET && env.PAYMENT_ALERT_WEBHOOK_URL))return reply(request,{ok:false,error:'payment_not_configured'},503);
+      const caseState=serializeCaseState(data?.case_state,route);
+      if(data?.case_state && !caseState)return reply(request,{ok:false,error:'invalid_case_state'},400);
+      if(env.RECOVERY_REQUIRED==='true'&&(!recoveryConfigured(env)||!caseState))
+        return reply(request,{ok:false,error:'recovery_not_ready'},503);
       try{
         const guide=await env.DB.prepare('SELECT guide_key,route FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(guideKey).first();
         if(!guide||guide.route!==route)return reply(request,{ok:false,error:'guide_not_available'},409);
@@ -156,12 +164,13 @@ export default {
         // Conditional CAS prevents simultaneous unauthenticated requests from stealing a token.
         // The checkout intent is inserted only if the token update really took effect.
         const saved=await env.DB.batch([
-          env.DB.prepare(`INSERT INTO access_grants (case_id,status,route,guide_key,access_token_hash,created_at,updated_at)
-          VALUES (?,'pending',?,?,?,datetime('now'),datetime('now'))
-          ON CONFLICT(case_id) DO UPDATE SET updated_at=datetime('now'),access_token_hash=excluded.access_token_hash
+          env.DB.prepare(`INSERT INTO access_grants (case_id,status,route,guide_key,access_token_hash,evaluation_json,created_at,updated_at)
+          VALUES (?,'pending',?,?,?,?,datetime('now'),datetime('now'))
+          ON CONFLICT(case_id) DO UPDATE SET updated_at=datetime('now'),access_token_hash=excluded.access_token_hash,
+            evaluation_json=COALESCE(excluded.evaluation_json,access_grants.evaluation_json)
           WHERE access_grants.status='pending' AND access_grants.guide_key=excluded.guide_key
             AND access_grants.route=excluded.route AND access_grants.access_token_hash = ?`)
-            .bind(caseId,route,guideKey,tokenHash,current?.access_token_hash||null),
+            .bind(caseId,route,guideKey,tokenHash,caseState,current?.access_token_hash||null),
           env.DB.prepare(`INSERT INTO checkout_intents (checkout_id,case_id,route,guide_key)
             SELECT ?,case_id,route,guide_key FROM access_grants
             WHERE case_id=? AND status='pending' AND access_token_hash=?`)
@@ -217,11 +226,13 @@ export default {
         if(!prev||prev.status!=='pending'||prev.route!==intent.route||prev.guide_key!==intent.guide_key)
           return review('grant_mismatch');
         const name=typeof order.name==='string'?order.name.slice(0,64):null;
+        const paidEmail=buyerEmail(order.email||order.contact_email||order.customer?.email);
+        const buyerHash=paidEmail ? await buyerEmailHash(env,paidEmail) : null;
         const changes=await env.DB.batch([
-          env.DB.prepare(`UPDATE access_grants SET status='paid',shopify_order_id=?,shopify_order_name=?,paid_at=datetime('now'),updated_at=datetime('now')
+          env.DB.prepare(`UPDATE access_grants SET status='paid',shopify_order_id=?,shopify_order_name=?,recovery_email_hash=?,paid_at=datetime('now'),updated_at=datetime('now')
             WHERE case_id=? AND route=? AND guide_key=? AND status='pending' AND revoked_at IS NULL
             AND NOT EXISTS(SELECT 1 FROM order_revocations WHERE order_id=?)`)
-            .bind(event.orderId,name,intent.case_id,intent.route,intent.guide_key,event.orderId),
+            .bind(event.orderId,name,buyerHash,intent.case_id,intent.route,intent.guide_key,event.orderId),
           env.DB.prepare(`UPDATE checkout_intents SET status='paid' WHERE checkout_id=? AND status='pending'`).bind(event.checkoutId)
         ]);
         if(changes[0]?.meta?.changes!==1){
