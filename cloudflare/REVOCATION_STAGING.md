@@ -48,7 +48,7 @@ The extended offline harness reports 35/35 F-02/F-05 and 28/28 F-04 passing; the
 ## Launch blockers that remain
 
 - **F-01:** premium guide scripts and historical QA versions remain public on `main` and in Git history.
-- **F-03:** customers cannot recover their guide after losing the original browser.
+- **F-03:** recovery code is implemented on this branch, but email delivery and D1 operation remain unverified in real staging. See `RECOVERY_STAGING.md`.
 - **F-06:** protection from abusive first-time checkout attempts and rate limiting not complete.
 - **F-16:** no real Shopify Test Mode order -> HMAC webhook -> D1 grant -> guide end-to-end test.
 - Legal/customer disclosure: refunds, disputes, digital-content withdrawal consent and transparent support process require review.
