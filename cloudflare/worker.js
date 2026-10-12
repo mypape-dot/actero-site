@@ -1,5 +1,6 @@
 import {recoverRequest,recoverConsume,buyerEmail,buyerEmailHash,serializeCaseState,recoveryConfigured} from './recovery.js';
 import {quota} from './quota.js';
+import {issueEvaluationSession,ownsEvaluationSession} from './evaluation-session.js';
 // ActeRO payment integration staging. Shopify test orders only until merchant review.
 // NEVER publish a paid access grant from a browser redirect or unchecked webhook body.
 const ORIGIN = 'https://mypape-dot.github.io';
@@ -14,7 +15,7 @@ function cors(request) {
   return {
     'Access-Control-Allow-Origin': origin === ORIGIN ? ORIGIN : ORIGIN,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Actero-Access-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Actero-Access-Token, X-Actero-Session-Token',
     'Vary': 'Origin',
     'X-Content-Type-Options': 'nosniff',
   };
@@ -131,6 +132,7 @@ export default {
     if(request.method==='GET'&&path==='/')return reply(request,{ok:true,service:'ActeRO API',status:'online'});
     if(request.method==='GET'&&path==='/health')return reply(request,{ok:true,service:'actero-api',version:'0.5.0',checkout_enabled:env.SHOPIFY_CHECKOUT_ENABLED==='true'});
 
+    if(request.method==='POST'&&path==='/session')return issueEvaluationSession(request,env);
     if(request.method==='POST'&&path==='/recover/request')return recoverRequest(request,env);
     if(request.method==='POST'&&path==='/recover/consume')return recoverConsume(request,env);
 
@@ -152,6 +154,11 @@ export default {
         const guide=await env.DB.prepare('SELECT guide_key,route FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(guideKey).first();
         if(!guide||guide.route!==route)return reply(request,{ok:false,error:'guide_not_available'},409);
         const current=await env.DB.prepare('SELECT status,route,guide_key,access_token_hash FROM access_grants WHERE case_id=? LIMIT 1').bind(caseId).first();
+        // New checkouts must prove a server-issued evaluation session.
+        // Existing pending checkouts can still be retried with their access token,
+        // including purchases started before this migration.
+        if(!current && !(await ownsEvaluationSession(request,env,caseId)))
+          return reply(request,{ok:false,error:'session_required'},403);
         if(current?.status==='paid')return reply(request,{ok:false,error:'already_paid'},409);
         if(current && (current.status!=='pending'||current.route!==route||current.guide_key!==guideKey))
           return reply(request,{ok:false,error:'case_route_changed'},409);
