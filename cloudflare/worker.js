@@ -45,7 +45,7 @@ function valueOfProperty(line,name){
 }
 async function getAccess(env,caseId,accessToken){
   if(!isCase(caseId)||typeof accessToken!=='string'||accessToken.length<40||accessToken.length>160)return null;
-  const row=await env.DB.prepare('SELECT case_id,status,route,guide_key,paid_at,access_token_hash FROM access_grants WHERE case_id = ? LIMIT 1').bind(caseId).first();
+  const row=await env.DB.prepare('SELECT case_id,status,route,guide_key,paid_at,revoked_at,access_token_hash FROM access_grants WHERE case_id = ? LIMIT 1').bind(caseId).first();
   if(!row?.access_token_hash || (await digest(accessToken))!==row.access_token_hash)return null;
   return row;
 }
@@ -82,6 +82,44 @@ async function paymentOutcome(request,env,event,kind,reason){
     if(kind==='duplicate')return reply(request,{ok:true,duplicate:true});
     return reply(request,{ok:true,ignored:reason});
   }catch(e){console.error('payment event persistence/alert error',e);return reply(request,{ok:false,error:'payment_event_failed'},500)}
+}
+
+// A revocation is recorded by *order id*, so out-of-order orders/paid cannot restore access.
+// Keep status='paid' and use revoked_at to avoid relying on unknown production CHECK(status).
+async function recordRevocation(request,env,event,reason,mode){
+  try{
+    const prior=await env.DB.prepare('SELECT event_id,outcome,alerted_at FROM revocation_events WHERE event_id=? LIMIT 1').bind(event.id).first();
+    let outcome=prior?.outcome||mode;
+    if(!prior){
+      // Affected events create a tombstone before (or simultaneously with) any grant revocation.
+      const changes=await env.DB.batch([
+        ...(mode==='revoked'||mode==='pending_order' ? [
+          env.DB.prepare(`INSERT INTO order_revocations (order_id,event_id,reason)
+            VALUES (?,?,?) ON CONFLICT(order_id) DO NOTHING`).bind(event.orderId,event.id,reason),
+          env.DB.prepare(`UPDATE access_grants SET revoked_at=COALESCE(revoked_at,datetime('now')),
+            revoked_reason=COALESCE(revoked_reason,?),updated_at=datetime('now')
+            WHERE shopify_order_id=? AND status='paid' AND revoked_at IS NULL`).bind(reason,event.orderId)
+        ] : []),
+        env.DB.prepare(`INSERT INTO revocation_events
+          (event_id,shopify_order_id,topic,outcome,reason,case_id) VALUES (?,?,?,?,?,?)
+          ON CONFLICT(event_id) DO NOTHING`)
+          .bind(event.id,event.orderId,event.topic,mode,reason,event.caseId||null)
+      ]);
+      // If the order wasn't already paid, the marker blocks late payment delivery.
+      // No automatic reinstatement is performed if the dispute or refund is later reversed.
+    }
+    if(['revoked','pending_order','needs_review'].includes(outcome)){
+      const row=await env.DB.prepare('SELECT alerted_at FROM revocation_events WHERE event_id=?').bind(event.id).first();
+      if(!row?.alerted_at){
+        if(!env.PAYMENT_ALERT_WEBHOOK_URL)return reply(request,{ok:false,error:'alert_not_configured'},503);
+        const msg=`ActeRO Shopify ${event.topic} | order ${event.orderId} | ${outcome} | ${reason}`;
+        const alert=await fetch(env.PAYMENT_ALERT_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:msg})});
+        if(!alert.ok)return reply(request,{ok:false,error:'alert_delivery_failed'},503);
+        await env.DB.prepare(`UPDATE revocation_events SET alerted_at=datetime('now') WHERE event_id=? AND alerted_at IS NULL`).bind(event.id).run();
+      }
+    }
+    return reply(request,{ok:true,outcome,reason});
+  }catch(e){console.error('revocation event processing failure',e);return reply(request,{ok:false,error:'revocation_database_error'},500)}
 }
 
 export default {
@@ -165,10 +203,12 @@ export default {
       if(!event.checkoutId)return review('missing_checkout_id');
       if(!/^\d+$/.test(event.orderId))return review('invalid_order_id');
       try{
+        const revokedOrder=await env.DB.prepare('SELECT reason FROM order_revocations WHERE order_id=? LIMIT 1').bind(event.orderId).first();
+        if(revokedOrder)return paymentOutcome(request,env,event,'ignored','revoked_prior_to_payment');
         const intent=await env.DB.prepare('SELECT checkout_id,case_id,route,guide_key FROM checkout_intents WHERE checkout_id=? LIMIT 1').bind(event.checkoutId).first();
         if(!intent)return review('unknown_checkout');
         event.caseId=intent.case_id;
-        const prev=await env.DB.prepare('SELECT status,route,guide_key,shopify_order_id FROM access_grants WHERE case_id=? LIMIT 1').bind(intent.case_id).first();
+        const prev=await env.DB.prepare('SELECT status,route,guide_key,shopify_order_id,revoked_at FROM access_grants WHERE case_id=? LIMIT 1').bind(intent.case_id).first();
         if(prev?.status==='paid'){
           if(String(prev.shopify_order_id)===event.orderId)
             return paymentOutcome(request,env,event,'duplicate','same_order_already_granted');
@@ -179,8 +219,9 @@ export default {
         const name=typeof order.name==='string'?order.name.slice(0,64):null;
         const changes=await env.DB.batch([
           env.DB.prepare(`UPDATE access_grants SET status='paid',shopify_order_id=?,shopify_order_name=?,paid_at=datetime('now'),updated_at=datetime('now')
-            WHERE case_id=? AND route=? AND guide_key=? AND status='pending'`)
-            .bind(event.orderId,name,intent.case_id,intent.route,intent.guide_key),
+            WHERE case_id=? AND route=? AND guide_key=? AND status='pending' AND revoked_at IS NULL
+            AND NOT EXISTS(SELECT 1 FROM order_revocations WHERE order_id=?)`)
+            .bind(event.orderId,name,intent.case_id,intent.route,intent.guide_key,event.orderId),
           env.DB.prepare(`UPDATE checkout_intents SET status='paid' WHERE checkout_id=? AND status='pending'`).bind(event.checkoutId)
         ]);
         if(changes[0]?.meta?.changes!==1){
@@ -190,13 +231,58 @@ export default {
         return paymentOutcome(request,env,event,'granted','paid_and_granted');
       }catch(e){console.error('paid webhook processing failure',e);return reply(request,{ok:false,error:'webhook_database_error'},500)}
     }
+    if(request.method==='POST'&&[
+      '/webhooks/shopify/refunds-create','/webhooks/shopify/orders-cancelled','/webhooks/shopify/disputes-create'
+    ].includes(path)){
+      const expected={
+        '/webhooks/shopify/refunds-create':'refunds/create',
+        '/webhooks/shopify/orders-cancelled':'orders/cancelled',
+        '/webhooks/shopify/disputes-create':'disputes/create'
+      }[path];
+      if(!env.SHOPIFY_WEBHOOK_SECRET||!env.DB)return reply(request,{ok:false,error:'webhook_not_configured'},503);
+      const raw=await request.arrayBuffer();
+      if(!await validWebhook(request,raw,env.SHOPIFY_WEBHOOK_SECRET))return reply(request,{ok:false,error:'invalid_signature'},401);
+      if(request.headers.get('X-Shopify-Shop-Domain')!==SHOP||request.headers.get('X-Shopify-Topic')!==expected)
+        return reply(request,{ok:false,error:'wrong_shop_or_topic'},403);
+      let data;try{data=JSON.parse(new TextDecoder().decode(raw))}catch{return reply(request,{ok:false,error:'invalid_json'},400)}
+      const orderId=String(expected==='orders/cancelled'?data?.id:data?.order_id||'');
+      if(!/^\d+$/.test(orderId))return reply(request,{ok:false,error:'invalid_order_id'},400);
+      const webhookId=request.headers.get('X-Shopify-Webhook-Id');
+      const event={id:webhookId&&safeId(webhookId)?webhookId:`sha256-${await digest(expected+':'+new TextDecoder().decode(raw))}`,
+        orderId,topic:expected,caseId:null};
+      try{
+        const grant=await env.DB.prepare('SELECT case_id,status,revoked_at FROM access_grants WHERE shopify_order_id=? LIMIT 1').bind(orderId).first();
+        event.caseId=grant?.case_id||null;
+        if(expected==='refunds/create'){
+          // Shopify supplies refunded line items, including the purchased variant.
+          // A purely monetary or ambiguous refund requires manual review, not automatic revocation.
+          const lines=Array.isArray(data?.refund_line_items)?data.refund_line_items:[];
+          if(lines.some(x=>String(x?.line_item?.variant_id)===VARIANT&&Number(x?.quantity)>=1))
+            return recordRevocation(request,env,event,'actero_product_refunded',grant?'revoked':'pending_order');
+          if(!lines.length||lines.some(x=>!x?.line_item||x.line_item.variant_id==null)){
+            // If the refund arrives BEFORE orders/paid, block a later accidental grant.
+            // Once an order is granted, don't revoke on an unidentifiable monetary-only refund.
+            if(grant)return recordRevocation(request,env,event,'refund_without_identifiable_actero_item','needs_review');
+            return recordRevocation(request,env,event,'ambiguous_refund_before_grant','pending_order');
+          }
+          return recordRevocation(request,env,event,'refund_for_other_product','ignored');
+        }
+        if(expected==='orders/cancelled'){
+          const product=Array.isArray(data?.line_items)&&data.line_items.some(x=>String(x?.variant_id)===VARIANT);
+          if(!grant&&!product)return recordRevocation(request,env,event,'unrelated_order_cancelled','ignored');
+          return recordRevocation(request,env,event,'shopify_order_cancelled',grant?'revoked':'pending_order');
+        }
+        // disputes/create: temporarily revoke / prevent late grant until reviewed manually.
+        return recordRevocation(request,env,event,'shopify_dispute_opened',grant?'revoked':'pending_order');
+      }catch(e){console.error('refund/cancel/dispute webhook error',e);return reply(request,{ok:false,error:'revocation_processing_failed'},500)}
+    }
     if(request.method==='GET'&&['/access','/guide-script','/guide'].includes(path)){
       const caseId=url.searchParams.get('case_id');
       const token=request.headers.get('X-Actero-Access-Token') || url.searchParams.get('access_token');
       try{
         const grant=await getAccess(env,caseId,token);
-        if(path==='/access')return grant?reply(request,{ok:true,paid:grant.status==='paid',status:grant.status,route:grant.route}):reply(request,{ok:true,paid:false,status:'not_found'});
-        if(!grant||grant.status!=='paid')return reply(request,{ok:false,error:'payment_required'},402);
+        if(path==='/access')return grant?reply(request,{ok:true,paid:grant.status==='paid'&&!grant.revoked_at,status:grant.revoked_at?'revoked':grant.status,route:grant.route}):reply(request,{ok:true,paid:false,status:'not_found'});
+        if(!grant||grant.status!=='paid'||grant.revoked_at)return reply(request,{ok:false,error:'payment_required'},402);
         if(path==='/guide-script'){
           const key=url.searchParams.get('guide_key');
           if(!isKey(key)||key!==grant.guide_key)return reply(request,{ok:false,error:'guide_not_authorized'},403);
