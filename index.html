@@ -564,6 +564,15 @@ body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rg
 .paywall-screen .paywall-paid-link{display:block;margin:14px auto 0;padding:8px 14px;background:none;border:0;color:rgba(190,208,240,.72);font-size:13px;font-weight:650;cursor:pointer;border-radius:10px;text-decoration:underline;text-underline-offset:3px}
 .paywall-screen .paywall-paid-link:hover{color:#fff;background:rgba(255,255,255,.06)}
 .paywall-screen .paywall-preview-note{margin:14px auto 0;max-width:430px;text-align:center;color:rgba(170,195,235,.62);font-size:12px;line-height:1.5}
+.paywall-case-context{max-width:590px;margin:0 auto 20px;padding:12px 16px;border:1px solid rgba(137,189,255,.24);border-radius:14px;background:rgba(96,158,255,.10);text-align:center}
+.paywall-case-context span{display:block;color:#92afe1;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.paywall-case-context strong{color:#eef5ff;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.paywall-blocker-notice{text-align:left;border:1px solid rgba(255,187,104,.35);background:rgba(255,175,61,.1);padding:16px 18px;border-radius:16px;margin:20px 0;color:#f5dfbc;font-size:13px;line-height:1.5}
+.paywall-blocker-notice strong{display:block;color:#ffe5b7;margin-bottom:5px;font-size:14px}
+.paywall-blocker-notice p{margin:0 0 8px}.paywall-blocker-notice ul{margin:0;padding-left:19px}.paywall-blocker-notice li+li{margin-top:5px}
+.paywall-disclaimer{font-size:11px;line-height:1.6;color:#8ea7ca;margin:12px 0 0;text-align:center}
+.paywall-cta:disabled{opacity:.58;cursor:not-allowed;box-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.paywall-review-track{animation:none!important}}
 /* ===== /Paywall extras ===== */
 .paywall-screen .paywall-note{max-width:520px;margin:18px auto 0;padding:10px 16px;border-radius:14px;background:rgba(255,184,76,.08);border:1px solid rgba(255,184,76,.24);color:#f1d29a;font-size:13px;line-height:1.5;text-align:center}
 /* ===== /Standalone ActeRO paywall ===== */
@@ -1136,6 +1145,17 @@ function showTourismUrgentResult(){
   $('statusBack').onclick=back;updateDebug();
 }
 
+function paywallDeclaredContext(){
+ const a=S.answers||{},country=a.residence_country_name||a.residence_country||'',goal=goalNames[a.goal]||'';
+ const parts=[country,goal].filter(Boolean).map(escapeHtmlText);
+ return parts.length?'<div class="paywall-case-context"><span>Evaluarea ta</span><strong>'+parts.join(' · ')+'</strong></div>':'';
+}
+function paywallDeclaredBlockers(){
+ if(!Array.isArray(S.blockers)||!S.blockers.length)return '';
+ const items=S.blockers.slice(0,3).map(x=>'<li>'+escapeHtmlText(x)+'</li>').join('');
+ const extra=S.blockers.length>3?'<p>Mai există și alte condiții de verificat.</p>':'';
+ return '<div class="paywall-blocker-notice" role="note"><strong>Înainte de plată: ai aspecte de clarificat</strong><p>Unele condiții trebuie rezolvate înainte să depui actele. Ghidul explică procedura, dar nu garantează că poți depune cererea imediat.</p><ul>'+items+'</ul>'+extra+'</div>';
+}
 function showResult(forcePreview=false){
  computeResult();
  S.current='RESULT';
@@ -1198,35 +1218,38 @@ function showResult(forcePreview=false){
      ${validated?`
        <div class="paywall-top">
          <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
-         <h2>Deblochează ghidul complet</h2>
-         <p class="paywall-copy">Rezolvă situația ta mai rapid, fără drumuri inutile și fără neclarități.</p>
+         ${paywallDeclaredContext()}
+         <h2>Ghidul pentru situația ta, într-un singur loc</h2>
+         <p class="paywall-copy">Pașii, documentele și sursele relevante sunt organizate pe baza răspunsurilor tale. Primești un ghid informativ, nu un act emis de o instituție.</p>
+         ${paywallDeclaredBlockers()}
          ${S.unknowns.length?`<p class="paywall-note">Un detaliu a rămas neclar în răspunsurile tale. Ghidul se bazează pe ce ne-ai spus până acum.</p>`:''}
        </div>
 
        <div class="paywall-features">
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.fresh}</div><span>Informații actualizate</span></div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.steps}</div><span>Explicații pas cu pas</span></div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.clear}</div><span>Scris pe înțelesul tuturor</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.fresh}</div><span>Pași în ordine</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.steps}</div><span>Documente de pregătit</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.clear}</div><span>Surse oficiale de consultat</span></div>
        </div>
 
-       <div class="paywall-reviews-head"><strong>Exemple ilustrative de feedback</strong></div>
-       <div class="paywall-reviews-window" aria-label="Exemple ilustrative de feedback">
+       <div class="paywall-reviews-head"><strong>Ce include ghidul</strong></div>
+       <div class="paywall-reviews-window" aria-label="Beneficiile incluse în ghid">
          <div class="paywall-review-track">${paywallReviewCards()}</div>
        </div>
        <div class="paywall-review-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
        <div class="paywall-actions">
-         <button id="unlockResult" class="btn primary paywall-cta paywall-cta-main"><span class="paywall-cta-label">Deblochează ghidul complet – ${GUIDE_PRICE_LABEL}</span><span class="paywall-cta-arrow" aria-hidden="true">→</span></button>
+         <button id="unlockResult" class="btn primary paywall-cta paywall-cta-main" ${live?'':'disabled aria-disabled="true"'}><span class="paywall-cta-label">${live?'Deblochează ghidul complet – '+GUIDE_PRICE_LABEL:'Plata este momentan indisponibilă'}</span><span class="paywall-cta-arrow" aria-hidden="true">→</span></button>
        </div>
        <div class="paywall-assure">
          <span><b aria-hidden="true">🔒</b>Plată securizată</span>
-         <span><b aria-hidden="true">⚡</b>Acces instant</span>
+         <span><b aria-hidden="true">⚡</b>Acces după confirmarea plății</span>
          <span><b aria-hidden="true">✓</b>Fără abonament</span>
        </div>
+       <p class="paywall-disclaimer">ActeRO oferă informații administrative independente și nu reprezintă o autoritate publică. Cerințele și taxele instituțiilor pot fi modificate.</p>
        <div id="checkoutError" class="final-issue hidden" role="alert"></div>
        ${live
          ?`<button id="checkPayment" class="paywall-paid-link" type="button">Ai plătit deja? Verifică accesul</button>`
-         :`<p class="paywall-preview-note">Plata online nu este încă activă: ghidul se deschide în regim de previzualizare.</p>`}
+         :`<p class="paywall-preview-note">Plata online nu este încă activă. Nu îți cerem bani și nu poți finaliza o comandă în acest moment.</p>`}
      `:`
        <div class="paywall-top">
          <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
@@ -1249,21 +1272,20 @@ function showResult(forcePreview=false){
 
 // Displayed price. Keep in sync with the Shopify product until the price is served by the payment API.
 const GUIDE_PRICE_LABEL='49 lei';
-const PAYWALL_FEEDBACK=[
-  'Acest ghid mi-ar fi economisit o grămadă de timp.',
-  'Informațiile sunt puse într-o ordine mult mai ușor de urmărit.',
-  'Pașii sunt explicați clar, fără termeni complicați.',
-  'Știi ce documente trebuie pregătite înainte să începi.',
-  'Ajută la eliminarea neclarităților dintre diferitele proceduri.',
-  'Totul este organizat într-un singur loc.',
-  'Este mult mai ușor să înțelegi ce ai de făcut pas cu pas.',
-  'Nu mai trebuie să cauți informația în zece locuri diferite.',
-  'Îți arată pașii de urmat într-un mod simplu.'
+const PAYWALL_BENEFITS=[
+ 'Documentele pe care să le verifici înainte de programare.',
+ 'Ordinea etapelor din procedura identificată.',
+ 'Ce autoritate sau instituție trebuie consultată.',
+ 'Linkurile oficiale relevante pentru situația ta.',
+ 'Explicații pentru termenii administrativi importanți.',
+ 'Avertismente despre condiții încă neîndeplinite.',
+ 'Informații de pregătit înainte de depunere.',
+ 'Ce trebuie reconfirmat când regulile se modifică.',
+ 'Pașii organizați pentru țara și scopul declarat.'
 ];
-// Illustrative copy only: these are NOT customer reviews and must stay labelled as examples.
 function paywallReviewCards(){
-  const cards=PAYWALL_FEEDBACK.map(text=>`<article class="paywall-review-card"><p>„${text}”</p><small>Exemplu de feedback</small></article>`).join('');
-  return `<div class="paywall-review-set">${cards}</div><div class="paywall-review-set" aria-hidden="true">${cards}</div>`;
+ const cards=PAYWALL_BENEFITS.map(text=>`<article class="paywall-review-card"><p>${escapeHtmlText(text)}</p><small>În interiorul ghidului</small></article>`).join('');
+ return `<div class="paywall-review-set">${cards}</div><div class="paywall-review-set" aria-hidden="true">${cards}</div>`;
 }
 
 function docGuideItems(){
