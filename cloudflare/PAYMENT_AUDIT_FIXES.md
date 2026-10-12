@@ -1,4 +1,4 @@
-# ActeRO — F-02 / F-05 / F-07 fixes (STAGING ONLY)
+# ActeRO — F-02 / F-04 / F-05 / F-07 fixes (STAGING ONLY)
 
 **NOT DEPLOYED. Do not merge or enable real payments.** This branch starts from PR #2 (Worker 0.5.0). The original public `main`, Cloudflare deployment and Shopify store have not been changed by these fixes.
 
@@ -16,19 +16,26 @@
 - `POST /checkout` now requires alert URL configuration in addition to the previous checkout feature flag, DB and HMAC secret.
 - **Manual resolution still required:** `needs_review` does not automatically grant access or issue a refund. Check corresponding Shopify orders and incident log.
 
+## F-04 — refunds, cancelled orders and payment disputes
+- Adds `004-revocations.sql` (revocation timestamps, order-level tombstones, revocation events) and three HMAC-verified Shopify webhook handlers.
+- Product-level refund, order cancellation and dispute events revoke an existing grant or prevent a delayed paid event from granting it.
+- Money-only refunds of a known paid order are flagged `needs_review`; revocation is not automatic when the refunded product cannot be identified. If such a refund arrives before paid, a tombstone blocks automatic grant pending review.
+- Existing access endpoints check `revoked_at` before responding paid or serving any protected guide.
+- **No Cloudflare migration or webhook subscriptions were installed.** See `REVOCATION_STAGING.md` for operational steps, manual-review policy and limitations.
+
 ## F-07 — Swiss document clarification loop
 - `q109()` and `q125()` now route `OTHER` to `STOP_CH_OTHER` with an explanation and **no payment**, rather than returning to the same clarification.
 - B, C, L and G paths remain unchanged. Existing `UNKNOWN` handling is unchanged.
 - Eight local Swiss branching checks passed; a full live guided journey remains to be tested.
 
 ## Test coverage
-A Node 22+ SQLite-in-memory harness reconstructed the basic D1 schema, applied migrations 001, 002, 003, and executed **35/35 passing local checks**: token replacement attempts, concurrent requests, authenticated retries, payments, missing properties, discounts, incorrect currency, duplicate orders, HMAC, alert failure and retry. Additional isolated checks: **9/9 frontend checkout** and **8/8 Swiss OTHER-document branching**, exercised with local function fixtures. The repository also contains `cloudflare/tests/checkout-frontend.test.mjs` and `cloudflare/tests/swiss-loop.test.mjs`, which operate on its current `index.html`. These tests are simulations, not verification against deployed Cloudflare D1 or Shopify.
+A Node 22+ SQLite-in-memory harness reconstructed the basic D1 schema, applied migrations 001, 002, 003, 004, and executed **35/35 passing local checks**: token replacement attempts, concurrent requests, authenticated retries, payments, missing properties, discounts, incorrect currency, duplicate orders, HMAC, alert failure and retry. Additional isolated checks: **9/9 frontend checkout** and **8/8 Swiss OTHER-document branching**, exercised with local function fixtures. The repository also contains `cloudflare/tests/checkout-frontend.test.mjs` and `cloudflare/tests/swiss-loop.test.mjs`, which operate on its current `index.html`. Additional local F-04 simulation: **28/28 checks**. Repository `audit-payment.test.mjs` currently verifies **23/23 scenarios** including refund, cancellation, dispute, and out-of-order delivery. These tests are simulations, not verification against deployed Cloudflare D1 or Shopify.
 
 ## Still blocking production
 1. Inspect deployed Worker and D1 schema/migrations, then test against a separate staging Worker.
 2. Run frontend and backend together in a staging browser using actual D1 (the local functions and isolated tests passed, but no integration deploy has occurred).
 3. Configure/test the alert secret; verify a real Shopify Test Mode `orders/paid` payload, then test page -> checkout -> webhook -> guide.
-4. Resolve F-01 (paid content public), F-03 (cross-device recovery), F-04 (refund/dispute revocation), F-06 (rate limits / unowned initial checkout), and independently retest F-07 in the deployed questionnaire.
+4. Resolve F-01 (paid content public), F-03 (cross-device recovery), F-06 (rate limits / unowned initial checkout), test F-04 on real staging webhooks, and independently retest F-07 in the deployed questionnaire.
 5. Do not assume initial `case_id` proves case ownership. An attacker aware of the case ID before the first checkout can still preempt creation. A server-issued case session is a future defense.
 
 **Review-only branch:** no SQL migration, Worker deployment, GitHub Pages publication or Shopify setting was changed by this patch.
