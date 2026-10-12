@@ -297,9 +297,14 @@ export default {
         return recordRevocation(request,env,event,'shopify_dispute_opened',grant?'revoked':'pending_order');
       }catch(e){console.error('refund/cancel/dispute webhook error',e);return reply(request,{ok:false,error:'revocation_processing_failed'},500)}
     }
-    if(request.method==='GET'&&['/access','/guide-script','/guide'].includes(path)){
+    // The retired route-only endpoint could expose other guide variants on the same route.
+    // All paid guidance must be served exclusively by the purchased guide_key.
+    if(request.method==='GET'&&path==='/guide')
+      return reply(request,{ok:false,error:'legacy_guide_endpoint_removed'},410);
+    if(request.method==='GET'&&['/access','/guide-script'].includes(path)){
       const caseId=url.searchParams.get('case_id');
-      const token=request.headers.get('X-Actero-Access-Token') || url.searchParams.get('access_token');
+      // Never accept access secrets from URL query strings (logs, history and referrers).
+      const token=request.headers.get('X-Actero-Access-Token');
       try{
         const grant=await getAccess(env,caseId,token);
         if(path==='/access')return grant?reply(request,{ok:true,paid:grant.status==='paid'&&!grant.revoked_at,status:grant.revoked_at?'revoked':grant.status,route:grant.route}):reply(request,{ok:true,paid:false,status:'not_found'});
@@ -311,9 +316,7 @@ export default {
           if(!guide||guide.route!==grant.route)return reply(request,{ok:false,error:'guide_not_found'},404);
           return new Response(guide.script_js,{status:200,headers:{...cors(request),...NOCACHE,'Content-Type':'application/javascript; charset=utf-8'}});
         }
-        const row=await env.DB.prepare('SELECT route,title,guide_json,updated_at FROM guides WHERE route=? LIMIT 1').bind(grant.route).first();
-        if(!row)return reply(request,{ok:false,error:'guide_not_found'},404);
-        return reply(request,{ok:true,route:row.route,title:row.title,guide:JSON.parse(row.guide_json),updated_at:row.updated_at});
+        return reply(request,{ok:false,error:'not_found'},404);
       }catch(e){console.error('access error',e);return reply(request,{ok:false,error:'database_error'},500)}
     }
     return reply(request,{ok:false,error:'not_found'},404);
