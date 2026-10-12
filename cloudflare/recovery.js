@@ -70,16 +70,26 @@ export async function recoverRequest(request,env){
     const url=new URL(env.RECOVERY_PAGE_URL);
     url.hash='token='+token; // fragment is never sent to Pages or by the HTTP Referer
     const urlText=url.toString();
-    const response=await fetch('https://api.resend.com/emails',{
-      method:'POST',headers:{Authorization:'Bearer '+env.RECOVERY_EMAIL_API_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({from:env.RECOVERY_EMAIL_FROM,to:[email],subject:'Recuperează accesul la ghidul ActeRO',
-        text:'Ai solicitat recuperarea ghidului ActeRO. Deschide acest link în maximum 30 de minute: '+urlText+'\nDacă nu ai solicitat recuperarea, ignoră mesajul.'})
-    });
-    if(!response.ok){
-      await env.DB.prepare('DELETE FROM recovery_links WHERE token_hash=? AND delivered_at IS NULL').bind(hashToken).run();
-      console.error('ActeRO recovery mail provider unavailable; status',response.status);
-    }else{
+    let mailStatus=0,delivered=false;
+    try{
+      const response=await fetch('https://api.resend.com/emails',{
+        method:'POST',headers:{Authorization:'Bearer '+env.RECOVERY_EMAIL_API_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({from:env.RECOVERY_EMAIL_FROM,to:[email],subject:'Recuperează accesul la ghidul ActeRO',
+          text:'Ai solicitat recuperarea ghidului ActeRO. Deschide acest link în maximum 30 de minute: '+urlText+'\nDacă nu ai solicitat recuperarea, ignoră mesajul.'})
+      });
+      mailStatus=response.status;delivered=response.ok;
+    }catch(e){console.error('ActeRO recovery email request failed');}
+    if(delivered){
       await env.DB.prepare('UPDATE recovery_links SET delivered_at=unixepoch() WHERE token_hash=?').bind(hashToken).run();
+    }else{
+      // A network failure must not leave an undelivered challenge consuming the email quota.
+      await env.DB.prepare('DELETE FROM recovery_links WHERE token_hash=? AND delivered_at IS NULL').bind(hashToken).run();
+      console.error('ActeRO recovery email provider unavailable; status',mailStatus);
+      if(env.PAYMENT_ALERT_WEBHOOK_URL){
+        try{await fetch(env.PAYMENT_ALERT_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({content:'ActeRO: recovery email delivery failed (case '+row.case_id+', HTTP '+mailStatus+')'})})}
+        catch(e){console.error('ActeRO recovery operator alert also failed')}
+      }
     }
     return reply(request,GENERIC,202);
   }catch(e){console.error('ActeRO recovery request failed',e?.message||'error');return reply(request,GENERIC,202)}
