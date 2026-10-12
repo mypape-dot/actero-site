@@ -71,10 +71,11 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
  </section>
  <p class="foot">Ai schimbat dispozitivul sau browserul? <a href="./recuperare.html">Recuperează ghidul prin email</a>. Poți și <a href="./">continua evaluarea ActeRO</a>.</p>
 </main>
+<script src="./actero-config.js"></script>
 <script>
 'use strict';
 (function(){
- const API='https://actero.actedsro.workers.dev';
+ const API=String(window.ACTERO_PAYMENT_API||'').trim().replace(/\/+$/,'');
  const $=id=>document.getElementById(id);
  const ICON_OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="10"/></svg>';
  const ICON_HELP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg>';
@@ -90,12 +91,16 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
    $('heading').textContent=title;$('lead').textContent=body;$('statusMessage').textContent=msg;
    $('statusIcon').className='status-ring '+(kind==='ok'?'positive':kind==='missing'?'muted':'');
    $('statusIcon').innerHTML=kind==='ok'?ICON_OK:kind==='pending'?'<div class="spinner"></div>':ICON_HELP;
-   $('openGuide').disabled=kind!=='ok';$('retry').hidden=kind==='pending'||!caseId||!token;
+   $('openGuide').disabled=kind!=='ok';$('retry').hidden=kind==='pending'||!caseId||!token||!/^https:\/\//i.test(API);
    $('eyebrow').textContent=kind==='ok'?'Plata confirmată · Acces disponibil':'ActeRO · Acces securizat';
  }
  function failMissing(){state('missing','Nu găsim evaluarea ta','Pentru a verifica plata avem nevoie de sesiunea în care ai completat chestionarul. Deschide această pagină în același browser și pe același dispozitiv.','Nu efectua o a doua plată înainte să verificăm comanda.');}
  async function check(){
    if(working||paid)return;
+   if(!/^https:\/\//i.test(API)){
+     state('missing','Verificarea plății nu este disponibilă','Această versiune a ActeRO nu este conectată la un serviciu de plăți. Nu efectua o nouă plată; revino când site-ul este activ.');
+     return;
+   }
    if(!caseId||!token){failMissing();return}
    working=true;
    if(count===0)state('pending','Verificăm plata ta','Așteptăm confirmarea de la Shopify. De regulă, durează câteva secunde.');
