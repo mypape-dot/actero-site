@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "description": "ActeRO client-to-paid-guide expected routing inventory only. No commercial guide text or personal data.",
+  "verification_note": "Entries are expected by the frontend; presence in live D1 and official procedural accuracy have NOT been verified.",
+  "review_status": "requires_individual_legal_and_content_review",
+  "countries": [
+    "ES",
+    "IT",
+    "DE",
+    "AT",
+    "FR",
+    "GB",
+    "BE",
+    "NL",
+    "IE",
+    "CH"
+  ],
+  "guides": [
+    {
+      "key": "B1_ES",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "ES"
+    },
+    {
+      "key": "B1_IT",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "IT"
+    },
+    {
+      "key": "B1_DE",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "DE"
+    },
+    {
+      "key": "B1_AT",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "AT"
+    },
+    {
+      "key": "B1_FR",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "FR"
+    },
+    {
+      "key": "B1_GB",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "GB"
+    },
+    {
+      "key": "B1_BE",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "BE"
+    },
+    {
+      "key": "B1_NL",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "NL"
+    },
+    {
+      "key": "B1_IE",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "IE"
+    },
+    {
+      "key": "B1_CH",
+      "route": "B1_FIRST_CRDS",
+      "scenario": "first_crds",
+      "country": "CH"
+    },
+    {
+      "key": "B5_RENEWAL_ES",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "ES"
+    },
+    {
+      "key": "B5_RENEWAL_IT",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "IT"
+    },
+    {
+      "key": "B5_RENEWAL_DE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "DE"
+    },
+    {
+      "key": "B5_RENEWAL_AT",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "AT"
+    },
+    {
+      "key": "B5_RENEWAL_FR",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "FR"
+    },
+    {
+      "key": "B5_RENEWAL_GB",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "GB"
+    },
+    {
+      "key": "B5_RENEWAL_BE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "BE"
+    },
+    {
+      "key": "B5_RENEWAL_NL",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "NL"
+    },
+    {
+      "key": "B5_RENEWAL_IE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "IE"
+    },
+    {
+      "key": "B5_RENEWAL_CH",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "renewal",
+      "country": "CH"
+    },
+    {
+      "key": "B5_LOST_ES",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "ES"
+    },
+    {
+      "key": "B5_LOST_IT",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "IT"
+    },
+    {
+      "key": "B5_LOST_DE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "DE"
+    },
+    {
+      "key": "B5_LOST_AT",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "AT"
+    },
+    {
+      "key": "B5_LOST_FR",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "FR"
+    },
+    {
+      "key": "B5_LOST_GB",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "GB"
+    },
+    {
+      "key": "B5_LOST_BE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "BE"
+    },
+    {
+      "key": "B5_LOST_NL",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "NL"
+    },
+    {
+      "key": "B5_LOST_IE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "IE"
+    },
+    {
+      "key": "B5_LOST_CH",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "lost",
+      "country": "CH"
+    },
+    {
+      "key": "B5_STOLEN",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "stolen",
+      "country": null
+    },
+    {
+      "key": "B5_DAMAGED",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "damaged",
+      "country": null
+    },
+    {
+      "key": "B5_DATA_CHANGE",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "data_change",
+      "country": null
+    },
+    {
+      "key": "B5_MOVED",
+      "route": "B5_EXISTING_CRDS",
+      "scenario": "new_country",
+      "country": null
+    },
+    {
+      "key": "A1_PERSONAL_ROMANIA",
+      "route": "A1_PERSONAL_ROMANIA",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "A2_PROXY",
+      "route": "A2_PROXY",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "A3_FIRST_ID_CONSULAR",
+      "route": "A3_FIRST_ID_CONSULAR",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "C1_CEI_ROMANIA",
+      "route": "C1_CEI_ROMANIA",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "C5_CEI_REPLACEMENT",
+      "route": "C5_CEI_REPLACEMENT",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "D1_TEMPORARY",
+      "route": "D1_TEMPORARY",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "D2_PERMANENT_RETURN",
+      "route": "D2_PERMANENT_RETURN",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "TRAVEL_TITLE_RETURN_RO",
+      "route": "TRAVEL_TITLE_RETURN_RO",
+      "scenario": "route_specific",
+      "country": null
+    },
+    {
+      "key": "URGENT_OTHER_COUNTRY",
+      "route": "URGENT_OTHER_COUNTRY",
+      "scenario": "route_specific",
+      "country": null
+    }
+  ]
+}

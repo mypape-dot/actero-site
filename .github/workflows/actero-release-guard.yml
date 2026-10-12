@@ -1,0 +1,44 @@
+name: ActeRO security and guide routing checks
+on:
+  push:
+    branches:
+      - "fix/**"
+      - "feature/**"
+  pull_request:
+    branches:
+      - "feature/**"
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  security-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reject public premium guide sources and QA copies
+        run: node scripts/check-public-surface.mjs
+      - name: Verify all 43 guide-key routing contracts
+        run: node --test cloudflare/tests/guide-catalog.test.mjs
+      - name: Verify paid guide authorization and header tokens
+        run: node --test cloudflare/tests/protected-guide-access.test.mjs
+      - name: Verify checkout disabled by default in public previews
+        run: node --test cloudflare/tests/public-runtime-config.test.mjs
+      - name: Verify questionnaire status history and travel routing
+        run: node --test cloudflare/tests/quiz-history.test.mjs
+      - name: Backend and client regression tests
+        run: >
+          node --test
+          cloudflare/tests/evaluation-session.test.mjs
+          cloudflare/tests/checkout-frontend.test.mjs
+          cloudflare/tests/quota.test.mjs
+          cloudflare/tests/recovery.test.mjs
+          cloudflare/tests/recovery-page.test.mjs
+          cloudflare/tests/swiss-loop.test.mjs
+      - name: Shopify payment and reversal regression harness
+        run: node --no-warnings cloudflare/tests/audit-payment.test.mjs

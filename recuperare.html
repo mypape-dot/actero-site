@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f0e8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Recuperează ghidul — ActeRO</title>
+<style>
+:root{--ink:#122033;--muted:#637185;--navy:#10233f;--blue:#315fdd;--line:#dce2e8;--paper:#fffdf9}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:radial-gradient(ellipse at 12% 6%,#e6edff,transparent 48%),#f4f0e8}
+header{width:min(700px,calc(100% - 36px));margin:0 auto;padding:34px 0;font-size:21px;font-weight:800;color:var(--navy)}header a{color:inherit;text-decoration:none}header b{display:inline-grid;place-items:center;background:var(--navy);color:#fff;width:36px;height:36px;border-radius:12px;font-size:12px;margin-right:10px}
+main{width:min(700px,calc(100% - 36px));margin:10px auto 60px;border-radius:26px;background:var(--paper);border:1px solid var(--line);box-shadow:0 20px 75px #10233f14;padding:clamp(24px,6vw,54px)}
+h1{font-size:clamp(29px,5vw,43px);letter-spacing:-1.4px;line-height:1.08;margin:0 0 16px}p{color:var(--muted);line-height:1.7;margin:0 0 22px}.tag{color:var(--blue);font-size:11px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:700;margin:20px 0 7px}input{width:100%;height:52px;border:1px solid #cfd8e4;border-radius:12px;font:inherit;padding:0 14px;background:white;color:var(--ink)}input:focus{outline:2px solid #7598fa;outline-offset:1px}
+button{width:100%;margin-top:24px;border:0;border-radius:13px;background:linear-gradient(110deg,#315fdd,#2099ed);color:white;font-size:16px;font-weight:750;padding:17px;cursor:pointer}button:disabled{opacity:.65;cursor:not-allowed}.message{margin-top:18px;color:var(--navy);font-size:14px;line-height:1.7;min-height:30px}.foot{font-size:12px;margin-top:22px}.foot a{color:#315fdd}section[hidden]{display:none}
+</style>
+</head>
+<body>
+<header><a href="./"><b>AR</b>ActeRO</a></header>
+<main>
+  <section id="requestSection">
+    <div class="tag">Acces după cumpărare</div>
+    <h1>Recuperează ghidul tău</h1>
+    <p>Dacă nu mai ai acces la browserul în care ai cumpărat ghidul, completează adresa de email folosită la Shopify și numărul comenzii. Îți vom trimite un link temporar dacă găsim o comandă eligibilă.</p>
+    <form id="recoveryForm">
+      <label for="email">Emailul folosit la cumpărare</label>
+      <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="exemplu@email.com">
+      <label for="order">Numărul comenzii Shopify</label>
+      <input id="order" name="order" type="text" inputmode="text" required maxlength="63" placeholder="De exemplu #1001">
+      <button id="send" type="submit">Trimite linkul de recuperare</button>
+    </form>
+  </section>
+  <section id="consumeSection" hidden>
+    <div class="tag">Confirmarea accesului</div>
+    <h1>Verificăm linkul de recuperare</h1>
+    <p>Un link valid îți redeschide evaluarea și ghidul cumpărat pe acest dispozitiv. Te rugăm să aștepți.</p>
+  </section>
+  <div class="message" id="message" role="status" aria-live="polite"></div>
+  <p class="foot">Linkul de recuperare expiră după 30 de minute și poate fi folosit o singură dată. Dacă nu primești un email, verifică Spam și contactează suportul. Nu plăti încă o dată.</p>
+</main>
+<script src="./actero-config.js"></script>
+<script>
+'use strict';
+(function(){
+ const API=String(window.ACTERO_PAYMENT_API||'').trim().replace(/\/+$/,'');
+ const $=id=>document.getElementById(id);
+ const token=new URLSearchParams(location.hash.slice(1)).get('token');
+ if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+ async function consume(t){
+   if(!/^https:\/\//i.test(API)){$('message').textContent='Recuperarea accesului nu este activă în această versiune de test. Linkul nu a fost consumat.';return}
+   $('requestSection').hidden=true;$('consumeSection').hidden=false;
+   if(!/^[a-f0-9]{64}$/.test(t)){$('message').textContent='Linkul este invalid. Solicită unul nou.';return}
+   // Never consume a one-time token unless this browser can actually store the new access.
+   try{localStorage.setItem('_actero_storage_probe','ok');localStorage.removeItem('_actero_storage_probe')}
+   catch(e){$('message').textContent='Browserul blochează salvarea accesului. Activează stocarea pentru acest site și redeschide linkul din email.';return}
+   try{
+     const response=await fetch(API+'/recover/consume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t}),cache:'no-store'});
+     const data=await response.json();
+     if(!response.ok||!data.ok)throw Error('recovery_denied');
+     if(!/^AR-[0-9a-f-]{36}$/i.test(data.case_id)||typeof data.access_token!=='string'||!data.case_state||
+       !data.case_state.answers||!data.case_state.docs||!data.case_state.route)throw Error('invalid_response');
+     const id=data.case_id, s=data.case_state;
+     const record={caseId:id,answers:s.answers,docs:s.docs,route:s.route,status:s.status||null,
+       blockers:[],unknowns:[],clarified:s.clarified||{},history:[],docQueue:[],docIndex:0,current:'RESULT'};
+     // Persist snapshot and token before navigating; paid access is still rechecked by the Worker.
+     localStorage.setItem('actero_case_'+id,JSON.stringify(record));
+     localStorage.setItem('actero_access_'+id,data.access_token);
+     localStorage.setItem('actero_active_case',id);
+     $('message').textContent='Acces confirmat. Deschidem ghidul…';
+     const url=new URL('./',location.href);url.searchParams.set('case_id',id);url.searchParams.set('open_guide','1');
+     location.replace(url.toString());
+   }catch(e){
+     $('message').textContent='Linkul nu mai este valabil, a fost deja folosit sau accesul a fost revocat. Solicită un link nou. Dacă ai plătit și problema persistă, contactează suportul.';
+     $('requestSection').hidden=false;$('consumeSection').hidden=true;
+   }
+ }
+ $('recoveryForm').addEventListener('submit',async e=>{
+   e.preventDefault();const btn=$('send');
+   if(!/^https:\/\//i.test(API)){$('message').textContent='Recuperarea accesului nu este disponibilă în această versiune. Nu efectua altă plată.';return}
+   btn.disabled=true;
+   try{
+     const response=await fetch(API+'/recover/request',{method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({email:$('email').value.trim(),order_name:$('order').value.trim()}),cache:'no-store'});
+     if(!response.ok)throw Error('temporarily_unavailable');
+     $('message').textContent='Dacă emailul și comanda corespund unei cumpărături eligibile, vei primi un link. Verifică și folderul Spam.';
+   }catch(e){$('message').textContent='Serviciul de recuperare este temporar indisponibil. Încearcă din nou mai târziu și nu efectua o a doua plată.'}
+   finally{btn.disabled=false}
+ });
+ if(token)consume(token);
+})();
+</script>
+</body>
+</html>

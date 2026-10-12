@@ -564,6 +564,15 @@ body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rg
 .paywall-screen .paywall-paid-link{display:block;margin:14px auto 0;padding:8px 14px;background:none;border:0;color:rgba(190,208,240,.72);font-size:13px;font-weight:650;cursor:pointer;border-radius:10px;text-decoration:underline;text-underline-offset:3px}
 .paywall-screen .paywall-paid-link:hover{color:#fff;background:rgba(255,255,255,.06)}
 .paywall-screen .paywall-preview-note{margin:14px auto 0;max-width:430px;text-align:center;color:rgba(170,195,235,.62);font-size:12px;line-height:1.5}
+.paywall-case-context{max-width:590px;margin:0 auto 20px;padding:12px 16px;border:1px solid rgba(137,189,255,.24);border-radius:14px;background:rgba(96,158,255,.10);text-align:center}
+.paywall-case-context span{display:block;color:#92afe1;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.paywall-case-context strong{color:#eef5ff;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.paywall-blocker-notice{text-align:left;border:1px solid rgba(255,187,104,.35);background:rgba(255,175,61,.1);padding:16px 18px;border-radius:16px;margin:20px 0;color:#f5dfbc;font-size:13px;line-height:1.5}
+.paywall-blocker-notice strong{display:block;color:#ffe5b7;margin-bottom:5px;font-size:14px}
+.paywall-blocker-notice p{margin:0 0 8px}.paywall-blocker-notice ul{margin:0;padding-left:19px}.paywall-blocker-notice li+li{margin-top:5px}
+.paywall-disclaimer{font-size:11px;line-height:1.6;color:#8ea7ca;margin:12px 0 0;text-align:center}
+.paywall-cta:disabled{opacity:.58;cursor:not-allowed;box-shadow:none!important}
+@media(prefers-reduced-motion:reduce){.paywall-review-track{animation:none!important}}
 /* ===== /Paywall extras ===== */
 .paywall-screen .paywall-note{max-width:520px;margin:18px auto 0;padding:10px 16px;border-radius:14px;background:rgba(255,184,76,.08);border:1px solid rgba(255,184,76,.24);color:#f1d29a;font-size:13px;line-height:1.5;text-align:center}
 /* ===== /Standalone ActeRO paywall ===== */
@@ -605,10 +614,11 @@ body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rg
 <div class="footer">ActeRO · Informații administrative bazate pe surse oficiale verificate.</div>
 <pre id="debug" class="debug hidden"></pre>
 </div>
+<script src="./actero-config.js"></script>
 <script>
 window.__ACTERO_BOOTED=false;
 // Set this to the deployed ActeRO payment Worker URL when payments go live.
-window.ACTERO_PAYMENT_API=window.ACTERO_PAYMENT_API||'https://actero.actedsro.workers.dev';
+window.ACTERO_PAYMENT_API=window.ACTERO_PAYMENT_API||''; // set explicitly for staging/production deployment only
 window.addEventListener('error',function(e){try{console.error(e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}var note=document.querySelector('#staticWelcomeFallback .hero-note');if(note)note.textContent='Evaluarea nu s-a încărcat corect.';}catch(_){}});
 window.addEventListener('unhandledrejection',function(e){try{console.error(e&&e.reason?e.reason:e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}}catch(_){}});
 </script>
@@ -851,7 +861,7 @@ function q004(){choose({kicker:'02 · Situația ta',title:'Ce încerci să rezol
 {value:'URGENT_TRAVEL',label:'Nu am un document de călătorie valabil și trebuie să plec urgent',sub:'Trebuie să ajung în România sau într-o altă țară și nu am documentul potrivit.'},
 {value:'UNKNOWN',label:'Nu știu ce variantă mi se potrivește',sub:'E în regulă. Îți punem câteva întrebări mai simple și restrângem noi situația.'}],key:'goal',next:'Q005'})}
 function q005(){setChrome('Documente');const opts=[['ROMANIAN_ID','Carte de identitate / buletin'],['PASSPORT','Pașaport românesc'],['CRDS_PASSPORT','Pașaport românesc cu domiciliul în străinătate'],['CEI','Carte electronică de identitate (CEI)'],['BIRTH_CERT','Certificat românesc de naștere'],['MARRIAGE_CERT','Certificat românesc de căsătorie'],['CITIZENSHIP_CERT','Certificat / card de cetățenie'],['UNKNOWN','Nu sunt sigur ce documente am']].map(([value,label])=>({value,label}));let selected=S.answers.documents||[];screen.innerHTML=header('03 · Actele tale','Ce acte românești ai la îndemână sau ai avut în trecut?','Bifează tot ce recunoști. Nu contează dacă sunt expirate — starea lor o verificăm imediat după.')+optionHTML(opts,selected,true)+'</div>';bindOptions(v=>{let a=S.answers.documents||[];if(v==='UNKNOWN'){a=a.includes('UNKNOWN')?[]:['UNKNOWN']}else{a=a.filter(x=>x!=='UNKNOWN');a=a.includes(v)?a.filter(x=>x!==v):[...a,v]}S.answers.documents=a;replace('Q005')});continueBtn.classList.remove('hidden');continueBtn.disabled=!(S.answers.documents||[]).length;continueBtn.onclick=()=>{const relevant=['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'];S.docQueue=(S.answers.documents||[]).filter(x=>relevant.includes(x));S.docIndex=0;push(S.docQueue.length?'Q006':'AFTER_DOCS')}}
-function q006(){setChrome('Starea actelor');if(S.docIndex>=S.docQueue.length){replace('AFTER_DOCS');return}const d=S.docQueue[S.docIndex];const opts=['VALID','EXPIRED','EXPIRING','LOST','STOLEN','DAMAGED','MISSING','UNKNOWN'].map(v=>({value:v,label:statusLabels[v][0].toUpperCase()+statusLabels[v].slice(1)}));screen.innerHTML=header('Starea actelor',`Cum stau lucrurile cu ${docLabels[d]}?`,'Spune-ne situația de acum. O păstrăm și nu te mai întrebăm același lucru mai târziu.')+optionHTML(opts,S.docs[d])+'</div>';bindOptions(v=>{S.docs[d]=v;S.docIndex++;if(S.docIndex<S.docQueue.length)replace('Q006');else push('AFTER_DOCS')})}
+function q006(){setChrome('Starea actelor');if(S.docIndex>=S.docQueue.length){replace('AFTER_DOCS');return}const d=S.docQueue[S.docIndex];const opts=['VALID','EXPIRED','EXPIRING','LOST','STOLEN','DAMAGED','MISSING','UNKNOWN'].map(v=>({value:v,label:statusLabels[v][0].toUpperCase()+statusLabels[v].slice(1)}));screen.innerHTML=header('Starea actelor',`Cum stau lucrurile cu ${docLabels[d]}?`,'Spune-ne situația de acum. O păstrăm și nu te mai întrebăm același lucru mai târziu.')+optionHTML(opts,S.docs[d])+'</div>';bindOptions(v=>{S.history.push(snapshot());S.docs[d]=v;S.docIndex++;if(S.docIndex<S.docQueue.length)replace('Q006');else replace('AFTER_DOCS')})}
 function afterDocs(){const goal=S.answers.goal;if(goal==='URGENT_TRAVEL'){const validTravel=S.docs.PASSPORT==='VALID'||S.docs.CRDS_PASSPORT==='VALID';if(validTravel){showStop('yellow','Răspunsurile se contrazic','Ai indicat că nu ai un document de călătorie valabil, dar ai marcat un pașaport românesc ca fiind valabil. Modifică răspunsul care nu este corect înainte să continuăm.');return}push('Q020');return}const docs=S.answers.documents||[];if(docs.includes('PASSPORT')||docs.includes('CRDS_PASSPORT'))push('Q007');else push('Q008')}
 function q007(){const opts=[{value:'ROMANIA',label:'România'},{value:'CURRENT',label:S.answers.residence_country_name||'Țara în care locuiesc acum'},{value:'OTHER',label:'Altă țară'},{value:'UNKNOWN',label:'Nu știu / nu mai pot verifica'}];choose({kicker:'Domiciliu',title:'Pe cel mai recent pașaport românesc, ce țară apărea la domiciliu?',lead:'Folosim informația doar ca să alegem procedura potrivită.',opts,key:'passport_domicile',next:'ROUTE_COMMON'})}
 function q008(){choose({kicker:'Domiciliu',title:'Ți-ai stabilit vreodată domiciliul oficial în străinătate?',lead:'De exemplu, printr-un pașaport românesc cu domiciliul în străinătate. Nu ne referim la rezidența fiscală sau la permisul local de ședere.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ever_crds',next:'ROUTE_COMMON'})}
@@ -920,7 +930,7 @@ function q109(){choose({
     {value:'UNKNOWN',label:'Nu știu ce tip este'}
   ],
   key:'swiss_permit',
-  next:v=>v==='G'?'STOP_CH_G':'Q103'
+  next:v=>v==='G'?'STOP_CH_G':v==='OTHER'?'STOP_CH_OTHER':'Q103'
 })}
 
 function q106(){choose({kicker:'Cetățenie română',title:'După ce ai dobândit sau redobândit cetățenia română, ai avut vreodată un pașaport sau act de identitate românesc?',lead:'Întrebarea contează pentru documentele cerute în cazul primului pașaport cu domiciliul în străinătate.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'post_citizenship_romanian_id',next:v=>{if(v==='YES'){S.answers.citizenship_cert_required='NO';delete S.answers.citizenship_cert_available;return'Q101'}if(v==='NO'){S.answers.citizenship_cert_required='YES';if((S.answers.documents||[]).includes('CITIZENSHIP_CERT')){S.answers.citizenship_cert_available='YES';return'Q101'}return'Q107'}S.answers.citizenship_cert_required='POSSIBLE';return'Q107'}})}
@@ -949,7 +959,7 @@ function q125(){choose({
     {value:'UNKNOWN',label:'Nu știu ce tip este'}
   ],
   key:'swiss_current_permit',
-  next:v=>v==='G'?'STOP_CH_G_RENEW':'Q040'
+  next:v=>v==='G'?'STOP_CH_G_RENEW':v==='OTHER'?'STOP_CH_OTHER':'Q040'
 })}
 
 function q201(){choose({kicker:'Depunere',title:'Dacă procedura cere prezența ta, poți veni în România?',lead:'Alege varianta realistă pentru perioada următoare. O poți modifica ulterior.',opts:[{value:'YES',label:'Da, pot veni'},{value:'NO',label:'Nu pot veni'},{value:'NOT_SOON',label:'Nu pot veni în perioada următoare'}],key:'can_come',next:v=>{if(v==='YES'){S.route='A1_PERSONAL_ROMANIA';return'Q202'}const hadPriorId=(S.answers.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x));if(!hadPriorId){S.route='A3_FIRST_ID_CONSULAR';return'Q202'}S.route='A2_PROXY';return'Q204'}})}
@@ -1136,6 +1146,17 @@ function showTourismUrgentResult(){
   $('statusBack').onclick=back;updateDebug();
 }
 
+function paywallDeclaredContext(){
+ const a=S.answers||{},country=a.residence_country_name||a.residence_country||'',goal=goalNames[a.goal]||'';
+ const parts=[country,goal].filter(Boolean).map(escapeHtmlText);
+ return parts.length?'<div class="paywall-case-context"><span>Evaluarea ta</span><strong>'+parts.join(' · ')+'</strong></div>':'';
+}
+function paywallDeclaredBlockers(){
+ if(!Array.isArray(S.blockers)||!S.blockers.length)return '';
+ const items=S.blockers.slice(0,3).map(x=>'<li>'+escapeHtmlText(x)+'</li>').join('');
+ const extra=S.blockers.length>3?'<p>Mai există și alte condiții de verificat.</p>':'';
+ return '<div class="paywall-blocker-notice" role="note"><strong>Înainte de plată: ai aspecte de clarificat</strong><p>Unele condiții trebuie rezolvate înainte să depui actele. Ghidul explică procedura, dar nu garantează că poți depune cererea imediat.</p><ul>'+items+'</ul>'+extra+'</div>';
+}
 function showResult(forcePreview=false){
  computeResult();
  S.current='RESULT';
@@ -1198,35 +1219,38 @@ function showResult(forcePreview=false){
      ${validated?`
        <div class="paywall-top">
          <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
-         <h2>Deblochează ghidul complet</h2>
-         <p class="paywall-copy">Rezolvă situația ta mai rapid, fără drumuri inutile și fără neclarități.</p>
+         ${paywallDeclaredContext()}
+         <h2>Ghidul pentru situația ta, într-un singur loc</h2>
+         <p class="paywall-copy">Pașii, documentele și sursele relevante sunt organizate pe baza răspunsurilor tale. Primești un ghid informativ, nu un act emis de o instituție.</p>
+         ${paywallDeclaredBlockers()}
          ${S.unknowns.length?`<p class="paywall-note">Un detaliu a rămas neclar în răspunsurile tale. Ghidul se bazează pe ce ne-ai spus până acum.</p>`:''}
        </div>
 
        <div class="paywall-features">
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.fresh}</div><span>Informații actualizate</span></div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.steps}</div><span>Explicații pas cu pas</span></div>
-         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.clear}</div><span>Scris pe înțelesul tuturor</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.fresh}</div><span>Pași în ordine</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.steps}</div><span>Documente de pregătit</span></div>
+         <div class="paywall-feature"><div class="paywall-feature-icon">${pwIcon.clear}</div><span>Surse oficiale de consultat</span></div>
        </div>
 
-       <div class="paywall-reviews-head"><strong>Exemple ilustrative de feedback</strong></div>
-       <div class="paywall-reviews-window" aria-label="Exemple ilustrative de feedback">
+       <div class="paywall-reviews-head"><strong>Ce include ghidul</strong></div>
+       <div class="paywall-reviews-window" aria-label="Beneficiile incluse în ghid">
          <div class="paywall-review-track">${paywallReviewCards()}</div>
        </div>
        <div class="paywall-review-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
        <div class="paywall-actions">
-         <button id="unlockResult" class="btn primary paywall-cta paywall-cta-main"><span class="paywall-cta-label">Deblochează ghidul complet – ${GUIDE_PRICE_LABEL}</span><span class="paywall-cta-arrow" aria-hidden="true">→</span></button>
+         <button id="unlockResult" class="btn primary paywall-cta paywall-cta-main" ${live?'':'disabled aria-disabled="true"'}><span class="paywall-cta-label">${live?'Deblochează ghidul complet – '+GUIDE_PRICE_LABEL:'Plata este momentan indisponibilă'}</span><span class="paywall-cta-arrow" aria-hidden="true">→</span></button>
        </div>
        <div class="paywall-assure">
          <span><b aria-hidden="true">🔒</b>Plată securizată</span>
-         <span><b aria-hidden="true">⚡</b>Acces instant</span>
+         <span><b aria-hidden="true">⚡</b>Acces după confirmarea plății</span>
          <span><b aria-hidden="true">✓</b>Fără abonament</span>
        </div>
+       <p class="paywall-disclaimer">ActeRO oferă informații administrative independente și nu reprezintă o autoritate publică. Cerințele și taxele instituțiilor pot fi modificate.</p>
        <div id="checkoutError" class="final-issue hidden" role="alert"></div>
        ${live
          ?`<button id="checkPayment" class="paywall-paid-link" type="button">Ai plătit deja? Verifică accesul</button>`
-         :`<p class="paywall-preview-note">Plata online nu este încă activă: ghidul se deschide în regim de previzualizare.</p>`}
+         :`<p class="paywall-preview-note">Plata online nu este încă activă. Nu îți cerem bani și nu poți finaliza o comandă în acest moment.</p>`}
      `:`
        <div class="paywall-top">
          <div class="paywall-brandline"><div class="paywall-brandmark">AR</div><span>ActeRO</span></div>
@@ -1249,21 +1273,20 @@ function showResult(forcePreview=false){
 
 // Displayed price. Keep in sync with the Shopify product until the price is served by the payment API.
 const GUIDE_PRICE_LABEL='49 lei';
-const PAYWALL_FEEDBACK=[
-  'Acest ghid mi-ar fi economisit o grămadă de timp.',
-  'Informațiile sunt puse într-o ordine mult mai ușor de urmărit.',
-  'Pașii sunt explicați clar, fără termeni complicați.',
-  'Știi ce documente trebuie pregătite înainte să începi.',
-  'Ajută la eliminarea neclarităților dintre diferitele proceduri.',
-  'Totul este organizat într-un singur loc.',
-  'Este mult mai ușor să înțelegi ce ai de făcut pas cu pas.',
-  'Nu mai trebuie să cauți informația în zece locuri diferite.',
-  'Îți arată pașii de urmat într-un mod simplu.'
+const PAYWALL_BENEFITS=[
+ 'Documentele pe care să le verifici înainte de programare.',
+ 'Ordinea etapelor din procedura identificată.',
+ 'Ce autoritate sau instituție trebuie consultată.',
+ 'Linkurile oficiale relevante pentru situația ta.',
+ 'Explicații pentru termenii administrativi importanți.',
+ 'Avertismente despre condiții încă neîndeplinite.',
+ 'Informații de pregătit înainte de depunere.',
+ 'Ce trebuie reconfirmat când regulile se modifică.',
+ 'Pașii organizați pentru țara și scopul declarat.'
 ];
-// Illustrative copy only: these are NOT customer reviews and must stay labelled as examples.
 function paywallReviewCards(){
-  const cards=PAYWALL_FEEDBACK.map(text=>`<article class="paywall-review-card"><p>„${text}”</p><small>Exemplu de feedback</small></article>`).join('');
-  return `<div class="paywall-review-set">${cards}</div><div class="paywall-review-set" aria-hidden="true">${cards}</div>`;
+ const cards=PAYWALL_BENEFITS.map(text=>`<article class="paywall-review-card"><p>${escapeHtmlText(text)}</p><small>În interiorul ghidului</small></article>`).join('');
+ return `<div class="paywall-review-set">${cards}</div><div class="paywall-review-set" aria-hidden="true">${cards}</div>`;
 }
 
 function docGuideItems(){
@@ -1691,26 +1714,73 @@ async function startShopifyCheckout(button){
   if(button){button.disabled=true;button.textContent='Pregătim plata…'}
   try{
     persistCase();
-    const returnUrl=acteroReturnUrl();
+    // A new checkout must be owned by a server-issued evaluation session.
+    // Older pending checkouts can still be retried with their existing paid-access token.
+    const previousToken=accessTokenForCase();
+    let sessionToken='';
+    try{sessionToken=localStorage.getItem('actero_session_'+S.caseId)||''}catch(e){}
+    if(!previousToken&&!sessionToken){
+      const sessionResponse=await fetch(paymentApiBase()+'/session',{
+        method:'POST',headers:{'Accept':'application/json'}
+      });
+      const session=await sessionResponse.json().catch(()=>null);
+      if(!sessionResponse.ok||!session?.ok||
+         !/^AR-[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(session.case_id||'')||
+         !/^[a-f0-9]{64}$/.test(session.session_token||''))
+        throw new Error(session?.error||'session_creation_failed');
+      // Keep the server's case ID and its secret together before attempting checkout.
+      localStorage.setItem('actero_session_'+session.case_id,session.session_token);
+      S.caseId=session.case_id;
+      persistCase();
+      if(!localStorage.getItem(caseStorageKey(S.caseId)))
+        throw new Error('local_storage_unavailable');
+      sessionToken=session.session_token;
+    }
+    const headers={'Content-Type':'application/json','Accept':'application/json'};
+    if(previousToken)headers['X-Actero-Access-Token']=previousToken;
+    if(sessionToken)headers['X-Actero-Session-Token']=sessionToken;
     const res=await fetch(paymentApiBase()+'/checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      headers,
       body:JSON.stringify({
         case_id:S.caseId,
         route:S.route||'',
         guide_key:guideKeyForCurrent(),
         country:(S.answers&&S.answers.residence_country)||'',
-        return_url:returnUrl
+        return_url:acteroReturnUrl(),
+        // A paid guide relies on these answers. Save a bounded snapshot in D1 so
+        // a buyer can recover it from another device after Shopify email verification.
+        case_state:{
+          route:S.route||'',
+          answers:S.answers||{},
+          docs:S.docs||{},
+          status:S.status||null,
+          clarified:S.clarified||{}
+        }
       })
     });
     const data=await res.json().catch(()=>null);
-    if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)throw new Error((data&&data.error)||'checkout_creation_failed');
+    if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)
+      throw new Error((data&&data.error)||'checkout_creation_failed');
+    // Persist the server-issued token before leaving for Shopify; never put it in the URL.
     localStorage.setItem('actero_access_'+S.caseId,data.accessToken);
     window.location.assign(data.checkoutUrl);
   }catch(e){
     console.error('ActeRO checkout error',e);
     const box=$('checkoutError');
-    if(box){box.classList.remove('hidden');box.textContent='Nu am putut deschide plata. Încearcă din nou.'}
+    const code=e&&e.message;
+    const message=code==='session_required'
+      ?'Sesiunea acestei evaluări a expirat sau nu mai poate fi verificată. Reia evaluarea înainte să încerci plata. Nu plăti din nou dacă ai făcut deja o comandă.'
+      :code==='too_many_requests'
+      ?'Au fost prea multe încercări într-un interval scurt. Încearcă din nou mai târziu; nu repeta plata.'
+      :code==='case_in_progress'
+      ?'Există deja o încercare de plată pentru această evaluare într-un alt browser sau fără tokenul inițial. Revino la browserul în care ai început sau pornește o evaluare nouă. Nu plăti din nou.'
+      :code==='case_route_changed'
+      ?'Ai modificat răspunsurile după inițierea plății. Pentru procedura nouă, începe o evaluare nouă. Dacă ai plătit deja, contactează suportul.'
+      :code==='already_paid'
+      ?'Această evaluare apare deja ca plătită. Folosește pagina de confirmare pentru a-ți deschide ghidul; nu plăti din nou.'
+      :'Nu am putut deschide plata. Nu am înregistrat o nouă plată aici. Încearcă din nou.';
+    if(box){box.classList.remove('hidden');box.textContent=message}
     if(button){button.disabled=false;button.textContent=original}
   }
 }
@@ -1884,6 +1954,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  case'STOP_TRAVEL_ALREADY_RO':return showStop('yellow','Ești deja în România','Ai ales că trebuie să ajungi urgent în România, dar apoi ai indicat că te afli deja în România. Modifică unul dintre răspunsuri ca să continuăm.');
  case'STOP_GOAL_UNKNOWN':return showStop('yellow','Mai avem nevoie de o clarificare','Răspunsurile de până acum nu sunt suficiente pentru a stabili în siguranță ce procedură trebuie verificată.');
  case'STOP_ORIENTATION':return showStop('yellow','Încă nu avem destule informații','Am încercat să restrângem situația prin câteva întrebări simple, dar încă nu putem alege o procedură fără să ghicim.','Poți modifica răspunsurile sau relua evaluarea după ce verifici ce document ori rezultat urmărești.');
+ case'STOP_CH_OTHER':return showStop('yellow','Tipul documentului elvețian trebuie verificat','Ai indicat că ai un alt document elvețian decât cele enumerate. ActeRO nu poate confirma automat dacă acel document dovedește domiciliul pentru procedura CRDS. Verifică denumirea exactă și cerințele cu consulatul înainte să continui.','Nu îți cerem plata pentru un ghid bazat pe un document încă neclarificat.');
  case'STOP_CH_G':return showStop('yellow','Permisul G nu arată că domiciliul tău principal este în Elveția','Permisul G este pentru navetiști transfrontalieri care locuiesc în alt stat și lucrează în Elveția. Pentru un CRDS cu domiciliul în Elveția trebuie să clarificăm mai întâi unde este, de fapt, domiciliul tău principal.','Nu îți cerem plata și nu continuăm cu un ghid care ar putea porni de la o premisă greșită.');
  case'STOP_CH_G_RENEW':return showStop('yellow','Permisul G intră în conflict cu domiciliul CRDS în Elveția','Permisul G este pentru navetiști transfrontalieri care au domiciliul principal în alt stat și lucrează în Elveția. Trebuie clarificat dacă domiciliul tău oficial CRDS mai trebuie să rămână în Elveția.','Nu îți cerem plata pentru reînnoirea CRDS Elveția până nu clarificăm acest punct.');
  default:return showStop('yellow','Evaluarea s-a oprit aici','Combinația de răspunsuri oferită nu este încă acoperită suficient de clar pentru a continua în siguranță.');
