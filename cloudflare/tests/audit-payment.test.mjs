@@ -5,7 +5,7 @@ import worker from '../worker.js';
 const ORIGIN='https://mypape-dot.github.io',SHOP='gyfu4v-5q.myshopify.com',SECRET='test-secret';
 const db=new DatabaseSync(':memory:');
 db.exec('CREATE TABLE access_grants(case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT); CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
-for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql'])db.exec(fs.readFileSync(new URL('../'+n,import.meta.url),'utf8'));
+for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql'])db.exec(fs.readFileSync(new URL('../'+n,import.meta.url),'utf8'));
 db.exec("INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES('B1_IT','B1_FIRST_CRDS','Italy','window.ok=true')");
 const stmt=(sql,args=[])=>({bind:(...v)=>stmt(sql,v),first:async()=>db.prepare(sql).get(...args)??null,run:async()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}}),exec:()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}})});
 const DB={prepare:sql=>stmt(sql),batch:async statements=>{db.exec('BEGIN');try{const out=statements.map(x=>x.exec());db.exec('COMMIT');return out;}catch(e){db.exec('ROLLBACK');throw e;}}};
