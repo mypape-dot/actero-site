@@ -617,7 +617,7 @@ body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rg
 <script>
 window.__ACTERO_BOOTED=false;
 // Set this to the deployed ActeRO payment Worker URL when payments go live.
-window.ACTERO_PAYMENT_API=window.ACTERO_PAYMENT_API||'https://actero.actedsro.workers.dev';
+window.ACTERO_PAYMENT_API=window.ACTERO_PAYMENT_API||''; // set explicitly for staging/production deployment only
 window.addEventListener('error',function(e){try{console.error(e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}var note=document.querySelector('#staticWelcomeFallback .hero-note');if(note)note.textContent='Evaluarea nu s-a încărcat corect.';}catch(_){}});
 window.addEventListener('unhandledrejection',function(e){try{console.error(e&&e.reason?e.reason:e);var box=document.getElementById('iosCompatError');if(box){box.style.display='block';box.textContent='Evaluarea nu s-a încărcat corect. Reîncarcă pagina și încearcă din nou.';}}catch(_){}});
 </script>
