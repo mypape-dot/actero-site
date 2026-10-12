@@ -1,4 +1,5 @@
 import {recoverRequest,recoverConsume,buyerEmail,buyerEmailHash,serializeCaseState,recoveryConfigured} from './recovery.js';
+import {quota} from './quota.js';
 // ActeRO payment integration staging. Shopify test orders only until merchant review.
 // NEVER publish a paid access grant from a browser redirect or unchecked webhook body.
 const ORIGIN = 'https://mypape-dot.github.io';
@@ -137,6 +138,8 @@ export default {
     if(request.method==='POST'&&path==='/checkout'){
       if(forbiddenOrigin(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
       if(env.SHOPIFY_CHECKOUT_ENABLED!=='true')return reply(request,{ok:false,error:'checkout_disabled'},503);
+      const checkoutQuota=await quota(request,env,'checkout',{limit:8,windowSeconds:3600});
+      if(!checkoutQuota.allowed)return reply(request,{ok:false,error:checkoutQuota.error||'too_many_requests'},checkoutQuota.error?503:429);
       let data;try{data=await request.json()}catch{return reply(request,{ok:false,error:'invalid_json'},400)}
       const caseId=data?.case_id,route=data?.route,guideKey=data?.guide_key;
       if(!isCase(caseId)||!isRoute(route)||!isKey(guideKey))return reply(request,{ok:false,error:'invalid_case'},400);
