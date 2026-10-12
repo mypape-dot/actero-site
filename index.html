@@ -1691,26 +1691,40 @@ async function startShopifyCheckout(button){
   if(button){button.disabled=true;button.textContent='Pregătim plata…'}
   try{
     persistCase();
-    const returnUrl=acteroReturnUrl();
+    // On a repeat checkout, prove ownership of the pending case with the existing token.
+    // case_id alone must not be treated as a secret or as authentication.
+    const previousToken=accessTokenForCase();
+    const headers={'Content-Type':'application/json','Accept':'application/json'};
+    if(previousToken)headers['X-Actero-Access-Token']=previousToken;
     const res=await fetch(paymentApiBase()+'/checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      headers,
       body:JSON.stringify({
         case_id:S.caseId,
         route:S.route||'',
         guide_key:guideKeyForCurrent(),
         country:(S.answers&&S.answers.residence_country)||'',
-        return_url:returnUrl
+        return_url:acteroReturnUrl()
       })
     });
     const data=await res.json().catch(()=>null);
-    if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)throw new Error((data&&data.error)||'checkout_creation_failed');
+    if(!res.ok||!data||!data.checkoutUrl||!data.accessToken)
+      throw new Error((data&&data.error)||'checkout_creation_failed');
+    // Persist the server-issued token before leaving for Shopify; never put it in the URL.
     localStorage.setItem('actero_access_'+S.caseId,data.accessToken);
     window.location.assign(data.checkoutUrl);
   }catch(e){
     console.error('ActeRO checkout error',e);
     const box=$('checkoutError');
-    if(box){box.classList.remove('hidden');box.textContent='Nu am putut deschide plata. Încearcă din nou.'}
+    const code=e&&e.message;
+    const message=code==='case_in_progress'
+      ?'Există deja o încercare de plată pentru această evaluare într-un alt browser sau fără tokenul inițial. Revino la browserul în care ai început sau pornește o evaluare nouă. Nu plăti din nou.'
+      :code==='case_route_changed'
+      ?'Ai modificat răspunsurile după inițierea plății. Pentru procedura nouă, începe o evaluare nouă. Dacă ai plătit deja, contactează suportul.'
+      :code==='already_paid'
+      ?'Această evaluare apare deja ca plătită. Folosește pagina de confirmare pentru a-ți deschide ghidul; nu plăti din nou.'
+      :'Nu am putut deschide plata. Nu am înregistrat o nouă plată aici. Încearcă din nou.';
+    if(box){box.classList.remove('hidden');box.textContent=message}
     if(button){button.disabled=false;button.textContent=original}
   }
 }
