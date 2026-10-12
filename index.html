@@ -920,7 +920,7 @@ function q109(){choose({
     {value:'UNKNOWN',label:'Nu știu ce tip este'}
   ],
   key:'swiss_permit',
-  next:v=>v==='G'?'STOP_CH_G':'Q103'
+  next:v=>v==='G'?'STOP_CH_G':v==='OTHER'?'STOP_CH_OTHER':'Q103'
 })}
 
 function q106(){choose({kicker:'Cetățenie română',title:'După ce ai dobândit sau redobândit cetățenia română, ai avut vreodată un pașaport sau act de identitate românesc?',lead:'Întrebarea contează pentru documentele cerute în cazul primului pașaport cu domiciliul în străinătate.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'post_citizenship_romanian_id',next:v=>{if(v==='YES'){S.answers.citizenship_cert_required='NO';delete S.answers.citizenship_cert_available;return'Q101'}if(v==='NO'){S.answers.citizenship_cert_required='YES';if((S.answers.documents||[]).includes('CITIZENSHIP_CERT')){S.answers.citizenship_cert_available='YES';return'Q101'}return'Q107'}S.answers.citizenship_cert_required='POSSIBLE';return'Q107'}})}
@@ -949,7 +949,7 @@ function q125(){choose({
     {value:'UNKNOWN',label:'Nu știu ce tip este'}
   ],
   key:'swiss_current_permit',
-  next:v=>v==='G'?'STOP_CH_G_RENEW':'Q040'
+  next:v=>v==='G'?'STOP_CH_G_RENEW':v==='OTHER'?'STOP_CH_OTHER':'Q040'
 })}
 
 function q201(){choose({kicker:'Depunere',title:'Dacă procedura cere prezența ta, poți veni în România?',lead:'Alege varianta realistă pentru perioada următoare. O poți modifica ulterior.',opts:[{value:'YES',label:'Da, pot veni'},{value:'NO',label:'Nu pot veni'},{value:'NOT_SOON',label:'Nu pot veni în perioada următoare'}],key:'can_come',next:v=>{if(v==='YES'){S.route='A1_PERSONAL_ROMANIA';return'Q202'}const hadPriorId=(S.answers.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x));if(!hadPriorId){S.route='A3_FIRST_ID_CONSULAR';return'Q202'}S.route='A2_PROXY';return'Q204'}})}
@@ -1898,6 +1898,7 @@ function render(id){S.current=id;const appEl=document.querySelector('.app');if(a
  case'STOP_TRAVEL_ALREADY_RO':return showStop('yellow','Ești deja în România','Ai ales că trebuie să ajungi urgent în România, dar apoi ai indicat că te afli deja în România. Modifică unul dintre răspunsuri ca să continuăm.');
  case'STOP_GOAL_UNKNOWN':return showStop('yellow','Mai avem nevoie de o clarificare','Răspunsurile de până acum nu sunt suficiente pentru a stabili în siguranță ce procedură trebuie verificată.');
  case'STOP_ORIENTATION':return showStop('yellow','Încă nu avem destule informații','Am încercat să restrângem situația prin câteva întrebări simple, dar încă nu putem alege o procedură fără să ghicim.','Poți modifica răspunsurile sau relua evaluarea după ce verifici ce document ori rezultat urmărești.');
+ case'STOP_CH_OTHER':return showStop('yellow','Tipul documentului elvețian trebuie verificat','Ai indicat că ai un alt document elvețian decât cele enumerate. ActeRO nu poate confirma automat dacă acel document dovedește domiciliul pentru procedura CRDS. Verifică denumirea exactă și cerințele cu consulatul înainte să continui.','Nu îți cerem plata pentru un ghid bazat pe un document încă neclarificat.');
  case'STOP_CH_G':return showStop('yellow','Permisul G nu arată că domiciliul tău principal este în Elveția','Permisul G este pentru navetiști transfrontalieri care locuiesc în alt stat și lucrează în Elveția. Pentru un CRDS cu domiciliul în Elveția trebuie să clarificăm mai întâi unde este, de fapt, domiciliul tău principal.','Nu îți cerem plata și nu continuăm cu un ghid care ar putea porni de la o premisă greșită.');
  case'STOP_CH_G_RENEW':return showStop('yellow','Permisul G intră în conflict cu domiciliul CRDS în Elveția','Permisul G este pentru navetiști transfrontalieri care au domiciliul principal în alt stat și lucrează în Elveția. Trebuie clarificat dacă domiciliul tău oficial CRDS mai trebuie să rămână în Elveția.','Nu îți cerem plata pentru reînnoirea CRDS Elveția până nu clarificăm acest punct.');
  default:return showStop('yellow','Evaluarea s-a oprit aici','Combinația de răspunsuri oferită nu este încă acoperită suficient de clar pentru a continua în siguranță.');
