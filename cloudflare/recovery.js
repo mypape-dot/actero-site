@@ -1,3 +1,4 @@
+import {quota} from './quota.js';
 // F-03: order-email based guide recovery. Every route fails closed when prerequisites are absent.
 // The raw purchaser email and recovery secret are never persisted in D1 or logged.
 const enc=new TextEncoder();
@@ -50,6 +51,8 @@ const secretToken=()=>{const bytes=new Uint8Array(32);crypto.getRandomValues(byt
 export async function recoverRequest(request,env){
   if(!originAllowed(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
   if(!recoveryConfigured(env))return reply(request,{ok:false,error:'recovery_not_configured'},503);
+  const requestQuota=await quota(request,env,'recovery-request',{limit:5,windowSeconds:3600});
+  if(!requestQuota.allowed)return requestQuota.error?reply(request,{ok:false,error:'recovery_temporarily_unavailable'},503):reply(request,GENERIC,202);
   let data;try{data=await request.json()}catch{return reply(request,GENERIC,202)}
   const email=buyerEmail(data?.email),name=orderReference(data?.order_name);
   if(!email||!name)return reply(request,GENERIC,202);
@@ -97,6 +100,8 @@ export async function recoverRequest(request,env){
 export async function recoverConsume(request,env){
   if(!originAllowed(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
   if(!env.DB)return reply(request,{ok:false,error:'recovery_not_configured'},503);
+  const consumeQuota=await quota(request,env,'recovery-consume',{limit:15,windowSeconds:3600});
+  if(!consumeQuota.allowed)return reply(request,{ok:false,error:consumeQuota.error||'too_many_requests'},consumeQuota.error?503:429);
   let data;try{data=await request.json()}catch{return reply(request,{ok:false,error:'invalid_or_expired_link'},400)}
   const token=data?.token;
   if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))return reply(request,{ok:false,error:'invalid_or_expired_link'},400);
