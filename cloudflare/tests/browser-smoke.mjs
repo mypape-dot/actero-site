@@ -114,6 +114,12 @@ try{
         assert.equal(after.answers.residence_country,'ES');
         assert.equal(after.answers.birth_cert,'READY');
         assert.equal(await page.locator('#unlockResult').isDisabled(),true);
+        if(mobile){
+          await page.setViewportSize({width:320,height:740});
+          await assertNoOverflow(page);
+          await page.setViewportSize({width:430,height:900});
+          await assertNoOverflow(page);
+        }
       },{isMobile:mobile});
 
       await browserCase(browser,kind+'-unresolved-before-pay',async page=>{
@@ -121,14 +127,16 @@ try{
         await select(page,'Q103','UNKNOWN','Q040');
         await select(page,'Q040','NO','RESULT');
         assert.equal(await page.locator('#unlockResult').count(),0);
-        const clarification=page.locator('#clarifyNow');
-        assert.equal(await clarification.count(),1);
-        await clarification.click();
-        await step(page,'Q103');
-        await select(page,'Q103','UNKNOWN');
-        await step(page,'RESULT');
-        assert.equal(await page.locator('#unlockResult').count(),0);
+        // UNKNOWN is not treated as complete. Do not repeat a question already answered.
         assert.equal(await page.locator('#clarifyNow').count(),0);
+        await page.locator('#resultBack').click();
+        await step(page,'Q040');
+        await page.locator('#back').click();
+        await step(page,'Q103');
+        await select(page,'Q103','READY','Q040');
+        await select(page,'Q040','NO','RESULT');
+        assert.equal(await page.locator('#unlockResult').count(),1);
+        assert.equal(await page.locator('#unlockResult').isDisabled(),true);
       },{isMobile:mobile});
 
       await browserCase(browser,kind+'-back-and-revise',async page=>{
