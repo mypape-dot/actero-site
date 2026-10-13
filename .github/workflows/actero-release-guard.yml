@@ -39,6 +39,8 @@ jobs:
         run: node --test cloudflare/tests/guide-review-register.test.mjs
       - name: Verify server checkout requires an approved exact guide script
         run: node --test cloudflare/tests/guide-approval.test.mjs
+      - name: Verify offline D1 inventory checker rejects unsafe exports
+        run: node --test cloudflare/tests/audit-d1-metadata.test.mjs
       - name: Backend and client regression tests
         run: >
           node --test
