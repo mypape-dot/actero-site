@@ -1,6 +1,6 @@
 # ActeRO — inventar D1 și aprobarea ghidurilor (STAGING / READ-ONLY)
 
-**Situație la 13 octombrie 2026:** conexiunea la D1 live nu este disponibilă în această sesiune. Nu s-au verificat date din D1 și **niciun ghid nu a primit aprobare editorială prin acest audit**. Toate cele 43 de rânduri din `guide-review-tracker.csv` au `sale_approved=NO`.
+**Situație la 13 octombrie 2026:** nu există o conexiune directă la D1 din instrumentele de audit. Utilizatorul a executat în Cloudflare D1 Console o interogare exclusiv de metadate și a comunicat rezultatele: **43/43 chei prezente, rutele coincid cu catalogul, toate scripturile au lungime nenulă**. O altă interogare a arătat că singura pereche identică este `B5_DAMAGED` și `B5_DATA_CHANGE`; cele două conțin atât `DAMAGED:{`, cât și `DATA_CHANGE:{` și generatorul comun. **Nu s-a inspectat sau validat complet conținutul efectiv din D1**. Toate cele 43 de rânduri din `guide-review-tracker.csv` au în continuare `sale_approved=NO`.
 
 ## 1. Inventariere fără exportul textului plătit
 
