@@ -31,6 +31,16 @@ This is an **operator-reported local result**; private commercial code was not c
 4. **Checkout:** no live or test payment grant/recovery has been exercised for the revised scripts. The new approval migration is not deployed and has no approved guides.
 5. **Preserve exact private revision:** user-confirmed five-change local draft must not be overwritten by a new patch without another local exact-diff and full browser regression.
 
+## Direct source confirmation — 13 October 2026
+
+The official one-page [DGP document for Great Britain (PDF, file dated 2022)](https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Marea-Britanie.pdf) is still publicly accessible on the DGP website. Its final paragraph specifically discusses **electronically generated settled/pre-settled confirmations following checks by named Romanian consular offices**, produced **on the application date or no more than 30 days earlier**. It does **not** state that *every* UKVI share code must be no more than 30 days old.
+
+Current [GOV.UK eVisa guidance](https://www.gov.uk/evisa) and [GOV.UK share-code page](https://www.gov.uk/evisa/view-evisa-get-share-code-prove-immigration-status) explain that UK immigration status is digital and a UKVI share code lasts **90 days**. These official rules cover different objects and must not be conflated: a share code's lifetime is **not evidence** that it satisfies the Romanian CRDS application requirements.
+
+**Editorial decision:** Keep the current local five-change draft unmodified pending confirmation from the consular/DGP side that the 2022 electronic-confirmation process and 30-day document freshness still apply. For now, advise the applicant to confirm the *exact* acceptable proof and issue date with eConsulat/consulate; do not promise that any 90-day-valid code is automatically sufficient. No guide may be marked approved based on this research alone.
+
+Operator confirmed on their own Mac: **5/5 planned replacements, 0 unexpected edits, 2 identical shared guide scripts; D1 unchanged**. This is a local integrity test, not legal sign-off.
+
 ## Review disposition
 
 - `B5_DAMAGED`: **render tested locally, editorial approval NO**.
