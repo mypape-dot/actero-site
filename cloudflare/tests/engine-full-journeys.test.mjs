@@ -217,7 +217,7 @@ test('cross-country shared B5 guide keys remain consistent in all 10 countries',
       assert.equal(result.current,'RESULT',country+' '+key+' '+result.history.join(' > '));
       assert.equal(result.key,key,country+' '+key+' wrong guide key');
       assert.equal(result.offer,true,country+' '+key+' unexpected checkout block');
-      assert.deepEqual(result.unknowns,[],country+' '+key+' unresolved prerequisites');
+      assert.equal(result.unknowns.length,0,country+' '+key+' unresolved prerequisites');
     }
   }
 });
@@ -261,7 +261,7 @@ test('minor and noncitizen cases stop before asking for payment',()=>{
 test('unsupported CEI and tourism-only temporary passport do not offer checkout',()=>{
   const abroad=walk({
     goal:'CEI',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},
-    choices:{passport_domicile:'ROMANIA',physical:'NO'}
+    choices:{passport_domicile:'ROMANIA',physical:'NO',can_come:'NO'}
   });
   assert.equal(abroad.S.route,'C2_CEI_CONSULAR');
   assert.equal(abroad.offer,false);
