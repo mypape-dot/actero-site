@@ -87,7 +87,7 @@ test('Rapid repeated taps cannot advance the standard question more than once',(
     document:{querySelectorAll:()=>[el]},updateDebug(){},updateCaseSide(){},
     setTimeout:fn=>fn(),push:id=>transitions.push(id)};
   vm.runInNewContext(extract('choose','showStop')+
-    "\\nchoose({title:'Test',opts:[{value:'A',label:'A'}],key:'answer',next:'Q004'});",ctx,{timeout:1000});
+    "\nchoose({title:'Test',opts:[{value:'A',label:'A'}],key:'answer',next:'Q004'});",ctx,{timeout:1000});
   onChoice('A',el);onChoice('A',el);
   assert.deepEqual(transitions,['Q004']);
 });
@@ -102,7 +102,7 @@ test('Rapid country taps cannot send the user to multiple branches',()=>{
     header:()=>'<div>',flagEmoji:()=>'',persistCase(){},
     $:id=>id==='countryList'?list:input,setTimeout:fn=>fn(),
     push:id=>transitions.push(id)};
-  vm.runInNewContext(extract('q003','q004')+'\\nq003();',ctx,{timeout:1000});
+  vm.runInNewContext(extract('q003','q004')+'\nq003();',ctx,{timeout:1000});
   els[0].onclick();els[1].onclick();
   assert.equal(S.answers.residence_country,'IT');
   assert.deepEqual(transitions,['Q004']);
