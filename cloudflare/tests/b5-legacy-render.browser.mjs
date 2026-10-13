@@ -17,7 +17,15 @@ const getFunction=(name,next)=>{
 const functions=getFunction('b5CountryConfig','showB5VariantGuide')+
   '\n'+getFunction('showB5VariantGuide','showB5MovedCountryCompositeGuide');
 const cases=[
+  {country:'ES',name:'Spania',source:'PDF-Spania.pdf'},
   {country:'IT',name:'Italia',source:'PDF-Italia.pdf'},
+  {country:'DE',name:'Germania',source:'PDF-Germania.pdf'},
+  {country:'AT',name:'Austria',source:'PDF-Austria.pdf'},
+  {country:'FR',name:'Franța',source:'PDF-Franta.pdf'},
+  {country:'GB',name:'Regatul Unit',source:'PDF-Marea-Britanie.pdf'},
+  {country:'BE',name:'Belgia',source:'dofi.ibz.be'},
+  {country:'NL',name:'Țările de Jos',source:'government.nl'},
+  {country:'IE',name:'Irlanda',source:'irishimmigration.ie'},
   {country:'CH',name:'Elveția',source:'sem.admin.ch'}
 ];
 const modes=[
@@ -65,6 +73,8 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
         assert.ok(text.includes('Starea civilă / datele de identificare'),
           label+' missing checklist of civil data');
         assert.ok(text.includes('În cazul tău:'),label+' missing personal situation');
+        assert.ok(text.includes('Verifică taxa și termenul'),label+' fee and timing step absent');
+        assert.ok(text.includes('eConsulat'),label+' eConsulat steps absent');
         const href=await page.locator('#screen .verified-source').first().getAttribute('href');
         assert.ok(href?.includes(region.source),label+' wrong evidence source: '+href);
         if(scenario.mode==='DATA_CHANGE'){
@@ -89,5 +99,6 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
     }
   }finally{await browser.close()}
 }
-console.log('HISTORICAL B5 RENDER QA: '+passed+'/'+(passed+failed)+' passed. Live D1 content NOT tested.');
+console.log('HISTORICAL B5 RENDER QA: '+passed+'/'+(passed+failed)+
+  ' passed for 10 countries × 2 incidents × 2 browser engines. Live D1 content NOT tested.');
 if(failed)process.exitCode=1;
