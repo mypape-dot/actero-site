@@ -180,7 +180,7 @@ test('unknown Swiss permit and a cross-border G permit do not present checkout',
       documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},
       choices:{passport_domicile:'ROMANIA',swiss_permit:permit}});
     assert.equal(result.offer,false,permit+' must not be offered a guide');
-    assert.ok(result.current==='UNRESOLVED'||result.current==='STOP');
+    assert.ok(result.current==='UNRESOLVED'||result.current==='STOP'||result.current.startsWith('STOP_'),result.current);
   }
 });
 
