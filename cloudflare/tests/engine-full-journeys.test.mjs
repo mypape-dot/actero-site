@@ -203,3 +203,82 @@ test('all 10 countries are supported in the first-CRDS and lost-CRDS journeys',(
     assert.ok(first.offer&&lost.offer);
   }
 });
+
+
+test('cross-country shared B5 guide keys remain consistent in all 10 countries',()=>{
+  for(const country of countryCodes){
+    for(const [key,scenario] of [
+      ['B5_STOLEN','stolen'],
+      ['B5_DAMAGED','damaged'],
+      ['B5_DATA_CHANGE','data_change'],
+      ['B5_MOVED','new_country']
+    ]){
+      const result=walk(fixtureFor({key,country,scenario,route:'B5_EXISTING_CRDS'}));
+      assert.equal(result.current,'RESULT',country+' '+key+' '+result.history.join(' > '));
+      assert.equal(result.key,key,country+' '+key+' wrong guide key');
+      assert.equal(result.offer,true,country+' '+key+' unexpected checkout block');
+      assert.deepEqual(result.unknowns,[],country+' '+key+' unresolved prerequisites');
+    }
+  }
+});
+
+test('critical unknowns never allow checkout across 10 countries',()=>{
+  for(const country of countryCodes){
+    const b1=walk({
+      country,goal:'ESTABLISH_FOREIGN_DOMICILE',
+      documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},
+      choices:{passport_domicile:'ROMANIA',birth_cert:'UNKNOWN'}
+    });
+    assert.equal(b1.offer,false,country+' B1 unknown birth certificate');
+    const lost=walk({
+      country,goal:'EXISTING_CRDS_PROBLEM',
+      documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'LOST'},
+      choices:{passport_domicile:'CURRENT',same_country:'UNKNOWN'}
+    });
+    assert.equal(lost.offer,false,country+' B5 ambiguous domicile');
+    const proof=walk({
+      country,goal:'EXISTING_CRDS_PROBLEM',
+      documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'LOST'},
+      choices:{passport_domicile:'CURRENT',current_foreign_proof:'UNKNOWN'}
+    });
+    assert.equal(proof.offer,false,country+' B5 unknown current proof');
+  }
+});
+
+test('minor and noncitizen cases stop before asking for payment',()=>{
+  for(const [choices,expected] of [
+    [{age:'NO'},'STOP_MINOR'],
+    [{citizenship:'NO'},'STOP_NONCITIZEN'],
+    [{citizenship:'UNKNOWN'},'STOP_CITIZENSHIP_UNKNOWN']
+  ]){
+    const result=walk({goal:'ID_PROBLEM',choices});
+    assert.equal(result.current,expected);
+    assert.equal(result.offer,false);
+    assert.equal(result.S.route,null);
+  }
+});
+
+test('unsupported CEI and tourism-only temporary passport do not offer checkout',()=>{
+  const abroad=walk({
+    goal:'CEI',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},
+    choices:{passport_domicile:'ROMANIA',physical:'NO'}
+  });
+  assert.equal(abroad.S.route,'C2_CEI_CONSULAR');
+  assert.equal(abroad.offer,false);
+  const tourism=walk({
+    goal:'URGENT_TRAVEL',documents:['PASSPORT'],docStatuses:{PASSPORT:'MISSING'},
+    choices:{physical:'NO',travel_dest:'OTHER',travel_urgent_basis:'TOURISM',ever_crds:'NO'}
+  });
+  assert.equal(tourism.offer,false);
+});
+
+test('urgent journey from Romania to another country is never mistaken for already in Romania',()=>{
+  const result=walk({
+    country:'IT',goal:'URGENT_TRAVEL',documents:['PASSPORT'],
+    docStatuses:{PASSPORT:'MISSING'},
+    choices:{physical:'YES',travel_dest:'OTHER',travel_urgent_basis:'OBJECTIVE_URGENT',ever_crds:'NO'}
+  });
+  assert.equal(result.S.route,'URGENT_OTHER_COUNTRY');
+  assert.equal(result.key,'URGENT_OTHER_COUNTRY');
+  assert.equal(result.offer,true);
+});
