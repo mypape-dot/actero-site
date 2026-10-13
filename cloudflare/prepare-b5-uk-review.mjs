@@ -35,7 +35,7 @@ function replaceOnce(label,before,after){
 }
 replaceOnce('UK residency explanation',
   "proof:'Pașaport britanic/cetățenie; BRP; NINo; council tax; P60/P45; anumite dovezi de școlarizare; ori dovada settled/pre-settled verificată consular.'",
-  "proof:'Pentru domiciliul în Regatul Unit, verifică documentele acceptate în fișa DGP: cetățenie britanică, dovezi fiscale, muncă ori școlarizare, în condițiile oficiale. Pentru settled/pre-settled, consultă statutul digital UKVI (eVisa) la https://www.gov.uk/evisa. Un share code permite verificarea statutului, dar nu este automat o dovadă admisă pentru CRDS; fișa DGP descrie dovezi electronice rezultate din verificări consulare. Cardurile BRP fizice au expirat și nu sunt, singure, dovada actuală a statutului. Confirmă documentul concret acceptat prin eConsulat/consulat.'");
+  "proof:'Pentru domiciliul în Regatul Unit, verifică documentele acceptate în fișa DGP: cetățenie britanică, dovezi fiscale, muncă ori școlarizare, în condițiile oficiale. Pentru settled/pre-settled, consultă statutul digital UKVI (eVisa) la <a href="https://www.gov.uk/evisa" target="_blank" rel="noopener">GOV.UK — eVisa</a>. Un share code permite verificarea statutului, dar nu este automat o dovadă admisă pentru CRDS; fișa DGP descrie dovezi electronice rezultate din verificări consulare. Cardurile BRP fizice au expirat și nu sunt, singure, dovada actuală a statutului. Confirmă documentul concret acceptat prin eConsulat/consulat.'");
 replaceOnce('unapproved badge',
   '<span class="validated-route-badge"><i></i> Procedură verificată</span>',
   '<span class="guide-eyebrow">Ghid personalizat · verifică sursele oficiale</span>');
