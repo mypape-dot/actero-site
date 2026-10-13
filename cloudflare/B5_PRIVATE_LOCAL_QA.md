@@ -56,3 +56,26 @@ rm "$HOME/actero-b5-private.json"
 - Nu simuleaza autentificarea cumparatorului, plata reala, plata de test, permisiunile D1 Worker sau interfața completa de recuperare.
 - Comparatia a doua scenarii cu scripturi identice este intentionata: modul de ghid se alege din datele utilizatorului, nu din `guide_key` singur.
 - Nu aproba vanzarea; toate cele 43 de rute raman neaprobate pana la QA individual, inclusiv verificarea documentelor si taxelor oficiale.
+
+## 4. Propunere de corecție UK (nepublicată, doar local)
+
+Pe 13 octombrie 2026, operatorul a confirmat prin interogare D1 exclusiv de citire că `B5_DAMAGED` și `B5_DATA_CHANGE` conțin `settled`, dar **NU** conțin `evisa` și `share code` ca expresii exacte. Verificarea `instr()` nu validează singură lipsa oricărei explicații alternative, dar identifică o lacună de revizuit.
+
+- [GOV.UK — eVisa](https://www.gov.uk/evisa) spune că dovada actuală a statutului este digitală și se poate genera un share code.
+- [GOV.UK — BRP](https://www.gov.uk/biometric-residence-permits) confirmă expirarea BRP-urilor fizice și înlocuirea cu eVisa.
+- [DGP — condiții Marea Britanie (PDF din 2022)](https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Marea-Britanie.pdf) enumeră documente istorice (inclusiv BRP) și dovezile electronice settled/pre-settled generate după verificarea consulară. **Nu substitui automat un share code oricărei dovezi cerute de consulat.**
+- [eConsulat — tarif CRDS electronic](https://econsulat.ro/PasaportSimpluElectronicRomaniMajoriCRDS/TaxeConsulareDescriere/203000002?isServiciuElectronic=False) confirmă 53 EUR sau echivalentul local la consulat, nu un tarif unic pentru depuneri în România.
+
+Am pregătit instrumentul de **revizie locală** `cloudflare/prepare-b5-uk-review.mjs`: actualizează doar paragraful pentru Regatul Unit, păstrează celelalte țări, clarifică taxa consulară și elimină afirmațiile nesusținute de verificare editorială (`Procedură verificată`, `5 octombrie 2026`). Nu schimbă D1 sau Shopify. Refuză exporturi diferite, intrări nepotrivite și suprascrierea fișierelor.
+
+Din folderul `~/Desktop/actero-site`, cu fișierul PRIVAT inițial în `$HOME`:
+
+```bash
+git pull --ff-only origin fix/engine-logic-audit-20261013
+node cloudflare/prepare-b5-uk-review.mjs "$HOME/actero-b5-private.json" "$HOME/actero-b5-review-draft.json"
+node cloudflare/tests/b5-legacy-render.browser.mjs "$HOME/actero-b5-review-draft.json"
+```
+
+Fișierul de ieșire **conține codul comercial privat**. Nu îl pune în repository, în GitHub, în chat sau într-o conversație publică. Trimite doar ultimele linii de succes/eroare fără cod. Nu folosi scriptul pentru `UPDATE` D1; aprobarea editorială, verificarea linkurilor și testele de plată/livrare lipsesc în continuare.
+
+CI verifică instrumentul **numai pe conținut sintetic derivat din `main` istoric**: [GitHub Actions 38443229096](https://github.com/mypape-dot/actero-site/actions/runs/38443229096) — securitate + browser PASS, revizia sintetică 40/40 PASS. Nu este dovada că fișierul privat revizuit de pe Mac a trecut până când operatorul rulează comanda.
