@@ -71,12 +71,16 @@ jobs:
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
         run: node cloudflare/tests/b5-legacy-render.browser.mjs
-      - name: Verify private D1 test harness using a synthetic historical fixture
+      - name: Verify private D1 review patch using synthetic historical fixture
         run: |
           fixture="$RUNNER_TEMP/actero-b5-test-fixture.json"
-          trap 'rm -f "$fixture"' EXIT
+          revision="$RUNNER_TEMP/actero-b5-review-draft.json"
+          trap 'rm -f "$fixture" "$revision"' EXIT
           node cloudflare/tests/b5-private-fixture.mjs "$fixture"
           node cloudflare/tests/b5-legacy-render.browser.mjs "$fixture"
+          node cloudflare/prepare-b5-uk-review.mjs "$fixture" "$revision"
+          node cloudflare/tests/b5-review-draft.test.mjs "$revision"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$revision"
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
