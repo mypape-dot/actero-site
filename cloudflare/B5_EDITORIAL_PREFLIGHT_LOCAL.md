@@ -36,3 +36,15 @@ Output is a list of `PASS` / `REVIEW` labels. This deliberately does not print s
 5. Only then consider a separate approved private exact-script revision and individual `sale_approved` review. Never set approvals automatically based on this helper.
 
 **No live database writes, migrations, Shopify interactions, premium guide publication or deploy.**
+
+## Source reconciliation after operator's private 8/8 preflight (13 October 2026)
+
+Operator screenshot reports `8/8 textual safeguards present` and `REVIEW UK_DGP_2022_30_DAY_CONSULAR_CONTEXT`. Interpret the last line as an **open source-policy question**, not a failed browser test and not a requirement to add a blanket 30-day rule.
+
+Evidence rechecked on official sites:
+- [DGP CRDS general requirements (last updated 31 July 2025)](https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/): accepted categories of residence evidence, original civil-status documents, payment and registration of foreign name changes. It does **not** resolve whether the UK country-specific 2022 30-day consular confirmation process still applies.
+- [DGP UK 2022 one-page PDF](https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Marea-Britanie.pdf): says the relevant *consular-generated* settled/pre-settled confirmation was issued at filing or within 30 days before filing; it does not say that all UKVI share codes expire after 30 days.
+- [GOV.UK UKVI share code](https://www.gov.uk/evisa/view-evisa-get-share-code-prove-immigration-status): share code lasts 90 days **for UK immigration-status verification**, which is not a Romanian consular admissibility guarantee.
+- [GOV.UK expired BRPs](https://www.gov.uk/biometric-residence-permits): BRP cards have expired and are replaced by eVisas; outdated physical BRP listings are not automatically valid consular documentary proof.
+
+**Open decision, deliberately not patched into premium guide:** Confirm with DGP or the selected Romanian UK consular office whether electronically generated settled/pre-settled *consular confirmations* remain acceptable in October 2026, who generates them, which issue-date requirement applies and whether the office accepts eVisa/share-code information directly. Keep B5_DAMAGED and B5_DATA_CHANGE unapproved until current acceptance and client-facing text are checked. Avoid expanding the already long GB checklist with an unverified legal instruction. No D1/Shopify/publication action is authorised by this document.
