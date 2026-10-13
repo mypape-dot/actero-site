@@ -41,6 +41,8 @@ jobs:
         run: node --test cloudflare/tests/guide-approval.test.mjs
       - name: Verify offline D1 inventory checker rejects unsafe exports
         run: node --test cloudflare/tests/audit-d1-metadata.test.mjs
+      - name: Validate local B5 review utility syntax
+        run: node --check cloudflare/prepare-b5-uk-review.mjs
       - name: Backend and client regression tests
         run: >
           node --test
