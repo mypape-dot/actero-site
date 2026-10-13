@@ -31,6 +31,8 @@ jobs:
         run: node --test cloudflare/tests/public-runtime-config.test.mjs
       - name: Verify questionnaire status history and travel routing
         run: node --test cloudflare/tests/quiz-history.test.mjs
+      - name: Verify engine routing and unresolved-case regressions
+        run: node --test cloudflare/tests/engine-logic-regression.test.mjs
       - name: Backend and client regression tests
         run: >
           node --test
