@@ -35,6 +35,8 @@ jobs:
         run: node --test cloudflare/tests/engine-logic-regression.test.mjs
       - name: Verify complete questionnaire journeys across 43 guide keys
         run: node --test cloudflare/tests/engine-full-journeys.test.mjs
+      - name: Verify guide review register and block incomplete approvals
+        run: node --test cloudflare/tests/guide-review-register.test.mjs
       - name: Backend and client regression tests
         run: >
           node --test
