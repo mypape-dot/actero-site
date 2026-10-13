@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-13",
+  "purpose": "Source-based evidence review prompts for two shared B5 variants, NOT consular acceptance approval",
+  "sale_approval": "NO",
+  "countries": [
+    {
+      "code": "ES",
+      "country": "Spania",
+      "source_url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Spania.pdf",
+      "source_class": "DGP_COUNTRY_PDF_2022",
+      "source_token": "PDF-Spania.pdf",
+      "review_focus": "Un NIE ca număr nu trebuie confundat cu un certificat/document care atestă înregistrarea; fișa menționează empadronamiento și alte acte. Pentru actele enumerate, fișa nu cere traducere.",
+      "nuance_code": "ES_NIE_AND_REGISTRATION_EVIDENCE",
+      "nuance_terms": [
+        "empadronamiento",
+        "NIE"
+      ]
+    },
+    {
+      "code": "DE",
+      "country": "Germania",
+      "source_url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Germania.pdf",
+      "source_class": "DGP_COUNTRY_PDF_2022",
+      "source_token": "PDF-Germania.pdf",
+      "review_focus": "Fișa distinge traducerea autorizată pentru cetățenia germană și extrasele fără rubrici multilingve față de documente scutite. Nu promite fără traducere pentru orice document german.",
+      "nuance_code": "DE_TRANSLATION_DEPENDS_ON_DOCUMENT",
+      "nuance_terms": [
+        "traduc"
+      ]
+    },
+    {
+      "code": "AT",
+      "country": "Austria",
+      "source_url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Austria.pdf",
+      "source_class": "DGP_COUNTRY_PDF_2022",
+      "source_token": "PDF-Austria.pdf",
+      "review_focus": "Verifică dovada înregistrării domiciliului/reședinței principale, nu doar existența unei adrese; fișa precizează lipsa necesității traducerii pentru actele enumerate.",
+      "nuance_code": "AT_MAIN_RESIDENCE_EVIDENCE",
+      "nuance_terms": [
+        "domicili"
+      ]
+    },
+    {
+      "code": "FR",
+      "country": "Franța",
+      "source_url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+      "source_class": "DGP_COUNTRY_PDF_2022",
+      "source_token": "PDF-Franta.pdf",
+      "review_focus": "Cartea Vitale, permisul de conducere și alte documente secundare sunt listate doar pentru titularii unui CRDS cu domiciliul în Franța care nu pot prezenta dovezile principale; respectă și limita de vechime unde există.",
+      "nuance_code": "FR_SECONDARY_DOCS_ONLY_CONDITIONALLY",
+      "nuance_terms": [
+        "carte vitale",
+        "titular"
+      ]
+    },
+    {
+      "code": "BE",
+      "country": "Belgia",
+      "source_url": "https://www.belgium.be/en/housing/moving_to_belgium",
+      "source_class": "FOREIGN_AUTHORITY_CONTEXT_ONLY",
+      "source_token": "dofi.ibz.be",
+      "review_focus": "Înregistrarea la municipalitate și o cerere de înregistrare (Annex 19) nu dovedesc automat finalizarea dreptului de ședere ori acceptarea consulară CRDS. Cere confirmare de la consulat.",
+      "nuance_code": "BE_APPLICATION_VS_REGISTERED_STATUS",
+      "nuance_terms": [
+        "annex 19"
+      ]
+    },
+    {
+      "code": "NL",
+      "country": "Țările de Jos",
+      "source_url": "https://www.government.nl/documents/question-and-answer/what-information-is-in-the-personal-records-database",
+      "source_class": "FOREIGN_AUTHORITY_CONTEXT_ONLY",
+      "source_token": "government.nl",
+      "review_focus": "Distinge BRP pentru rezidenți de RNI pentru nerezidenți; un număr BSN sau un extras RNI nu dovedește singur domiciliul actual în Olanda și acceptarea consulară nu este confirmată.",
+      "nuance_code": "NL_RESIDENT_BRP_VS_NONRESIDENT_RNI",
+      "nuance_terms": [
+        "RNI"
+      ]
+    },
+    {
+      "code": "IE",
+      "country": "Irlanda",
+      "source_url": "https://www.gov.ie/en/department-of-justice-home-affairs-and-migration/collections/how-our-immigration-system-works/",
+      "source_class": "FOREIGN_AUTHORITY_CONTEXT_ONLY",
+      "source_token": "irishimmigration.ie",
+      "review_focus": "Cetățenii UE nu au în mod obișnuit nevoie de IRP; PPS poate fi obținut și fără domiciliu în Irlanda. Nu descrie PPS/IRP ca dovezi CRDS universale.",
+      "nuance_code": "IE_EU_IRP_AND_PPS_LIMITATIONS",
+      "nuance_terms": [
+        "PPS",
+        "IRP"
+      ]
+    },
+    {
+      "code": "CH",
+      "country": "Elveția",
+      "source_url": "https://www.sem.admin.ch/sem/en/home/themen/aufenthalt/eu_efta/ausweis_g_eu_efta.html",
+      "source_class": "FOREIGN_AUTHORITY_CONTEXT_ONLY",
+      "source_token": "sem.admin.ch",
+      "review_focus": "Permisul G este de navetist transfrontalier și implică domiciliul principal în afara Elveției. B/C/L au situații diferite; documentul SEM este informativ, nu formular CRDS.",
+      "nuance_code": "CH_G_CROSS_BORDER_NOT_SWISS_DOMICILE",
+      "nuance_terms": [
+        "permis G"
+      ]
+    }
+  ]
+}
