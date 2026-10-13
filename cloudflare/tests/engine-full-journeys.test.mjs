@@ -49,6 +49,8 @@ function walk({country='IT',goal,documents=[],docStatuses={},choices={},expected
   const history=[];
   const ctx=vm.createContext({
     S,countries,continueBtn,input,screen:{innerHTML:''},
+    statusLabels:{VALID:'valabil',EXPIRED:'expirat',EXPIRING:'în expirare',LOST:'pierdut',STOLEN:'furat',DAMAGED:'deteriorat',MISSING:'lipsă',UNKNOWN:'necunoscut'},
+    docLabels:{ROMANIAN_ID:'buletinul',PASSPORT:'pașaportul',CRDS_PASSPORT:'pașaportul CRDS',CEI:'cartea electronică'},
     setChrome(){},header:()=>'<div>',optionHTML:()=>'<div>',
     flagEmoji:()=>'',persistCase(){},updateCaseSide(){},updateDebug(){},
     $:id=>id==='countryList'?list:input,
