@@ -2,6 +2,7 @@
 // never private Cloudflare D1 content or a live paid request.
 // Do not interpret PASS as verification of D1 byte-for-byte or legal guidance.
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {chromium,webkit} from 'playwright';
 
@@ -14,8 +15,31 @@ const getFunction=(name,next)=>{
   assert.ok(start>=0&&end>start,'Historical function missing: '+name);
   return legacy.slice(start,end);
 };
-const functions=getFunction('b5CountryConfig','showB5VariantGuide')+
-  '\n'+getFunction('showB5VariantGuide','showB5MovedCountryCompositeGuide');
+const operatorPrivatePath=process.argv[2]||null;
+let functions;
+if(operatorPrivatePath){
+  // LOCAL ONLY. JSON export of *exactly two* D1 scripts; never commit or upload it.
+  // No part of the paid script is printed, even when a test fails.
+  const raw=JSON.parse(readFileSync(operatorPrivatePath,'utf8'));
+  const rows=Array.isArray(raw)&&raw.length===1&&Array.isArray(raw[0]?.results)?raw[0].results:
+    Array.isArray(raw)&&raw.every(x=>x&&typeof x==='object'&&'guide_key' in x)?raw:
+    Array.isArray(raw?.results)?raw.results:null;
+  assert.ok(Array.isArray(rows)&&rows.length===2,'Private D1 input must contain precisely two guide records');
+  const byKey=new Map(rows.map(row=>[row.guide_key,row]));
+  assert.equal(byKey.size,2);
+  const damaged=byKey.get('B5_DAMAGED'),changed=byKey.get('B5_DATA_CHANGE');
+  assert.ok(damaged&&changed,'Expected B5_DAMAGED and B5_DATA_CHANGE');
+  assert.equal(damaged.route,'B5_EXISTING_CRDS');
+  assert.equal(changed.route,'B5_EXISTING_CRDS');
+  assert.ok(typeof damaged.script_js==='string'&&damaged.script_js.length>500,
+    'Private D1 script missing/empty');
+  assert.equal(damaged.script_js,changed.script_js,'Private D1 scripts differ unexpectedly');
+  functions=damaged.script_js;
+}else{
+  // CI: historical public renderer only.
+  functions=getFunction('b5CountryConfig','showB5VariantGuide')+
+    '\n'+getFunction('showB5VariantGuide','showB5MovedCountryCompositeGuide');
+}
 const cases=[
   {country:'ES',name:'Spania',source:'PDF-Spania.pdf'},
   {country:'IT',name:'Italia',source:'PDF-Italia.pdf'},
@@ -115,6 +139,8 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
     }
   }finally{await browser.close()}
 }
-console.log('HISTORICAL B5 RENDER QA: '+passed+'/'+(passed+failed)+
-  ' passed for 10 countries × 2 incidents × 2 browser engines. Live D1 content NOT tested.');
+console.log((operatorPrivatePath?'PRIVATE LOCAL D1 EXPORT (no content uploaded)':'HISTORICAL B5 RENDER QA')+
+  ': '+passed+'/'+(passed+failed)+
+  ' passed for 10 countries × 2 incidents × 2 browser engines.'+
+  (operatorPrivatePath?' Contents verified for rendering only; legal accuracy not reviewed.':' Live D1 content NOT tested.'));
 if(failed)process.exitCode=1;
