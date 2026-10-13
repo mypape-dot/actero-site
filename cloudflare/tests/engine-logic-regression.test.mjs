@@ -77,3 +77,33 @@ test('L-06 deselected documents do not retain stale statuses',()=>{
   assert.equal(S.docs.PASSPORT,undefined);
   assert.equal(pushed[0],'Q006');
 });
+
+test('Rapid repeated taps cannot advance the standard question more than once',()=>{
+  const S={current:'Q002',answers:{},clarified:{}}, transitions=[];
+  let onChoice;
+  const el={classList:{add(){},remove(){}}};
+  const ctx={S,screen:{innerHTML:''},setChrome(){},header:()=>'<div>',
+    optionHTML:()=>'<div>',bindOptions:fn=>{onChoice=fn},
+    document:{querySelectorAll:()=>[el]},updateDebug(){},updateCaseSide(){},
+    setTimeout:fn=>fn(),push:id=>transitions.push(id)};
+  vm.runInNewContext(extract('choose','showStop')+
+    "\\nchoose({title:'Test',opts:[{value:'A',label:'A'}],key:'answer',next:'Q004'});",ctx,{timeout:1000});
+  onChoice('A',el);onChoice('A',el);
+  assert.deepEqual(transitions,['Q004']);
+});
+
+test('Rapid country taps cannot send the user to multiple branches',()=>{
+  const S={answers:{}},transitions=[];
+  const countries=[{code:'IT',name:'Italia'},{code:'CH',name:'Elveția'}];
+  const els=countries.map(c=>({dataset:{code:c.code},onclick:null}));
+  const list={innerHTML:'',querySelectorAll:()=>els};
+  const input={value:'',oninput:null};
+  const ctx={S,countries,screen:{innerHTML:''},setChrome(){},
+    header:()=>'<div>',flagEmoji:()=>'',persistCase(){},
+    $:id=>id==='countryList'?list:input,setTimeout:fn=>fn(),
+    push:id=>transitions.push(id)};
+  vm.runInNewContext(extract('q003','q004')+'\\nq003();',ctx,{timeout:1000});
+  els[0].onclick();els[1].onclick();
+  assert.equal(S.answers.residence_country,'IT');
+  assert.deepEqual(transitions,['Q004']);
+});
