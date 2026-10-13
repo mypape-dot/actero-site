@@ -37,6 +37,8 @@ jobs:
         run: node --test cloudflare/tests/engine-full-journeys.test.mjs
       - name: Verify guide review register and block incomplete approvals
         run: node --test cloudflare/tests/guide-review-register.test.mjs
+      - name: Verify server checkout requires an approved exact guide script
+        run: node --test cloudflare/tests/guide-approval.test.mjs
       - name: Backend and client regression tests
         run: >
           node --test
