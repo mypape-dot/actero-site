@@ -39,10 +39,20 @@ Nicio schimbare în `sale_approved` sau în baza de date.
 - [GOV.UK – eVisa](https://www.gov.uk/evisa)
 - [DGP – Pașaport simplu temporar](https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-temporar/)
 
+## Clarificare din D1 și surse actuale (13.10.2026, după verificarea locală)
+
+**Dovezi operator (doar indicatori, fără extragerea codului privat în GitHub):** În `actero-db`, interogarea SQL `instr(script_js, ...)` a întors `DA` pentru **ambele** `B5_DAMAGED` și `B5_DATA_CHANGE` la toate cele trei expresii: `5 octombrie 2026`, `53 EUR`, `BRP`. Acestea sunt doar *ocurențe textuale*, nu o garanție că termenii se afișează în fiecare situație. Operatorul a raportat separat că ambele scripturi private au trecut **40/40 teste de randare locală** (10 țări × 2 incidente × 2 browsere), fără verificare juridică.
+
+- **Taxa de 53 EUR este documentată de eConsulat**, pe pagina pentru „Pașaport simplu electronic pentru cetățeni români majori cu domiciliul în străinătate”: [Taxe consulare eConsulat](https://econsulat.ro/PasaportSimpluElectronicRomaniMajoriCRDS/TaxeConsulareDescriere/203000002?isServiciuElectronic=False). Este taxa/contravaloarea blanchetei citată de platformă, „53 EUR sau echivalent în moneda locală”. Această regulă **nu trebuie eliminată automat ca eronată**. Ghidul trebuie să distingă depunerea la consulat de depunerea în România și să îi trimită pe utilizatori la condițiile actuale ale consulatului ales; existența textului în script nu confirmă însă întregul paragraf.
+- **BRP:** Documentul românesc [DGP Marea Britanie (PDF, 2022)](https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Marea-Britanie.pdf) enumeră BRP, precum și dovada *settled/pre-settled* generată electronic în condițiile verificării consulare. Însă [GOV.UK — BRP](https://www.gov.uk/biometric-residence-permits) și [GOV.UK — eVisa](https://www.gov.uk/evisa) precizează că BRP-urile au expirat, iar statutul curent se verifică digital. **Nu prezenta un BRP fizic ca dovadă automat valabilă sau universal obligatorie**; nu pretinde automat că orice eVisa/share code este acceptat de serviciul CRDS fără confirmare românească. Se cere corelarea ghidului GB cu cerințele DGP/eConsulat curente.
+- **Data „5 octombrie 2026”:** Reprezintă o afirmație despre istoricul verificării, nu o normă juridică. Nu afișa „Procedură verificată” cu această dată dacă nu există dovadă editorială individuală pentru ghid și pentru sursele citate. Data nu este automat falsă; este **neconfirmată ca certificare editorială**.
+
+**Verdict editorial provizoriu pentru B5_DAMAGED/B5_DATA_CHANGE:** structură și randare locală verificate de operator; **taxa 53 EUR susținută de sursa eConsulat în context consular**, **BRP necesită avertizare/context actualizat GB**, **data verificării necesită dovadă**, **ambele `sale_approved=NO`**. Nu s-a operat niciun UPDATE D1.
+
 ## Concluzie de lansare
 
 - **43 de identificatori** există în catalog, iar registrul editorial are **43/43 `sale_approved=NO`**.
-- **0 variante au fost confirmate ca scripturi reale și complete în D1** de acest audit; această frază NU înseamnă că scripturile lipsesc, ci că încă nu le-am inspectat.
+- Operatorul a confirmat prin interogări read-only **43/43 scripturi ne-goale și rute corecte în D1**, plus două scripturi B5 care trec testele locale de randare; nicio variantă nu a fost încă **certificată editorial/juridic** pentru vânzare.
 - Pentru revizia fiecărui ghid este necesară vizualizarea **privată** a conținutului său efectiv, fără expunerea `script_js` într-un GitHub public, plus lista surselor, documentelor, taxelor, termenelor și condițiilor.
 - Verificarea surselor comune **nu poate** transforma automat cele 43 de rânduri în aprobări editoriale.
 - Pentru o garanție de blocare a vânzărilor, verificarea aprobării trebuie făcută **la server**; testul CSV adăugat în CI este doar o protecție a registrului, nu o verificare runtime Shopify.
