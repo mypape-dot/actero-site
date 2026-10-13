@@ -87,8 +87,24 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
           assert.ok(text.includes('Nu îl arunca.'),label+' missing damaged-passport warning');
           assert.ok(!title.includes('date actualizate'),label+' inherited data-change heading');
         }
+        // Re-evaluate the same paid-guide UI when a required residence proof is missing.
+        // The guide must disclose the blocker instead of retaining an old "confirmed" state.
+        await page.evaluate(mode=>{
+          S.answers.current_foreign_proof='NO';
+          if(mode==='DATA_CHANGE')S.answers.civil_sync='YES';
+          showB5VariantGuide(mode);
+        },scenario.mode);
+        const revised=await page.locator('#screen').innerText();
+        assert.ok(revised.includes('Nu ai confirmat încă această dovadă.'),
+          label+' missing-proof warning absent');
+        if(scenario.mode==='DATA_CHANGE'){
+          assert.ok(revised.includes('nu apare o schimbare de stare civilă rămasă neînregistrată'),
+            label+' confirmed civil-sync status not reflected in result');
+          assert.ok(!revised.includes('trebuie actualizată/confirmată'),
+            label+' stale civil-change warning despite confirmed registration');
+        }
         assert.deepEqual(errors,[],label+' browser JavaScript errors');
-        console.log('PASS '+label+' | '+scenario.mainStep+' | country source matched');
+        console.log('PASS '+label+' | incident + missing-proof + civil-sync matrix');
         passed++;
       }catch(e){
         failed++;
