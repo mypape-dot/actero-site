@@ -44,6 +44,6 @@ test('no guide is sale-approved without every independent review gate',()=>{
   }
 });
 test('inventory may not silently claim that 43 private scripts were checked',()=>{
-  assert.match(catalog.verification_note,/NOT been verified/);
+  assert.match(catalog.verification_note,/Private D1 script content.*NOT been verified individually/);
   assert.equal(catalog.review_status,'requires_individual_legal_and_content_review');
 });
