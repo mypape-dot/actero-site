@@ -67,6 +67,8 @@ async function browserCase(browser,label,test,contextOptions={}){
   const context=await browser.newContext({viewport:{width:contextOptions.isMobile?390:1280,height:contextOptions.isMobile?844:900},
     isMobile:!!contextOptions.isMobile,hasTouch:!!contextOptions.isMobile});
   const page=await context.newPage();
+  page.setDefaultTimeout(6500);
+  page.setDefaultNavigationTimeout(10000);
   const pageErrors=[];page.on('pageerror',error=>pageErrors.push(error.message));
   try{
     await test(page);
@@ -116,13 +118,15 @@ try{
 
       await browserCase(browser,kind+'-unresolved-before-pay',async page=>{
         await firstCRDS(page,'ES');
-        await select(page,'Q103','UNKNOWN','RESULT');
+        await select(page,'Q103','UNKNOWN','Q040');
+        await select(page,'Q040','NO','RESULT');
         assert.equal(await page.locator('#unlockResult').count(),0);
         const clarification=page.locator('#clarifyNow');
         assert.equal(await clarification.count(),1);
         await clarification.click();
         await step(page,'Q103');
-        await select(page,'Q103','UNKNOWN','RESULT');
+        await select(page,'Q103','UNKNOWN');
+        await step(page,'RESULT');
         assert.equal(await page.locator('#unlockResult').count(),0);
         assert.equal(await page.locator('#clarifyNow').count(),0);
       },{isMobile:mobile});
