@@ -106,6 +106,10 @@ jobs:
           node cloudflare/verify-b5-checklist-diff.mjs "$revision" "$checklist"
           node cloudflare/tests/b5-legacy-render.browser.mjs "$checklist"
           node cloudflare/b5-mobile-visual-local.mjs "$checklist" "$RUNNER_TEMP/b5-visual-synthetic"
+          country_review="$RUNNER_TEMP/actero-b5-country-review-draft.json"
+          node cloudflare/prepare-b5-country-review-local.mjs "$checklist" "$country_review"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$country_review"
+          node cloudflare/b5-mobile-visual-local.mjs "$country_review" "$RUNNER_TEMP/b5-country-visual-synthetic" FR,BE,NL,IE
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
