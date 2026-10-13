@@ -45,6 +45,8 @@ jobs:
         run: |
           node --check cloudflare/prepare-b5-uk-review.mjs
           node --check cloudflare/verify-b5-review-diff.mjs
+          node --check cloudflare/prepare-b5-checklist-review.mjs
+          node --check cloudflare/verify-b5-checklist-diff.mjs
       - name: Backend and client regression tests
         run: >
           node --test
@@ -86,6 +88,11 @@ jobs:
           node cloudflare/verify-b5-review-diff.mjs "$fixture" "$revision"
           node cloudflare/tests/b5-review-draft.test.mjs "$revision"
           node cloudflare/tests/b5-legacy-render.browser.mjs "$revision"
+          checklist="$RUNNER_TEMP/actero-b5-checklist-draft.json"
+          trap 'rm -f "$fixture" "$revision" "$checklist"' EXIT
+          node cloudflare/prepare-b5-checklist-review.mjs "$revision" "$checklist"
+          node cloudflare/verify-b5-checklist-diff.mjs "$revision" "$checklist"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$checklist"
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
