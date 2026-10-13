@@ -69,8 +69,14 @@ jobs:
           npx playwright install --with-deps chromium webkit
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
-      - name: Test historical B5 renderer for Italy and Switzerland
+      - name: Test historical B5 renderer across all ten countries
         run: node cloudflare/tests/b5-legacy-render.browser.mjs
+      - name: Verify private D1 test harness using a synthetic historical fixture
+        run: |
+          fixture="$RUNNER_TEMP/actero-b5-test-fixture.json"
+          trap 'rm -f "$fixture"' EXIT
+          node cloudflare/tests/b5-private-fixture.mjs "$fixture"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$fixture"
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
