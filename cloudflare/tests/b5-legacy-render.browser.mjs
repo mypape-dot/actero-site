@@ -6,7 +6,8 @@ import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {chromium,webkit} from 'playwright';
 
-const legacy=execFileSync('git',['show','origin/main:index.html'],{
+const operatorPrivatePath=process.argv[2]||null;
+const legacy=operatorPrivatePath?null:execFileSync('git',['show','origin/main:index.html'],{
   encoding:'utf8',maxBuffer:8*1024*1024
 });
 const getFunction=(name,next)=>{
@@ -15,7 +16,6 @@ const getFunction=(name,next)=>{
   assert.ok(start>=0&&end>start,'Historical function missing: '+name);
   return legacy.slice(start,end);
 };
-const operatorPrivatePath=process.argv[2]||null;
 let functions;
 if(operatorPrivatePath){
   // LOCAL ONLY. JSON export of *exactly two* D1 scripts; never commit or upload it.
