@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import {readFileSync,mkdirSync} from 'node:fs';
 import {resolve,isAbsolute,sep} from 'node:path';
 import {webkit} from 'playwright';
-const [privateJson,outputFolder]=process.argv.slice(2);
+const [privateJson,outputFolder,countryList]=process.argv.slice(2);
+const countries=countryList?countryList.split(','):['IT','GB'];
+const allowed=new Set(['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH']);
+assert.ok(countries.length>0&&new Set(countries).size===countries.length&&countries.every(c=>allowed.has(c)),'Invalid country selection');
 assert.ok(privateJson&&outputFolder&&isAbsolute(privateJson)&&isAbsolute(outputFolder),'Two absolute paths required');
 const repo=resolve(new URL('../',import.meta.url).pathname);
 assert.ok(!resolve(outputFolder).startsWith(repo+sep)&&resolve(outputFolder)!==repo,'No screenshots in repository');
@@ -23,7 +26,7 @@ mkdirSync(outputFolder,{recursive:true,mode:0o700});
 const browser=await webkit.launch({headless:true});
 let good=0,bad=0;
 try{
-for(const country of ['IT','GB'])for(const mode of ['DAMAGED','DATA_CHANGE'])for(const width of [320,390,430]){
+for(const country of countries)for(const mode of ['DAMAGED','DATA_CHANGE'])for(const width of [320,390,430]){
  const tag=country+'_'+mode+'_'+width;
  const ctx=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true});
  const page=await ctx.newPage();
@@ -60,5 +63,5 @@ for(const country of ['IT','GB'])for(const mode of ['DAMAGED','DATA_CHANGE'])for
  finally{await ctx.close()}
 }
 }finally{await browser.close()}
-console.log('B5 MOBILE LAYOUT: '+good+'/12 checks passed; '+bad+' issues. Screenshots kept on Mac.');
+console.log('B5 MOBILE LAYOUT: '+good+'/'+(countries.length*2*3)+' checks passed; '+bad+' issues. Screenshots kept on Mac.');
 if(bad)process.exitCode=1;
