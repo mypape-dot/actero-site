@@ -93,6 +93,7 @@ jobs:
           node cloudflare/prepare-b5-checklist-review.mjs "$revision" "$checklist"
           node cloudflare/verify-b5-checklist-diff.mjs "$revision" "$checklist"
           node cloudflare/tests/b5-legacy-render.browser.mjs "$checklist"
+          node cloudflare/b5-mobile-visual-local.mjs "$checklist" "$RUNNER_TEMP/b5-visual-synthetic"
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
