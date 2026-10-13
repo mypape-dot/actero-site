@@ -47,6 +47,6 @@ test('does not report success for old verification badge, missing caution or mis
 });
 
 test('distinguishes 90-day UKVI code from DGP consular verification freshness',()=>{
- const r=auditB5Text(sample.replace('cel mult 30 de zile','90 de zile'));
+ const r=auditB5Text(sample.replaceAll('cel mult 30 de zile','90 de zile'));
  assert.equal(r.ukFreshnessContext,false);
 });
