@@ -94,8 +94,32 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
         const text=await page.locator('#screen').innerText();
         assert.ok(text.includes('Dovada actuală din '+region.name),
           label+' did not show country-specific proof');
-        assert.ok(text.includes('Starea civilă / datele de identificare'),
-          label+' missing checklist of civil data');
+        const granular=functions.includes('Certificatul românesc de naștere');
+        if(granular){
+          const rows=page.locator('#screen .personal-check');
+          assert.equal(await rows.count(),scenario.mode==='DATA_CHANGE'?6:5,
+            label+' wrong individualized document count');
+          assert.ok(text.includes('Certificatul românesc de naștere'),label+' missing Romanian birth certificate');
+          assert.ok(text.includes('Carte de identitate românească (dacă există)'),label+' missing optional Romanian ID');
+          assert.ok(text.includes('Dovada achitării taxei'),label+' missing payment evidence');
+          const passport=rows.first();
+          assert.ok((await passport.locator('.pc-status').getAttribute('class')).includes('warn'),
+            label+' invalid green OK on changed/damaged passport');
+          assert.equal((await passport.locator('.pc-status').innerText()),
+            scenario.mode==='DAMAGED'?'deteriorat':'date schimbate');
+          const proof=rows.nth(1);
+          assert.equal(await proof.locator('.pc-status').innerText(),'de verificat');
+          assert.ok((await proof.locator('.pc-status').getAttribute('class')).includes('neutral'),
+            label+' residence proof treated as officially accepted');
+          if(scenario.mode==='DATA_CHANGE'){
+            const changed=rows.nth(3);
+            assert.equal(await changed.locator('.pc-status').innerText(),'de actualizat');
+            assert.ok((await changed.locator('.pc-status').getAttribute('class')).includes('warn'));
+          }
+        }else{
+          assert.ok(text.includes('Starea civilă / datele de identificare'),
+            label+' missing historic checklist of civil data');
+        }
         assert.ok(text.includes('În cazul tău:'),label+' missing personal situation');
         assert.ok(text.includes('Verifică taxa și termenul'),label+' fee and timing step absent');
         assert.ok(text.includes('eConsulat'),label+' eConsulat steps absent');
@@ -121,6 +145,17 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
         const revised=await page.locator('#screen').innerText();
         assert.ok(revised.includes('Nu ai confirmat încă această dovadă.'),
           label+' missing-proof warning absent');
+        if(granular){
+          const rows=page.locator('#screen .personal-check');
+          const proof=rows.nth(1).locator('.pc-status');
+          assert.equal(await proof.innerText(),'neconfirmată');
+          assert.ok((await proof.getAttribute('class')).includes('warn'));
+          if(scenario.mode==='DATA_CHANGE'){
+            const changed=rows.nth(3).locator('.pc-status');
+            assert.equal(await changed.innerText(),'de prezentat');
+            assert.ok((await changed.getAttribute('class')).includes('neutral'));
+          }
+        }
         if(scenario.mode==='DATA_CHANGE'){
           assert.ok(revised.includes('nu apare o schimbare de stare civilă rămasă neînregistrată'),
             label+' confirmed civil-sync status not reflected in result');
