@@ -151,8 +151,15 @@ export default {
       if(env.RECOVERY_REQUIRED==='true'&&(!recoveryConfigured(env)||!caseState))
         return reply(request,{ok:false,error:'recovery_not_ready'},503);
       try{
-        const guide=await env.DB.prepare('SELECT guide_key,route FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(guideKey).first();
-        if(!guide||guide.route!==route)return reply(request,{ok:false,error:'guide_not_available'},409);
+        // A present script is NOT automatically sellable. A reviewer must explicitly
+        // approve the exact UTF-8 script bytes and route stored in private D1.
+        const guide=await env.DB.prepare(`SELECT g.route,g.script_js,a.script_sha256
+          FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+          ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+          WHERE g.guide_key=? LIMIT 1`).bind(guideKey).first();
+        if(!guide||guide.route!==route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
+          typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
+          return reply(request,{ok:false,error:'guide_not_available'},409);
         const current=await env.DB.prepare('SELECT status,route,guide_key,access_token_hash FROM access_grants WHERE case_id=? LIMIT 1').bind(caseId).first();
         // New checkouts must prove a server-issued evaluation session.
         // Existing pending checkouts can still be retried with their access token,
@@ -312,8 +319,15 @@ export default {
         if(path==='/guide-script'){
           const key=url.searchParams.get('guide_key');
           if(!isKey(key)||key!==grant.guide_key)return reply(request,{ok:false,error:'guide_not_authorized'},403);
-          const guide=await env.DB.prepare('SELECT route,script_js FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(key).first();
-          if(!guide||guide.route!==grant.route)return reply(request,{ok:false,error:'guide_not_found'},404);
+          // Never replace a purchased approved guide with an unreviewed script version.
+          // On review revocation or content drift, withhold it for manual support.
+          const guide=await env.DB.prepare(`SELECT g.route,g.script_js,a.script_sha256
+            FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+            ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+            WHERE g.guide_key=? LIMIT 1`).bind(key).first();
+          if(!guide||guide.route!==grant.route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
+            typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
+            return reply(request,{ok:false,error:'guide_not_available'},503);
           return new Response(guide.script_js,{status:200,headers:{...cors(request),...NOCACHE,'Content-Type':'application/javascript; charset=utf-8'}});
         }
         return reply(request,{ok:false,error:'not_found'},404);
