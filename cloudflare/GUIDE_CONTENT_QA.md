@@ -22,17 +22,17 @@ The independent audit tested routing consistency but noted that a consistently i
 | Audit ID | Check needed | Status |
 |---|---|---|
 | G-01 | Remove/revalidate blanket 'verified on 5 Oct 2026' claim across all 43 guides; not all procedures were independently corroborated. | Pending D1/source review |
-| G-02 | Reconcile CEI fee wording across A1, C1, D2 and C5 with CURRENT official rule. | Pending official confirmation |
+| G-02 | Reconcile CEI fee wording across A1, C1, D2 and C5. DGEP rule checked 13 Oct 2026: first CEI free after age 13 years 11 months, new CEI 70 RON. Actual guide scripts still require review. | Official general rule corroborated; pending private-guide review |
 | G-03 | Validate and include urgent consular travel fee, or explicitly say it varies. | Pending official confirmation |
 | G-04 | Remove internal editorial note from A1 customer-facing step. | Confirmed in historical guide, private D1 not inspected |
 | G-05 | Replace placeholder in C5 guide title. | Confirmed in historical guide, private D1 not inspected |
 | G-06 | Verify proxy eligibility, traditional ID process and CEI restrictions in A2/A3. | Pending official confirmation |
 | G-07 | Validate eConsulat steps after login with an authorized operator; do not assume unseen screens. | Pending real flow |
 | G-08 | Label conflicting fee/time information from DGP vs eConsulat rather than silently choosing one. | Pending official confirmation |
-| G-09 | Recheck UK digital immigration status (eVisa), Ireland documents, and Belgian/Dutch official links. | Pending official confirmation |
+| G-09 | UK eVisa officially replaces physical-status documents in standard cases (GOV.UK checked 13 Oct 2026); check its acceptance by Romanian consular/CRDS offices. Ireland documents and Belgian/Dutch links remain pending. | UK status rule corroborated; CRDS eligibility and other countries pending |
 | G-10 | Perform new B5 route audit; original finding lacked sufficient detail to safely change text. | Pending |
 | G-11 | Swiss SEM informational reference must not be labelled as an application form to submit. | Pending source/document review |
-| G-12 | Verify or remove unsupported Swiss '60 working days' claim. | Pending official confirmation |
+| G-12 | DGP confirms a general maximum of 60 working days for electronic-passport applications through Romanian missions in third countries, including Switzerland. Do not delete the rule without checking the specific submission/collection scenario. | General 60-day rule corroborated 13 Oct 2026; private-guide context pending |
 
 The notes above reflect the audit's findings and confidence levels; they are not a substitute for checking the original government material and current service rules.
 
@@ -51,3 +51,7 @@ The notes above reflect the audit's findings and confidence levels; they are not
 4. Finish F-01 clean-history publication plan before enabling real payments.
 
 **This file deliberately contains no paid guide instructions, customer data or D1 secrets.**
+
+## Official rule-level review, 13 Oct 2026
+
+The public-source evidence and limitations are recorded in [`GUIDE_OFFICIAL_SOURCE_AUDIT_2026-10-13.md`](GUIDE_OFFICIAL_SOURCE_AUDIT_2026-10-13.md). This updates **general fact-check notes only**, not the 43 individual approval states. Do not use it to bypass private D1 content review.
