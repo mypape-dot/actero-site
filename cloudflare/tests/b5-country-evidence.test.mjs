@@ -36,14 +36,14 @@ test('scans each country block and returns source/keyword cues without guide tex
 });
 
 test('missing official country token yields REVIEW, not false approval',()=>{
- const s=fixture().replace('PDF-Franta.pdf','not-listed-here');
+ const s=fixture().replaceAll('PDF-Franta.pdf','not-listed-here');
  const results=inspectCountries(s);
  assert.equal(results.find(x=>x.code==='FR').source_present,false);
  assert.equal(formatSummary(results),2);
 });
 
 test('missing a nuance stays advisory while official source still exists',()=>{
- const s=fixture().replace('annex 19','pending verification');
+ const s=fixture().replaceAll('annex 19','pending verification');
  const results=inspectCountries(s);
  assert.equal(results.find(x=>x.code==='BE').nuance_present,false);
  assert.equal(results.find(x=>x.code==='BE').source_present,true);
