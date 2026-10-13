@@ -58,6 +58,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Historical B5 renderer test reads public main locally, no paid D1 script is exported
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -67,6 +69,8 @@ jobs:
           npx playwright install --with-deps chromium webkit
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
+      - name: Test historical B5 renderer for Italy and Switzerland
+        run: node cloudflare/tests/b5-legacy-render.browser.mjs
       - name: Upload browser screenshots when a check fails
         if: failure()
         uses: actions/upload-artifact@v4
