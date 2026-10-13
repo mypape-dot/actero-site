@@ -46,3 +46,25 @@ jobs:
           cloudflare/tests/swiss-loop.test.mjs
       - name: Shopify payment and reversal regression harness
         run: node --no-warnings cloudflare/tests/audit-payment.test.mjs
+
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated Playwright test browsers
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Test questionnaire navigation in Chromium and WebKit
+        run: node cloudflare/tests/browser-smoke.mjs
+      - name: Upload browser screenshots when a check fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actero-browser-qa-failures
+          path: browser-qa-screenshots/
+          if-no-files-found: ignore
