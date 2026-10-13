@@ -48,6 +48,7 @@ for(const [browserType,kind] of [[chromium,'chromium-desktop'],[webkit,'webkit-m
           window.$=id=>document.getElementById(id);
           window.showResult=()=>{throw Error('Unexpected fallback')};
           window.updateDebug=()=>{};
+          window.reset=()=>{};
         },{country:region.country,mode:scenario.mode});
         await page.addScriptTag({content:functions});
         await page.evaluate(mode=>showB5VariantGuide(mode),scenario.mode);
