@@ -73,9 +73,14 @@ Din folderul `~/Desktop/actero-site`, cu fișierul PRIVAT inițial în `$HOME`:
 ```bash
 git pull --ff-only origin fix/engine-logic-audit-20261013
 node cloudflare/prepare-b5-uk-review.mjs "$HOME/actero-b5-private.json" "$HOME/actero-b5-review-draft.json"
+node cloudflare/verify-b5-review-diff.mjs "$HOME/actero-b5-private.json" "$HOME/actero-b5-review-draft.json"
 node cloudflare/tests/b5-legacy-render.browser.mjs "$HOME/actero-b5-review-draft.json"
 ```
 
 Fișierul de ieșire **conține codul comercial privat**. Nu îl pune în repository, în GitHub, în chat sau într-o conversație publică. Trimite doar ultimele linii de succes/eroare fără cod. Nu folosi scriptul pentru `UPDATE` D1; aprobarea editorială, verificarea linkurilor și testele de plată/livrare lipsesc în continuare.
 
 CI verifică instrumentul **numai pe conținut sintetic derivat din `main` istoric**: [GitHub Actions 38443229096](https://github.com/mypape-dot/actero-site/actions/runs/38443229096) — securitate + browser PASS, revizia sintetică 40/40 PASS. Nu este dovada că fișierul privat revizuit de pe Mac a trecut până când operatorul rulează comanda.
+
+## 5. Operator update: 40/40 post-edit private rendering PASS
+
+The operator ran the private D1 review draft locally on Mac (13 October 2026) and reported `40/40 passed for 10 countries × 2 incidents × 2 browser engines. Contents verified for rendering only; legal accuracy not reviewed.` This is **operator-reported evidence**, not an independent audit of the private source bytes; no raw private source was transferred. `verify-b5-review-diff.mjs` was subsequently added to independently regenerate the exact reviewed draft from the original and verify it contains only the five planned replacements. This exact-diff check still needs to be executed locally on the actual two private files. Do not set any sale approvals.
