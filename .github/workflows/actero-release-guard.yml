@@ -45,6 +45,10 @@ jobs:
         run: |
           node --check cloudflare/b5-editorial-preflight-local.mjs
           node --test cloudflare/tests/b5-editorial-preflight.test.mjs
+      - name: Check eight-country B5 evidence matrix with synthetic fixtures
+        run: |
+          node --check cloudflare/b5-country-evidence-local.mjs
+          node --test cloudflare/tests/b5-country-evidence.test.mjs
       - name: Validate local B5 review utilities syntax
         run: |
           node --check cloudflare/prepare-b5-uk-review.mjs
