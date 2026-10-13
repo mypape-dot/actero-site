@@ -18,6 +18,7 @@ function harness(){
    .run('B1_ES','B1_FIRST_CRDS','Spain',APPROVED_SCRIPT);
  const stmt=(query,args=[])=>({bind:(...v)=>stmt(query,v),
    first:async()=>sql.prepare(query).get(...args)??null,
+   run:async()=>({meta:{changes:sql.prepare(query).run(...args).changes}}),
    exec:()=>({meta:{changes:sql.prepare(query).run(...args).changes}})});
  const DB={prepare:query=>stmt(query),batch:async stmts=>{
    sql.exec('BEGIN');try{const v=stmts.map(x=>x.exec());sql.exec('COMMIT');return v}
