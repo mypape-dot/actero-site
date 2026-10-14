@@ -1,10 +1,11 @@
 // Synthetic 12-guide payload for offline browser smoke only.
 // NEVER create this fixture from real D1 scripts or upload premium code.
 const codes=['FR','BE','NL','IE'];
+const countryNames={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
 const pairs=[
  ['B1_','B1_FIRST_CRDS','showB1','ValidatedGuide'],
- ['B5_RENEWAL_','B5_EXISTING_CRDS','showB5Renewal','ValidatedGuide'],
- ['B5_LOST_','B5_EXISTING_CRDS','showB5Lost','ValidatedGuide']
+ ['B5_RENEWAL_','B5_EXISTING_CRDS','showB2','ValidatedGuide'],
+ ['B5_LOST_','B5_EXISTING_CRDS','showB3','ValidatedGuide']
 ];
 const output=[];
 for(const country of codes){
@@ -12,11 +13,14 @@ for(const country of codes){
   const key=prefix+country;
   const fn=before+country+after;
   const filler=('Acesta este un text sintetic pentru un test automat de structură. ').repeat(20);
-  const html='<h1>Ghid de test '+country+'</h1><section class="real-guide-step"><h3>Pasul de test</h3><p>'+
+  const html='<h1>Ghid de test '+countryNames[country]+'</h1><section class="real-guide-step"><h3>Pasul de test</h3><p>'+
     filler+'</p></section><div class="personal-check">Document demonstrativ</div>'+
     '<a href="https://example.org/official-document.pdf">Document de test</a>';
+  // Prove the offline harness loads the actual public miniFormPreview helper
+  // before invoking a synthetic paid-guide function. Do not mock it in CI.
+  const callPublicHelper=key==='B1_FR'?'void miniFormPreview("Test sintetic","DGP");':'';
   output.push({guide_key:key,route,
-    script_js:'function '+fn+'(){document.getElementById("screen").innerHTML='+JSON.stringify(html)+';}'});
+    script_js:'function '+fn+'(){'+callPublicHelper+'document.getElementById("screen").innerHTML='+JSON.stringify(html)+';}'});
  }
 }
 process.stdout.write(JSON.stringify([{results:output}]));

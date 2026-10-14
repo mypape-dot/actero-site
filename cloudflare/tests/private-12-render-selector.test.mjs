@@ -1,7 +1,7 @@
 // No paid script source is included in these tests.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rendererFor} from '../private-12-render-selector.mjs';
+import {rendererFor,diagnosticEntrypoints,scriptShape} from '../private-12-render-selector.mjs';
 test('B1 selects only its matching national renderer',()=>{
  const text='function showB1FRValidatedGuide(){return 1;}\nfunction showB1BEValidatedGuide(){return 2;}';
  assert.deepEqual(rendererFor('B1_FR',text),{
@@ -22,4 +22,44 @@ test('ambiguous or unknown guide variants require human review',()=>{
  assert.equal(rendererFor('B1_FR',s).reason,'AMBIGUOUS_ENTRYPOINT');
  assert.equal(rendererFor('B1_US',s).reason,'UNKNOWN_GUIDE');
  assert.equal(rendererFor('B1_FR','').reason,'EMPTY_SCRIPT');
+});
+
+test('diagnostic lists only bounded renderer identifier metadata without body text',()=>{
+ const secret='PRIVATE_PREMIUM_PROCEDURE_SHOULD_NEVER_LEAK';
+ const fixture='function showB5SharedGuide(){ const note="'+secret+'"; return note; }\n'+
+   'const showB5PreviewGuide=()=>42;\n'+
+   'function renderInternalSecret(){ return "'+secret+'"; }';
+ const names=diagnosticEntrypoints(fixture);
+ assert.deepEqual(names,['renderInternalSecret','showB5PreviewGuide','showB5SharedGuide']);
+ assert.equal(names.join(' ').includes(secret),false);
+});
+
+test('diagnostic metadata distinguishes direct DOM render and window registration',()=>{
+ const code='const makeDocument=()=>42;\nwindow.renderGuide=function(){ screen.innerHTML="<h1>Test</h1>"; };';
+ const shape=scriptShape(code);
+ assert.equal(shape.directDomWrite,true);
+ assert.equal(shape.windowAssignment,true);
+ assert.equal(shape.functions,2);
+ assert.equal(shape.hasModuleExport,false);
+ assert.deepEqual(diagnosticEntrypoints(code),['makeDocument','renderGuide']);
+});
+
+test('selects exact private B2-renewal and B3-lost functions for all four countries',()=>{
+ for(const country of ['FR','BE','NL','IE']){
+  const source=[
+   'function showB2'+country+'ValidatedGuide(){}',
+   'function showB3'+country+'ValidatedGuide(){}',
+   'function showB3RemainingValidatedGuide(){}'
+  ].join('\n');
+  assert.equal(rendererFor('B5_RENEWAL_'+country,source).entrypoint,'showB2'+country+'ValidatedGuide');
+  assert.equal(rendererFor('B5_LOST_'+country,source).entrypoint,'showB3'+country+'ValidatedGuide');
+  assert.equal(rendererFor('B5_LOST_'+country,source).country,country);
+ }
+});
+test('never substitutes generic B3Remaining, unrelated B2/B3, or wrong-country renderer',()=>{
+ const source='function showB3RemainingValidatedGuide(){}\n'+
+   'function showB3FRValidatedGuide(){}\n'+
+   'function showB2FRValidatedGuide(){}';
+ assert.equal(rendererFor('B5_LOST_BE',source).reason,'NO_KNOWN_ENTRYPOINT');
+ assert.equal(rendererFor('B5_RENEWAL_IE',source).reason,'NO_KNOWN_ENTRYPOINT');
 });

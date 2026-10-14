@@ -7,7 +7,7 @@ import {resolve,dirname,sep,isAbsolute,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
-import {rendererFor} from './private-12-render-selector.mjs';
+import {rendererFor,diagnosticEntrypoints,scriptShape} from './private-12-render-selector.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
@@ -35,6 +35,20 @@ function visibleCss(){
  const html=readFileSync(join(root,'index.html'),'utf8');
  return [...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/gi)].map(m=>m[0]).join('\n');
 }
+// Use the EXACT publicly shipped helper, never an invented stand-in.
+// The private D1 scripts reference it as an external frontend dependency.
+export function publicMiniFormPreviewSource(html){
+ const needle='function miniFormPreview(title,anexa){';
+ const start=html.indexOf(needle);
+ if(start<0||html.indexOf(needle,start+needle.length)!==-1)
+   throw Error('PUBLIC_HELPER_MISSING_OR_AMBIGUOUS');
+ const end=html.indexOf('\n}\n',start);
+ if(end<0||end-start>4000)throw Error('PUBLIC_HELPER_CHANGED');
+ const helper=html.slice(start,end+2);
+ if(!helper.includes('real-doc-page')||!helper.includes('doc-mini'))
+   throw Error('PUBLIC_HELPER_SIGNATURE_CHANGED');
+ return helper;
+}
 function baseAnswers(country,key){
  const first=key.startsWith('B1_');
  const lost=key.startsWith('B5_LOST_');
@@ -48,13 +62,15 @@ function baseAnswers(country,key){
    b5case:lost?'LOST':'RENEWAL',travel_urgent_basis:'CONTINUE_JOURNEY'
  };
 }
-async function renderOne(browser,scenario,row,outputDir,css){
+async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
  const {guide_key:key,script_js:script}=row;
  const selected=rendererFor(key,script);
  const label=key+'-'+scenario.name;
  if(!selected.entrypoint)return {
    guide_key:key,viewport:scenario.name,status:'REVIEW',
-   flags:['RENDER_ENTRYPOINT_'+selected.reason]
+   flags:['RENDER_ENTRYPOINT_'+selected.reason],
+   candidate_function_identifiers:diagnosticEntrypoints(script),
+   script_shape:scriptShape(script)
  };
  const context=await browser.newContext({
    viewport:{width:scenario.width,height:scenario.height},
@@ -62,10 +78,13 @@ async function renderOne(browser,scenario,row,outputDir,css){
  });
  const page=await context.newPage();
  const pageErrors=[];
+ let phase='CONTEXT_SETUP';
  page.on('pageerror',()=>pageErrors.push('EXCEPTION'));
  await page.route('**/*',route=>route.abort()); // Strictly offline: no remote requests.
  try{
+   phase='HTML_SETUP';
    await page.setContent('<!doctype html><html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+css+'</head><body><main id="screen"></main></body></html>');
+   phase='FIXTURE_SETUP';
    await page.evaluate(({country,key,answers})=>{
      window.screen=document.getElementById('screen');
      window.S={route:key.startsWith('B1_')?'B1_FIRST_CRDS':'B5_EXISTING_CRDS',
@@ -83,14 +102,41 @@ async function renderOne(browser,scenario,row,outputDir,css){
      window.showResult=()=>{throw Error('FALLBACK_TO_UNPAID_RESULT')};
      window.reset=()=>{};
    },{country:selected.country,key,answers:baseAnswers(selected.country,key)});
+   phase='PUBLIC_HELPER_LOAD';
+   await page.addScriptTag({content:publicHelper});
+   phase='PRIVATE_SCRIPT_LOAD';
    await page.addScriptTag({content:script});
-   const called=await page.evaluate(async ({name,mode})=>{
+   phase='GUIDE_ENTRYPOINT_CALL';
+   // Catch errors INSIDE the browser; Playwright errors otherwise include
+   // source excerpts or proprietary function bodies. Only sanitized categories escape.
+   const invocation=await page.evaluate(async ({name,mode})=>{
      const fn=window[name];
-     if(typeof fn!=='function')return false;
-     await fn(mode);
-     return true;
+     if(typeof fn!=='function')return {called:false,kind:'ENTRYPOINT_NOT_EXPOSED'};
+     try{
+       await fn(mode);
+       return {called:true};
+     }catch(error){
+       const value=String(error?.message||'');
+       const knownTypes=['ReferenceError','TypeError','SyntaxError','RangeError','Error'];
+       const kind=knownTypes.includes(error?.name)?error.name:'OTHER';
+       let detail='UNCLASSIFIED';
+       const ref=/^([a-zA-Z_$][\w$]{0,50}) is not defined$/.exec(value);
+       if(ref)detail='UNDEFINED_IDENTIFIER_'+ref[1];
+       else if(/^Cannot read properties of (undefined|null)/.test(value))
+         detail='NULL_OR_MISSING_OBJECT';
+       else if(/ is not a function$/.test(value))
+         detail='NOT_CALLABLE';
+       else if(/Cannot set properties of (undefined|null)/.test(value))
+         detail='MISSING_DOM_OR_STATE';
+       return {called:false,kind,detail};
+     }
    },{name:selected.entrypoint,mode:selected.mode});
-   if(!called)return {guide_key:key,viewport:scenario.name,status:'REVIEW',flags:['ENTRYPOINT_NOT_EXPOSED']};
+   if(!invocation.called)return {
+     guide_key:key,viewport:scenario.name,status:'REVIEW',
+     flags:[invocation.kind==='ENTRYPOINT_NOT_EXPOSED'?'ENTRYPOINT_NOT_EXPOSED':
+       'INVOCATION_'+invocation.kind+'_'+invocation.detail]
+   };
+   phase='RENDER_INSPECTION';
    const result=await page.evaluate(()=>{
      const root=document.querySelector('#screen');
      const text=(root.innerText||'').trim();
@@ -101,6 +147,7 @@ async function renderOne(browser,scenario,row,outputDir,css){
      return {
        chars:text.length,
        heading:!!root.querySelector('h1,h2'),
+       headingText:(root.querySelector('h1,h2')?.innerText||'').trim(),
        steps:root.querySelectorAll('.real-guide-step,.guide-step,[data-step]').length,
        documents:root.querySelectorAll('.personal-check,.document-card').length,
        links:links.length,
@@ -115,6 +162,8 @@ async function renderOne(browser,scenario,row,outputDir,css){
    });
    const flags=[];
    if(result.chars<400||!result.heading)flags.push('RESULT_EMPTY_OR_MISSING_HEADING');
+   if(result.heading&&!result.headingText.toLocaleLowerCase('ro-RO').includes(countries[selected.country].toLocaleLowerCase('ro-RO')))
+     flags.push('REVIEW_COUNTRY_HEADING_MISMATCH');
    if(result.steps<1)flags.push('REVIEW_STEP_STRUCTURE');
    if(result.links<1||result.suspiciousLinks)flags.push('REVIEW_OFFICIAL_LINKS');
    if(result.verificationBadge)flags.push('REVIEW_VISIBLE_VERIFICATION_CLAIM');
@@ -124,16 +173,20 @@ async function renderOne(browser,scenario,row,outputDir,css){
    if(pageErrors.length)flags.push('BROWSER_JAVASCRIPT_EXCEPTION');
    if(result.chars>0){
      // This image is proprietary paid-guide content. Never upload to GitHub/ChatGPT.
+     phase='PRIVATE_SCREENSHOT';
      await page.screenshot({path:join(outputDir,label+'.png'),fullPage:true,timeout:15000});
    }
    return {
      guide_key:key,viewport:scenario.name,
      status:flags.length?'REVIEW':'RENDER_OK',
+     rendered:result.chars>0&&result.heading,
      flags,summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
- }catch{
-   // Avoid printing error.stack; JavaScript syntax errors sometimes quote private text.
-   return {guide_key:key,viewport:scenario.name,status:'REVIEW',flags:['BROWSER_RENDER_FAILED']};
+ }catch(error){
+   // Never display error.message or error.stack; they can contain private code.
+   const safeName=['TypeError','ReferenceError','SyntaxError','TimeoutError'].includes(error?.name)?error.name:'OTHER';
+   return {guide_key:key,viewport:scenario.name,status:'REVIEW',
+     flags:['BROWSER_RENDER_FAILED_'+phase,'BROWSER_EXCEPTION_'+safeName]};
  }finally{
    await context.close();
  }
@@ -151,24 +204,35 @@ async function main(){
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
    outdir=privateFolder(argv[0]);
    const css=visibleCss();
+   const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
    for(const scenario of modes){
      const browser=await scenario.browser.launch({headless:true});
      try{
        for(const row of rows){
-         results.push(await renderOne(browser,scenario,row,outdir,css));
+         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper));
        }
      }finally{await browser.close()}
    }
    const summary={
      checked:results.length,render_ok:results.filter(x=>x.status==='RENDER_OK').length,
+     visually_rendered:results.filter(x=>x.rendered===true).length,
      review:results.filter(x=>x.status==='REVIEW').length,
      notes:'VISUAL STRUCTURE ONLY. NOT LEGAL/CONSULAR APPROVAL. NO PAID CHECKOUT TEST.',
      results
    };
    writeFileSync(join(outdir,'diagnostic-summary.json'),JSON.stringify(summary,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE VISUAL QA: '+summary.render_ok+'/'+summary.checked+' renders without automatic review flags.');
-   for(const result of results)console.log(result.status+' '+result.guide_key+' '+result.viewport+' | '+(result.flags.join(',')||'STRUCTURAL_RENDER_ONLY'));
+   console.log('VISUALLY DISPLAYED (including review flags): '+summary.visually_rendered+'/'+summary.checked+'.');
+   for(const result of results){
+     console.log(result.status+' '+result.guide_key+' '+result.viewport+' | '+(result.flags.join(',')||'STRUCTURAL_RENDER_ONLY'));
+     if(result.candidate_function_identifiers)
+       console.log('  FUNCTION_IDENTIFIERS_ONLY '+result.guide_key+' | '+
+         (result.candidate_function_identifiers.join(',')||'NONE'));
+     if(result.script_shape)
+       console.log('  SCRIPT_SHAPE '+result.guide_key+' | '+
+         Object.entries(result.script_shape).map(([k,v])=>k+'='+v).join(','));
+   }
    console.log('Screenshots and diagnostics saved privately outside repository. DO NOT upload premium screenshots/code.');
    console.log('NO SALE APPROVAL. D1, Shopify and deployment unchanged.');
    if(summary.review)process.exitCode=2;

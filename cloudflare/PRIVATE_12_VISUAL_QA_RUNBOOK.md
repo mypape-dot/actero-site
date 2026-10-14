@@ -39,3 +39,21 @@ Terminalul va afișa numai `RENDER_OK` sau `REVIEW`, cheile de ghid publice și 
 ## Pasul următor după diagnostic
 
 Revizuirea umană a ghidului efectiv în browser, a tuturor documentelor, taxelor, condițiilor pentru FR/BE/NL/IE, linkurilor PDF oficiale și a fluxului Shopify–Worker în staging. Orice corecție va fi pregătită prin modificări private, testată diferențial și aprobată separat. Cele 12 ghiduri și toate cele 43 chei rămân **neaprobate pentru vânzare**.
+
+## Clarificare diagnostic după rularea reală 0/24 din 14.10.2026
+
+**Operator-reported (screenshot, fără exportul sursei):** 24/24 cazuri au primit un semnal `REVIEW`, însă **nu** sunt 24 erori de ghid: B1_IE și B1_NL au randat pe ambele viewporturi, dar au afișat o afirmație `Procedură verificată` fără aprobarea editorială; B1_FR și B1_BE au eșuat în testul de randare offline; cele 8 scripturi B5 (lost/renewal × 4 țări) nu au funcții cunoscute de selector. Nu schimbați codul premium pe baza acestor rezultate.
+
+Ramura de diagnostic `fix/private-12-render-diagnostics-20261014` distinge acum faza erorii de browser (`BROWSER_RENDER_FAILED_HTML_SETUP`, `..._GUIDE_ENTRYPOINT_CALL`, etc.), afișează doar **identificatori de funcție** din sursa privată într-o listă limitată `FUNCTION_IDENTIFIERS_ONLY` și semnalează un titlu din altă țară. Numele funcțiilor sunt metadate tehnice; **nu** afișați corpul funcțiilor, pașii, linkurile clienților, tokenurile sau exportul.
+
+Comandă de retestare doar în mediul propriu, într-un director privat NOU (nu suprascrie rezultatele anterioare):
+
+```bash
+cd ~/Desktop/actero-site
+git fetch origin
+git switch fix/private-12-render-diagnostics-20261014 || git switch --track origin/fix/private-12-render-diagnostics-20261014
+git pull --ff-only
+bash cloudflare/audit-private-12-visual-on-mac.sh "$HOME/actero-private-12-render-diagnostic-20261014"
+```
+
+Trimite doar rezultatul textual care începe cu `PRIVATE VISUAL QA` și codurile `BROWSER_RENDER_FAILED_...` / `FUNCTION_IDENTIFIERS_ONLY`, **nu** codul comercial sau fotografiile premium. Această probă nu aprobă nicio variantă de vânzare și nu modifică D1/Shopify.
