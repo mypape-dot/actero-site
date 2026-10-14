@@ -242,6 +242,18 @@ export default {
         }
         if(!prev||prev.status!=='pending'||prev.route!==intent.route||prev.guide_key!==intent.guide_key)
           return review('grant_mismatch');
+        // Checkout and payment can happen hours apart. Re-check the exact approved
+        // D1 content here; otherwise Shopify could charge for a now-withdrawn guide.
+        // On mismatch, flag the genuine paid order for a human refund/resolution.
+        // Never auto-deliver unapproved code, and never silently acknowledge it.
+        const currentGuide=await env.DB.prepare(`SELECT g.script_js,a.script_sha256
+          FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+          ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+          WHERE g.guide_key=? AND g.route=? LIMIT 1`).bind(intent.guide_key,intent.route).first();
+        if(!currentGuide||typeof currentGuide.script_js!=='string'||!currentGuide.script_js.trim()||
+          typeof currentGuide.script_sha256!=='string'||
+          (await digest(currentGuide.script_js))!==currentGuide.script_sha256)
+          return review('guide_unavailable_after_checkout');
         const name=typeof order.name==='string'?order.name.slice(0,64):null;
         const paidEmail=buyerEmail(order.email||order.contact_email||order.customer?.email);
         const buyerHash=paidEmail ? await buyerEmailHash(env,paidEmail) : null;
