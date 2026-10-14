@@ -62,10 +62,13 @@ async function renderOne(browser,scenario,row,outputDir,css){
  });
  const page=await context.newPage();
  const pageErrors=[];
+ let phase='CONTEXT_SETUP';
  page.on('pageerror',()=>pageErrors.push('EXCEPTION'));
  await page.route('**/*',route=>route.abort()); // Strictly offline: no remote requests.
  try{
+   phase='HTML_SETUP';
    await page.setContent('<!doctype html><html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+css+'</head><body><main id="screen"></main></body></html>');
+   phase='FIXTURE_SETUP';
    await page.evaluate(({country,key,answers})=>{
      window.screen=document.getElementById('screen');
      window.S={route:key.startsWith('B1_')?'B1_FIRST_CRDS':'B5_EXISTING_CRDS',
@@ -83,7 +86,9 @@ async function renderOne(browser,scenario,row,outputDir,css){
      window.showResult=()=>{throw Error('FALLBACK_TO_UNPAID_RESULT')};
      window.reset=()=>{};
    },{country:selected.country,key,answers:baseAnswers(selected.country,key)});
+   phase='PRIVATE_SCRIPT_LOAD';
    await page.addScriptTag({content:script});
+   phase='GUIDE_ENTRYPOINT_CALL';
    const called=await page.evaluate(async ({name,mode})=>{
      const fn=window[name];
      if(typeof fn!=='function')return false;
@@ -91,6 +96,7 @@ async function renderOne(browser,scenario,row,outputDir,css){
      return true;
    },{name:selected.entrypoint,mode:selected.mode});
    if(!called)return {guide_key:key,viewport:scenario.name,status:'REVIEW',flags:['ENTRYPOINT_NOT_EXPOSED']};
+   phase='RENDER_INSPECTION';
    const result=await page.evaluate(()=>{
      const root=document.querySelector('#screen');
      const text=(root.innerText||'').trim();
@@ -124,6 +130,7 @@ async function renderOne(browser,scenario,row,outputDir,css){
    if(pageErrors.length)flags.push('BROWSER_JAVASCRIPT_EXCEPTION');
    if(result.chars>0){
      // This image is proprietary paid-guide content. Never upload to GitHub/ChatGPT.
+     phase='PRIVATE_SCREENSHOT';
      await page.screenshot({path:join(outputDir,label+'.png'),fullPage:true,timeout:15000});
    }
    return {
@@ -131,9 +138,11 @@ async function renderOne(browser,scenario,row,outputDir,css){
      status:flags.length?'REVIEW':'RENDER_OK',
      flags,summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
- }catch{
-   // Avoid printing error.stack; JavaScript syntax errors sometimes quote private text.
-   return {guide_key:key,viewport:scenario.name,status:'REVIEW',flags:['BROWSER_RENDER_FAILED']};
+ }catch(error){
+   // Never display error.message or error.stack; they can contain private code.
+   const safeName=['TypeError','ReferenceError','SyntaxError','TimeoutError'].includes(error?.name)?error.name:'OTHER';
+   return {guide_key:key,viewport:scenario.name,status:'REVIEW',
+     flags:['BROWSER_RENDER_FAILED_'+phase,'BROWSER_EXCEPTION_'+safeName]};
  }finally{
    await context.close();
  }
