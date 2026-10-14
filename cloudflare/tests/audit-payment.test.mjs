@@ -5,14 +5,18 @@ import worker from '../worker.js';
 const ORIGIN='https://mypape-dot.github.io',SHOP='gyfu4v-5q.myshopify.com',SECRET='test-secret';
 const db=new DatabaseSync(':memory:');
 db.exec('CREATE TABLE access_grants(case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT); CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
-for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql'])db.exec(fs.readFileSync(new URL('../'+n,import.meta.url),'utf8'));
+for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql','008-guide-approvals.sql'])db.exec(fs.readFileSync(new URL('../'+n,import.meta.url),'utf8'));
 db.exec("INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES('B1_IT','B1_FIRST_CRDS','Italy','window.ok=true')");
+const approvedJs='window.ok=true';
+const approvedHash=crypto.createHash('sha256').update(approvedJs,'utf8').digest('hex');
+db.prepare("INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES('B1_IT','B1_FIRST_CRDS',?,'approved','qa-test-fixture','2026-10-13')").run(approvedHash);
 const stmt=(sql,args=[])=>({bind:(...v)=>stmt(sql,v),first:async()=>db.prepare(sql).get(...args)??null,run:async()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}}),exec:()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}})});
 const DB={prepare:sql=>stmt(sql),batch:async statements=>{db.exec('BEGIN');try{const out=statements.map(x=>x.exec());db.exec('COMMIT');return out;}catch(e){db.exec('ROLLBACK');throw e;}}};
 let alerts=0,alertFail=false;
 globalThis.fetch=async()=>{alerts++;return {ok:!alertFail,status:alertFail?503:204}};
 const env={DB,SHOPIFY_CHECKOUT_ENABLED:'true',SHOPIFY_WEBHOOK_SECRET:SECRET,PAYMENT_ALERT_WEBHOOK_URL:'https://example.invalid/mock-discord',ABUSE_HASH_PEPPER:'a-long-secret-pepper-for-quotas-1234567890'};
-async function api(method,path,body,headers={}){const res=await worker.fetch(new Request('https://worker.test'+path,{method,headers:{Origin:ORIGIN,'Content-Type':'application/json','CF-Connecting-IP':'198.51.100.'+(body?.case_id?(parseInt(body.case_id.slice(3,5),16)%200+1):4),...headers},body:body?JSON.stringify(body):undefined}),env);return {status:res.status,data:await res.json()}};
+let sessionRequestCount=3;
+async function api(method,path,body,headers={}){const res=await worker.fetch(new Request('https://worker.test'+path,{method,headers:{Origin:ORIGIN,'Content-Type':'application/json','CF-Connecting-IP':'198.51.100.'+(body?.case_id?(parseInt(body.case_id.slice(3,5),16)%200+1):(++sessionRequestCount%200+1)),...headers},body:body?JSON.stringify(body):undefined}),env);return {status:res.status,data:await res.json()}};
 const sessions=new Map();
 const makeCase=async()=>{const s=await api('POST','/session');if(s.status!==200)throw Error(JSON.stringify(s));sessions.set(s.data.case_id,s.data.session_token);return s.data.case_id};
 const checkout=(case_id,token)=>api('POST','/checkout',{case_id,route:'B1_FIRST_CRDS',guide_key:'B1_IT'},token?{'X-Actero-Access-Token':token}:{'X-Actero-Session-Token':sessions.get(case_id)});
@@ -74,5 +78,46 @@ const g=await makeCase(),gc=await checkout(g),gOrder='88888004';
 await reversal('refunds/create',{order_id:gOrder,refund_line_items:[]});
 const gLate=await webhook(order(checkoutId(gc.data.checkoutUrl),gOrder));
 check('F-04 unknown refund before payment blocks grant',gLate.data.ignored==='revoked_prior_to_payment'&&!(await access(g,gc.data.accessToken)).data.paid);
+
+// Between checkout and a signed paid order, content can be withdrawn or edited.
+// The customer may still be charged by Shopify: record/alert for manual resolution
+// rather than silently issue a paid grant for an unreviewed/missing script.
+const h=await makeCase(),hc=await checkout(h),hOrder='88888005';
+db.prepare("UPDATE guide_approvals SET status='revoked' WHERE guide_key='B1_IT'").run();
+const preAlerts=alerts;
+const withdrawn=await webhook(order(checkoutId(hc.data.checkoutUrl),hOrder));
+check('withdrawn guide after checkout: paid order flagged for review',
+  withdrawn.status===200&&withdrawn.data.needs_review===true&&
+  withdrawn.data.reason==='guide_unavailable_after_checkout'&&alerts===preAlerts+1);
+check('withdrawn guide after checkout: no paid grant',
+  db.prepare('SELECT status FROM access_grants WHERE case_id=?').get(h).status==='pending');
+check('withdrawn guide after checkout: incident persisted',
+  db.prepare('SELECT result FROM payment_events WHERE shopify_order_id=?').get(hOrder).result==='needs_review');
+
+db.prepare("UPDATE guide_approvals SET status='approved' WHERE guide_key='B1_IT'").run();
+const i=await makeCase(),ic=await checkout(i),iOrder='88888006';
+db.prepare("UPDATE guide_scripts SET script_js='window.changedSinceCheckout=true' WHERE guide_key='B1_IT'").run();
+const drift=await webhook(order(checkoutId(ic.data.checkoutUrl),iOrder));
+check('content changed after checkout: do not grant now-unapproved script',
+  drift.status===200&&drift.data.needs_review===true&&
+  drift.data.reason==='guide_unavailable_after_checkout'&&
+  db.prepare('SELECT status FROM access_grants WHERE case_id=?').get(i).status==='pending');
+db.prepare('UPDATE guide_scripts SET script_js=? WHERE guide_key=?').run(approvedJs,'B1_IT');
+
+const paidBeforeRevocation=(await access(f,fc.data.accessToken)).data;
+check('paid entitlement reports guide available with intact approval',
+  paidBeforeRevocation.paid===true&&paidBeforeRevocation.guide_available===true);
+db.prepare("UPDATE guide_approvals SET status='revoked' WHERE guide_key='B1_IT'").run();
+const paidDuringRevocation=(await access(f,fc.data.accessToken)).data;
+check('already paid customer remains paid but is warned guide is unavailable',
+  paidDuringRevocation.paid===true&&paidDuringRevocation.guide_available===false);
+const noScript=await api('GET','/guide-script?case_id='+f+'&guide_key=B1_IT',undefined,
+  {'X-Actero-Access-Token':fc.data.accessToken});
+check('withdrawn content is never delivered to an existing paid customer',
+  noScript.status===503&&noScript.data.error==='guide_not_available');
+db.prepare("UPDATE guide_approvals SET status='approved' WHERE guide_key='B1_IT'").run();
+const restored=(await access(f,fc.data.accessToken)).data;
+check('restored exact approval makes guide available without a second payment',
+  restored.paid===true&&restored.guide_available===true);
 
 console.log(`SUMMARY ${passed}/${passed} PASS — simulated D1/Shopify, not production`);

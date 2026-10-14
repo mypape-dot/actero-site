@@ -2,14 +2,16 @@
 // Run: node --no-warnings cloudflare/tests/recovery.test.mjs
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {createHmac,randomUUID} from 'node:crypto';
+import {createHmac,randomUUID,createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import worker from '../worker.js';
 const db=new DatabaseSync(':memory:');
 db.exec('CREATE TABLE access_grants (case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT);CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
-for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql'])
+for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql','008-guide-approvals.sql'])
   db.exec(readFileSync(new URL('../'+n,import.meta.url),'utf8'));
 db.exec("INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES('B1_CH','B1_FIRST_CRDS','Elveția','window.test=true')");
+const approvedHash=createHash('sha256').update('window.test=true','utf8').digest('hex');
+db.prepare("INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES('B1_CH','B1_FIRST_CRDS',?,'approved','qa-test-fixture','2026-10-13')").run(approvedHash);
 const statement=(sql,args=[])=>({bind:(...v)=>statement(sql,v),first:async()=>db.prepare(sql).get(...args)||null,run:async()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}}),exec:()=>({meta:{changes:Number(db.prepare(sql).run(...args).changes)}})});
 const DB={prepare:s=>statement(s),batch:async items=>{db.exec('BEGIN');try{const results=items.map(x=>x.exec());db.exec('COMMIT');return results}catch(e){db.exec('ROLLBACK');throw e}}};
 const env={DB,SHOPIFY_CHECKOUT_ENABLED:'true',SHOPIFY_WEBHOOK_SECRET:'local-secret',PAYMENT_ALERT_WEBHOOK_URL:'https://alert.test',ABUSE_HASH_PEPPER:'a-long-secret-pepper-for-quotas-1234567890',RECOVERY_REQUIRED:'true',RECOVERY_EMAIL_PEPPER:'pepper-'.repeat(8),RECOVERY_EMAIL_API_KEY:'re_test_abcdef',RECOVERY_EMAIL_FROM:'support@actero.test',RECOVERY_PAGE_URL:'https://mypape-dot.github.io/actero-site/recuperare.html'};

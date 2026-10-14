@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "ActeRO client-to-paid-guide expected routing inventory only. No commercial guide text or personal data.",
-  "verification_note": "Entries are expected by the frontend; presence in live D1 and official procedural accuracy have NOT been verified.",
+  "verification_note": "Operator-provided read-only Cloudflare D1 metadata (2026-10-13) confirmed all 43 expected guide keys, matching routes and nonempty scripts. Private D1 script content, renderings, and legal accuracy have NOT been verified individually.",
   "review_status": "requires_individual_legal_and_content_review",
   "countries": [
     "ES",

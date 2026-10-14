@@ -151,8 +151,15 @@ export default {
       if(env.RECOVERY_REQUIRED==='true'&&(!recoveryConfigured(env)||!caseState))
         return reply(request,{ok:false,error:'recovery_not_ready'},503);
       try{
-        const guide=await env.DB.prepare('SELECT guide_key,route FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(guideKey).first();
-        if(!guide||guide.route!==route)return reply(request,{ok:false,error:'guide_not_available'},409);
+        // A present script is NOT automatically sellable. A reviewer must explicitly
+        // approve the exact UTF-8 script bytes and route stored in private D1.
+        const guide=await env.DB.prepare(`SELECT g.route,g.script_js,a.script_sha256
+          FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+          ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+          WHERE g.guide_key=? LIMIT 1`).bind(guideKey).first();
+        if(!guide||guide.route!==route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
+          typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
+          return reply(request,{ok:false,error:'guide_not_available'},409);
         const current=await env.DB.prepare('SELECT status,route,guide_key,access_token_hash FROM access_grants WHERE case_id=? LIMIT 1').bind(caseId).first();
         // New checkouts must prove a server-issued evaluation session.
         // Existing pending checkouts can still be retried with their access token,
@@ -235,6 +242,18 @@ export default {
         }
         if(!prev||prev.status!=='pending'||prev.route!==intent.route||prev.guide_key!==intent.guide_key)
           return review('grant_mismatch');
+        // Checkout and payment can happen hours apart. Re-check the exact approved
+        // D1 content here; otherwise Shopify could charge for a now-withdrawn guide.
+        // On mismatch, flag the genuine paid order for a human refund/resolution.
+        // Never auto-deliver unapproved code, and never silently acknowledge it.
+        const currentGuide=await env.DB.prepare(`SELECT g.script_js,a.script_sha256
+          FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+          ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+          WHERE g.guide_key=? AND g.route=? LIMIT 1`).bind(intent.guide_key,intent.route).first();
+        if(!currentGuide||typeof currentGuide.script_js!=='string'||!currentGuide.script_js.trim()||
+          typeof currentGuide.script_sha256!=='string'||
+          (await digest(currentGuide.script_js))!==currentGuide.script_sha256)
+          return review('guide_unavailable_after_checkout');
         const name=typeof order.name==='string'?order.name.slice(0,64):null;
         const paidEmail=buyerEmail(order.email||order.contact_email||order.customer?.email);
         const buyerHash=paidEmail ? await buyerEmailHash(env,paidEmail) : null;
@@ -307,13 +326,36 @@ export default {
       const token=request.headers.get('X-Actero-Access-Token');
       try{
         const grant=await getAccess(env,caseId,token);
-        if(path==='/access')return grant?reply(request,{ok:true,paid:grant.status==='paid'&&!grant.revoked_at,status:grant.revoked_at?'revoked':grant.status,route:grant.route}):reply(request,{ok:true,paid:false,status:'not_found'});
+        if(path==='/access'){
+          if(!grant)return reply(request,{ok:true,paid:false,status:'not_found'});
+          const paid=grant.status==='paid'&&!grant.revoked_at;
+          // Paid entitlement and approved content availability are different facts.
+          // Do not tell a customer their guide is ready if its approval was withdrawn.
+          let guideAvailable=false;
+          if(paid){
+            const ready=await env.DB.prepare(`SELECT g.script_js,a.script_sha256
+              FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+              ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+              WHERE g.guide_key=? AND g.route=? LIMIT 1`).bind(grant.guide_key,grant.route).first();
+            guideAvailable=!!(ready&&typeof ready.script_js==='string'&&ready.script_js.trim()&&
+              typeof ready.script_sha256==='string'&&(await digest(ready.script_js))===ready.script_sha256);
+          }
+          return reply(request,{ok:true,paid,guide_available:guideAvailable,
+            status:grant.revoked_at?'revoked':grant.status,route:grant.route});
+        }
         if(!grant||grant.status!=='paid'||grant.revoked_at)return reply(request,{ok:false,error:'payment_required'},402);
         if(path==='/guide-script'){
           const key=url.searchParams.get('guide_key');
           if(!isKey(key)||key!==grant.guide_key)return reply(request,{ok:false,error:'guide_not_authorized'},403);
-          const guide=await env.DB.prepare('SELECT route,script_js FROM guide_scripts WHERE guide_key=? LIMIT 1').bind(key).first();
-          if(!guide||guide.route!==grant.route)return reply(request,{ok:false,error:'guide_not_found'},404);
+          // Never replace a purchased approved guide with an unreviewed script version.
+          // On review revocation or content drift, withhold it for manual support.
+          const guide=await env.DB.prepare(`SELECT g.route,g.script_js,a.script_sha256
+            FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+            ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+            WHERE g.guide_key=? LIMIT 1`).bind(key).first();
+          if(!guide||guide.route!==grant.route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
+            typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
+            return reply(request,{ok:false,error:'guide_not_available'},503);
           return new Response(guide.script_js,{status:200,headers:{...cors(request),...NOCACHE,'Content-Type':'application/javascript; charset=utf-8'}});
         }
         return reply(request,{ok:false,error:'not_found'},404);

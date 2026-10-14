@@ -31,6 +31,26 @@ jobs:
         run: node --test cloudflare/tests/public-runtime-config.test.mjs
       - name: Verify questionnaire status history and travel routing
         run: node --test cloudflare/tests/quiz-history.test.mjs
+      - name: Verify engine routing and unresolved-case regressions
+        run: node --test cloudflare/tests/engine-logic-regression.test.mjs
+      - name: Verify public copy avoids unsupported official verification claims
+        run: node --test cloudflare/tests/public-copy-integrity.test.mjs
+      - name: Verify private guide audit CLI does not disclose content
+        run: node --test cloudflare/tests/private-guide-audit.test.mjs
+      - name: Verify complete questionnaire journeys across 43 guide keys
+        run: node --test cloudflare/tests/engine-full-journeys.test.mjs
+      - name: Verify guide review register and block incomplete approvals
+        run: node --test cloudflare/tests/guide-review-register.test.mjs
+      - name: Verify server checkout requires an approved exact guide script
+        run: node --test cloudflare/tests/guide-approval.test.mjs
+      - name: Verify offline D1 inventory checker rejects unsafe exports
+        run: node --test cloudflare/tests/audit-d1-metadata.test.mjs
+      - name: Validate local B5 review utilities syntax
+        run: |
+          node --check cloudflare/prepare-b5-uk-review.mjs
+          node --check cloudflare/verify-b5-review-diff.mjs
+          node --check cloudflare/prepare-b5-checklist-review.mjs
+          node --check cloudflare/verify-b5-checklist-diff.mjs
       - name: Backend and client regression tests
         run: >
           node --test
@@ -42,3 +62,46 @@ jobs:
           cloudflare/tests/swiss-loop.test.mjs
       - name: Shopify payment and reversal regression harness
         run: node --no-warnings cloudflare/tests/audit-payment.test.mjs
+
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Historical B5 renderer test reads public main locally, no paid D1 script is exported
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated Playwright test browsers
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Test questionnaire navigation in Chromium and WebKit
+        run: node cloudflare/tests/browser-smoke.mjs
+      - name: Test historical B5 renderer across all ten countries
+        run: node cloudflare/tests/b5-legacy-render.browser.mjs
+      - name: Verify private D1 review patch using synthetic historical fixture
+        run: |
+          fixture="$RUNNER_TEMP/actero-b5-test-fixture.json"
+          revision="$RUNNER_TEMP/actero-b5-review-draft.json"
+          trap 'rm -f "$fixture" "$revision"' EXIT
+          node cloudflare/tests/b5-private-fixture.mjs "$fixture"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$fixture"
+          node cloudflare/prepare-b5-uk-review.mjs "$fixture" "$revision"
+          node cloudflare/verify-b5-review-diff.mjs "$fixture" "$revision"
+          node cloudflare/tests/b5-review-draft.test.mjs "$revision"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$revision"
+          checklist="$RUNNER_TEMP/actero-b5-checklist-draft.json"
+          trap 'rm -f "$fixture" "$revision" "$checklist"' EXIT
+          node cloudflare/prepare-b5-checklist-review.mjs "$revision" "$checklist"
+          node cloudflare/verify-b5-checklist-diff.mjs "$revision" "$checklist"
+          node cloudflare/tests/b5-legacy-render.browser.mjs "$checklist"
+          node cloudflare/b5-mobile-visual-local.mjs "$checklist" "$RUNNER_TEMP/b5-visual-synthetic"
+      - name: Upload browser screenshots when a check fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: actero-browser-qa-failures
+          path: browser-qa-screenshots/
+          if-no-files-found: ignore

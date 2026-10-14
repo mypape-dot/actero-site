@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import worker from '../worker.js';
 const ORIGIN='https://mypape-dot.github.io';
 function harness(){
  const sql=new DatabaseSync(':memory:');
  sql.exec('CREATE TABLE access_grants(case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT);CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
- for(const migration of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql'])sql.exec(readFileSync(new URL('../'+migration,import.meta.url),'utf8'));
+ for(const migration of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql','008-guide-approvals.sql'])sql.exec(readFileSync(new URL('../'+migration,import.meta.url),'utf8'));
  sql.exec("INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES('B1_IT','B1_FIRST_CRDS','Italia','window.ok=true')");
+ const hash=createHash('sha256').update('window.ok=true','utf8').digest('hex');
+ sql.prepare("INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES('B1_IT','B1_FIRST_CRDS',?,'approved','qa-test-fixture','2026-10-13')").run(hash);
  const stmt=(query,args=[])=>({bind:(...v)=>stmt(query,v),first:async()=>sql.prepare(query).get(...args)??null,run:async()=>({meta:{changes:Number(sql.prepare(query).run(...args).changes)}}),exec:()=>({meta:{changes:Number(sql.prepare(query).run(...args).changes)}})});
  const DB={prepare:q=>stmt(q),batch:async stmts=>{sql.exec('BEGIN');try{const result=stmts.map(s=>s.exec());sql.exec('COMMIT');return result}catch(e){sql.exec('ROLLBACK');throw e}}};
  const env={DB,ABUSE_HASH_PEPPER:'a-long-randomized-pepper-for-testing-not-a-secret-2026',SHOPIFY_CHECKOUT_ENABLED:'true',SHOPIFY_WEBHOOK_SECRET:'test-shop-secret',PAYMENT_ALERT_WEBHOOK_URL:'https://alert.invalid/mock'};

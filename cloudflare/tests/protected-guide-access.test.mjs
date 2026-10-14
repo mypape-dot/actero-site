@@ -8,7 +8,7 @@ const caseId='AR-12345678-1234-4123-8123-123456789012';
 const token='authorized-token-'+('x'.repeat(50));
 const hash=createHash('sha256').update(token).digest('hex');
 const origin='https://mypape-dot.github.io';
-function envFor({revoked=false}={}){
+function envFor({revoked=false,approved=true,changed=false}={}){
   let guideQueries=0;
   const DB={
     prepare(sql){
@@ -17,9 +17,11 @@ function envFor({revoked=false}={}){
           if(sql.includes('FROM access_grants WHERE case_id'))
             return {case_id:caseId,status:'paid',route:'B1_FIRST_CRDS',
               guide_key:'B1_IT',access_token_hash:hash,revoked_at:revoked?'2026-10-12':null};
-          if(sql.includes('FROM guide_scripts WHERE guide_key')){
+          if(sql.includes('FROM guide_scripts AS g INNER JOIN guide_approvals AS a')){
             guideQueries++;
-            return {route:'B1_FIRST_CRDS',script_js:'window.verified=true;'};
+            return approved?{route:'B1_FIRST_CRDS',
+              script_js:changed?'window.changed=true;':'window.verified=true;',
+              script_sha256:createHash('sha256').update('window.verified=true;').digest('hex')}:null;
           }
           throw Error('Unexpected query: '+sql);
         }};
@@ -64,4 +66,15 @@ test('revoked token cannot retrieve any private guide script',async()=>{
   const res=await get('/guide-script?case_id='+caseId+'&guide_key=B1_IT',env,token);
   assert.equal(res.status,402);
   assert.equal(env.guideQueries(),0);
+});
+
+test('a paid token cannot receive guide content after review approval is withdrawn',async()=>{
+  const env=envFor({approved:false});
+  const result=await get('/guide-script?case_id='+caseId+'&guide_key=B1_IT',env,token);
+  assert.equal(result.status,503);
+});
+test('editing an approved guide invalidates its review fingerprint',async()=>{
+  const env=envFor({changed:true});
+  const result=await get('/guide-script?case_id='+caseId+'&guide_key=B1_IT',env,token);
+  assert.equal(result.status,503);
 });
