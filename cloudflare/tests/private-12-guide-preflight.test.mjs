@@ -48,7 +48,7 @@ test('syntax errors and unsupported verification claims are signalled without le
  assert.ok(!lines.includes(secret));
  const b=fixture();
  b.results.find(x=>x.guide_key==='B1_FR').script_js=
-   'function guide(){return "Procedură verificată; Carte Vitale; '+url.FR+'";}'+ ' '.repeat(220);
+   'function guide(){return "Procedură verificată; Carte Vitale; '+url.FR+'; '+ 'test editorial '.repeat(25)+'";}';
  const second=inspectPrivateExport(b);
  const warnings=second.rows.find(x=>x.guide_key==='B1_FR').manual_signals;
  assert.ok(warnings.includes('REVIEW_UNSUPPORTED_VERIFICATION_BADGE'));
