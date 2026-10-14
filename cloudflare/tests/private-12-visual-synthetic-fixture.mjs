@@ -1,6 +1,7 @@
 // Synthetic 12-guide payload for offline browser smoke only.
 // NEVER create this fixture from real D1 scripts or upload premium code.
 const codes=['FR','BE','NL','IE'];
+const includeUnverifiedClaim=process.argv.includes('--editorial-badge');
 const countryNames={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
 const pairs=[
  ['B1_','B1_FIRST_CRDS','showB1','ValidatedGuide'],
@@ -15,7 +16,8 @@ for(const country of codes){
   const filler=('Acesta este un text sintetic pentru un test automat de structură. ').repeat(20);
   const html='<h1>Ghid de test '+countryNames[country]+'</h1><section class="real-guide-step"><h3>Pasul de test</h3><p>'+
     filler+'</p></section><div class="personal-check">Document demonstrativ</div>'+
-    '<a href="https://example.org/official-document.pdf">Document de test</a>';
+    '<a href="https://example.org/official-document.pdf">Document de test</a>'+
+    (includeUnverifiedClaim?'<span class="guide-status">Procedură verificată</span>':'');
   // Prove the offline harness loads the actual public miniFormPreview helper
   // before invoking a synthetic paid-guide function. Do not mock it in CI.
   const callPublicHelper=key==='B1_FR'?'void miniFormPreview("Test sintetic","DGP");':'';
