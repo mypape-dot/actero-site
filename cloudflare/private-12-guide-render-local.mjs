@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
 import {rendererFor,diagnosticEntrypoints,scriptShape} from './private-12-render-selector.mjs';
-import {assessRenderedGuide,compareViewportSignals} from './private-guide-procedure-signals.mjs';
+import {assessRenderedGuide,compareViewportSignals} from './procedure-signal-classifier.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
