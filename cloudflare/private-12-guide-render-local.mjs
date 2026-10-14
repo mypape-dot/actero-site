@@ -250,7 +250,7 @@ async function main(){
          ' | badge='+a.badge+
          ' | source_date='+a.dated_source+
          ' | other_dates='+a.other_date_mentions+
-         ' | mobile_match='+JSON.stringify(a)===JSON.stringify(b));
+         ' | mobile_match='+(JSON.stringify(a)===JSON.stringify(b)));
      }
      console.log('NO D1 WRITES. NO SCREENSHOTS. THIS DOES NOT APPROVE LEGAL CONTENT.');
      if(results.some(r=>!r.claim_counts))process.exitCode=2;
