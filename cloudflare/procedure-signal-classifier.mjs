@@ -10,7 +10,7 @@ const PATTERNS={
  },
  BE:{
   ANNEX_19:/\banex(?:a|ă)\s*19\b|\bannexe?\s*19\b/i,
-  APPLICATION_PENDING:/\b(?:cerere|solicitare|înregistrare)\b.{0,85}\b(?:depusă|în\s+curs|în\s+analiză|nu\s+este\s+aprobată)\b|\bnu\s+(?:atestă|garantează)\b.{0,75}\baprob/i,
+  APPLICATION_PENDING:/(?:cerere|solicitare|înregistrare).{0,85}(?:depusă|în\s+curs|în\s+analiză|nu\s+este\s+aprobată)|nu\s+(?:atestă|garantează).{0,75}aprob/i,
   ACCEPTANCE_CAUTION:/\b(?:consulat|DGP|autorită[țt]ile\s+române)\b.{0,150}\b(?:accept|verific|confirm)\w*/i
  },
  NL:{
@@ -19,7 +19,7 @@ const PATTERNS={
   BRP:/\bBRP\b/i,
   RESIDENT_DISTINCTION:/\b(?:rezident|nerezident)\b.{0,120}\b(?:BRP|RNI|BSN)\b|\b(?:BRP|RNI|BSN)\b.{0,120}\b(?:rezident|nerezident)\b/i,
   IND_8004:/\b(?:IND\s*)?8004\b/i,
-  PERMANENT_CONDITION:/\b(?:reziden[țt]ă|ședere)\s+permanentă\b|\b(?:cinci|5)\s+ani\b/i
+  PERMANENT_CONDITION:/(?:reziden[țt]ă|ședere)\s+permanentă|\b(?:cinci|5)\s+ani\b/i
  },
  IE:{
   PPS:/\bPPS(?:N)?\b/i,
@@ -27,7 +27,7 @@ const PATTERNS={
   EUTR2:/\bEUTR[\s-]?2\b/i,
   PPS_NOT_PROOF:/\bPPS(?:N)?\b.{0,120}\b(?:nu\s+(?:este|dovedește|atestă)|insuficient|singur)\b|\b(?:nu\s+(?:este|dovedește|atestă)|insuficient)\b.{0,120}\bPPS(?:N)?\b/i,
   EU_CITIZEN_DISTINCTION:/\b(?:cetățean|cetă[țt]eni)\b.{0,100}\b(?:UE|român)\b|\b(?:UE|român)\b.{0,100}\b(?:cetățean|cetă[țt]eni)\b/i,
-  PERMANENT_CONDITION:/\b(?:reziden[țt]ă|ședere)\s+permanentă\b|\b(?:cinci|5)\s+ani\b/i
+  PERMANENT_CONDITION:/(?:reziden[țt]ă|ședere)\s+permanentă|\b(?:cinci|5)\s+ani\b/i
  }
 };
 const REVISIONS={
@@ -41,7 +41,7 @@ function detected(country,text){
  return Object.fromEntries(Object.entries(PATTERNS[country])
    .map(([name,re])=>[name,re.test(text)]));
 }
-// Do not infer legal correctness from global keyword proximity. These markers
+// Regex word boundaries in JavaScript treat Romanian diacritics as non-word\n// characters. Avoid trailing ASCII boundaries on words ending with ă/ț/î.\n// Do not infer legal correctness from global keyword proximity. These markers
 // ONLY tell a reviewer which passages to inspect privately in context.
 export function assessRenderedGuide(key,text){
  if(typeof key!=='string'||!KEYS.has(key))throw Error('UNKNOWN_GUIDE_KEY');
