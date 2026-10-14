@@ -15,7 +15,8 @@ const DB={prepare:sql=>stmt(sql),batch:async statements=>{db.exec('BEGIN');try{c
 let alerts=0,alertFail=false;
 globalThis.fetch=async()=>{alerts++;return {ok:!alertFail,status:alertFail?503:204}};
 const env={DB,SHOPIFY_CHECKOUT_ENABLED:'true',SHOPIFY_WEBHOOK_SECRET:SECRET,PAYMENT_ALERT_WEBHOOK_URL:'https://example.invalid/mock-discord',ABUSE_HASH_PEPPER:'a-long-secret-pepper-for-quotas-1234567890'};
-async function api(method,path,body,headers={}){const res=await worker.fetch(new Request('https://worker.test'+path,{method,headers:{Origin:ORIGIN,'Content-Type':'application/json','CF-Connecting-IP':'198.51.100.'+(body?.case_id?(parseInt(body.case_id.slice(3,5),16)%200+1):4),...headers},body:body?JSON.stringify(body):undefined}),env);return {status:res.status,data:await res.json()}};
+let sessionRequestCount=3;
+async function api(method,path,body,headers={}){const res=await worker.fetch(new Request('https://worker.test'+path,{method,headers:{Origin:ORIGIN,'Content-Type':'application/json','CF-Connecting-IP':'198.51.100.'+(body?.case_id?(parseInt(body.case_id.slice(3,5),16)%200+1):(++sessionRequestCount%200+1)),...headers},body:body?JSON.stringify(body):undefined}),env);return {status:res.status,data:await res.json()}};
 const sessions=new Map();
 const makeCase=async()=>{const s=await api('POST','/session');if(s.status!==200)throw Error(JSON.stringify(s));sessions.set(s.data.case_id,s.data.session_token);return s.data.case_id};
 const checkout=(case_id,token)=>api('POST','/checkout',{case_id,route:'B1_FIRST_CRDS',guide_key:'B1_IT'},token?{'X-Actero-Access-Token':token}:{'X-Actero-Session-Token':sessions.get(case_id)});
