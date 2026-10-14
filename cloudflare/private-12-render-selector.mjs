@@ -14,11 +14,20 @@ export function rendererFor(guideKey,script){
   if(kind==='B1'){
     eligible=unique.filter(n=>n.startsWith('showB1')&&n.includes(country)&&/ValidatedGuide$|VariantGuide$/.test(n));
   }else{
-    const mode=kind==='B5_LOST'?'LOST':'RENEWAL';
-    eligible=unique.filter(n=>n.startsWith('showB5')&&new RegExp(mode,'i').test(n));
-    const countrySpecific=eligible.filter(n=>n.toUpperCase().includes(country));
-    if(countrySpecific.length)eligible=countrySpecific;
-    else eligible=eligible.filter(n=>!COUNTRY_CODES.some(c=>n.toUpperCase().includes(c)));
+    // The actual private B5_RENEWAL/B5_LOST country guides expose historical
+    // showB2XXValidatedGuide and showB3XXValidatedGuide names respectively.
+    // Select only an EXACT country-specific function. Never fall back to another
+    // country's code or to generic "Remaining" guide helpers.
+    const family=kind==='B5_RENEWAL'?'B2':'B3';
+    const exact=family==='B2'?'showB2'+country+'ValidatedGuide':'showB3'+country+'ValidatedGuide';
+    const actual=unique.filter(n=>n===exact);
+    // Synthetic/historical B5-style functions remain supported for CI, but
+    // only when no exact B2/B3 country entrypoint is present.
+    const legacy=unique.filter(n=>
+      n.startsWith('showB5')&&
+      new RegExp(kind==='B5_RENEWAL'?'RENEWAL':'LOST','i').test(n)&&
+      n.toUpperCase().includes(country));
+    eligible=actual.length?actual:legacy;
   }
   if(eligible.length!==1)return {
     entrypoint:null,reason:eligible.length?'AMBIGUOUS_ENTRYPOINT':'NO_KNOWN_ENTRYPOINT',
