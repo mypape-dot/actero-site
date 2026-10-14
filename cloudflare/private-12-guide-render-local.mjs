@@ -62,7 +62,7 @@ function baseAnswers(country,key){
    b5case:lost?'LOST':'RENEWAL',travel_urgent_basis:'CONTINUE_JOURNEY'
  };
 }
-async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
+async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsOnly=false){
  const {guide_key:key,script_js:script}=row;
  const selected=rendererFor(key,script);
  const label=key+'-'+scenario.name;
@@ -156,6 +156,16 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
          return /^(?:javascript:|data:)/i.test(href)||href==='#'||href.trim()==='';
        }).length,
        verificationBadge:/Procedură verificată|Surse reverificate/i.test(text),
+       visibleClaimCounts:(()=>{
+         const badges=(text.match(/Procedură verificată/gi)||[]).length;
+         const datedSources=(text.match(/Surse reverificate:\s*5 octombrie 2026/gi)||[]).length;
+         // Count all rendered date mentions independently; no proximity regex
+         // can accidentally create duplicate "separate" matches here.
+         const datedMentions=(text.match(/5 octombrie 2026/gi)||[]).length;
+         return {badge:badges,dated_source:datedSources,
+           date_mentions:datedMentions,
+           other_date_mentions:Math.max(0,datedMentions-datedSources)};
+       })(),
        placeholders:/\b(?:TODO|FIXME|undefined|UNRESOLVED|OUT_OF_SCOPE)\b/i.test(text),
        overflow,clipped
      };
@@ -171,7 +181,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
    if(result.overflow)flags.push('PAGE_HORIZONTAL_OVERFLOW');
    if(result.clipped)flags.push('CARD_CONTENT_OVERFLOW');
    if(pageErrors.length)flags.push('BROWSER_JAVASCRIPT_EXCEPTION');
-   if(result.chars>0){
+   if(result.chars>0&&!claimsOnly){
      // This image is proprietary paid-guide content. Never upload to GitHub/ChatGPT.
      phase='PRIVATE_SCREENSHOT';
      await page.screenshot({path:join(outputDir,label+'.png'),fullPage:true,timeout:15000});
@@ -180,7 +190,8 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
      guide_key:key,viewport:scenario.name,
      status:flags.length?'REVIEW':'RENDER_OK',
      rendered:result.chars>0&&result.heading,
-     flags,summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
+     flags,claim_counts:result.visibleClaimCounts,
+     summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
  }catch(error){
    // Never display error.message or error.stack; they can contain private code.
@@ -196,13 +207,14 @@ async function main(){
  try{
    const argv=process.argv.slice(2);
    if(argv.length!==1)throw Error('ONE_OUTPUT_ARGUMENT_REQUIRED');
+   const claimsOnly=argv[0]==='--claims-only';
    // Read the private source only from stdin; no exported JS gets saved to disk.
    const input=readFileSync(0,'utf8');
    if(input.length>16*1024*1024)throw Error('PRIVATE_EXPORT_TOO_LARGE');
    const {raw,rows}=extractRows(input);
    const preflight=inspectPrivateExport(raw);
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
-   outdir=privateFolder(argv[0]);
+   if(!claimsOnly)outdir=privateFolder(argv[0]);
    const css=visibleCss();
    const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
@@ -210,7 +222,7 @@ async function main(){
      const browser=await scenario.browser.launch({headless:true});
      try{
        for(const row of rows){
-         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper));
+         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly));
        }
      }finally{await browser.close()}
    }
@@ -221,6 +233,29 @@ async function main(){
      notes:'VISUAL STRUCTURE ONLY. NOT LEGAL/CONSULAR APPROVAL. NO PAID CHECKOUT TEST.',
      results
    };
+   if(claimsOnly){
+     const ordered=[...new Set(results.map(r=>r.guide_key))].sort();
+     console.log('VISIBLE CLAIM AUDIT: '+results.filter(r=>r.rendered===true).length+
+       '/24 offline renders inspected; NO source code printed.');
+     for(const key of ordered){
+       const pair=results.filter(r=>r.guide_key===key);
+       const desktop=pair.find(r=>r.viewport==='chromium-1280');
+       const mobile=pair.find(r=>r.viewport==='webkit-390');
+       if(!desktop?.claim_counts||!mobile?.claim_counts){
+         console.log('VISIBLE_CLAIMS '+key+' | INCOMPLETE_RENDER');
+         continue;
+       }
+       const a=desktop.claim_counts,b=mobile.claim_counts;
+       console.log('VISIBLE_CLAIMS '+key+
+         ' | badge='+a.badge+
+         ' | source_date='+a.dated_source+
+         ' | other_dates='+a.other_date_mentions+
+         ' | mobile_match='+JSON.stringify(a)===JSON.stringify(b));
+     }
+     console.log('NO D1 WRITES. NO SCREENSHOTS. THIS DOES NOT APPROVE LEGAL CONTENT.');
+     if(results.some(r=>!r.claim_counts))process.exitCode=2;
+     return;
+   }
    writeFileSync(join(outdir,'diagnostic-summary.json'),JSON.stringify(summary,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE VISUAL QA: '+summary.render_ok+'/'+summary.checked+' renders without automatic review flags.');
    console.log('VISUALLY DISPLAYED (including review flags): '+summary.visually_rendered+'/'+summary.checked+'.');
