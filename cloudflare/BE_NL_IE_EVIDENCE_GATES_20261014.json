@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-14",
+  "auditor_scope": "Official public evidence classification only; the twelve private D1 scripts have not been substantively checked against these rules.",
+  "overall_sale_approval": "NO",
+  "romanian_crds_source": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+  "explanation": "Official Belgian, Dutch, and Irish sources describe local evidence categories, NOT which exact documents Romania accepts. Review the exact CRDS guide and source currency before approval.",
+  "countries": {
+    "BE": {
+      "name": "Belgia",
+      "authority_refs": [
+        {
+          "url": "https://dofi.ibz.be/en/news/changes-residence-applications-eu-citizens",
+          "what_it_proves": "From 1 Sep 2025 EU registration applicants must provide complete evidence at first municipal appointment. Annex 19 is application-stage paperwork; EU card follows later if requirements are met."
+        },
+        {
+          "url": "https://www.brussels.be/eu-citizen-registration-sufficient-means-existence-holder",
+          "what_it_proves": "City of Brussels distinguishes Annex 19 application, address check, immigration office decision and later EU card; municipality procedure varies by profile."
+        }
+      ],
+      "red_flag": "Anexa 19 singură nu demonstrează automat aprobarea șederii sau acceptarea dovezii la CRDS românesc.",
+      "check_for": "Identifică exact actul belgian, stadiul solicitării, înregistrarea adresei și dovada condițiilor de ședere; cere confirmarea acceptării la autoritatea română.",
+      "prohibited_claims": [
+        "Anexa 19 este permisul de ședere aprobat.",
+        "Anexa 19 este acceptată automat pentru pașaport CRDS.",
+        "Poți prezenta orice act de înregistrare fără verificarea statutului."
+      ],
+      "cases": [
+        {
+          "scenario": "first_crds",
+          "case": "Cetățean român cu doar Anexa 19 și dosar înregistrare în analiză",
+          "must_not": "Garanta CRDS sau trata cererea belgiană ca aprobarea dreptului de ședere",
+          "must_do": "Verifica stadiul documentului și acceptarea dovezii de către autoritatea română."
+        },
+        {
+          "scenario": "renewal",
+          "case": "Titular CRDS Belgia cu Anexa 19, pașaport anterior și alt statut neclar",
+          "must_not": "Deduce automat că dovada belgiană veche rămâne suficientă",
+          "must_do": "Verifica tipul dovezii curente și datele pașaportului CRDS."
+        },
+        {
+          "scenario": "lost",
+          "case": "Titular CRDS Belgia cu pașaport pierdut și dovadă belgiană incompletă",
+          "must_not": "Echivala pierderea pașaportului cu pierderea dreptului de ședere sau cere automat poliție pentru simpla pierdere",
+          "must_do": "Separa declarația pierderii de dovada domiciliului și identifica autoritatea competentă."
+        }
+      ]
+    },
+    "NL": {
+      "name": "Țările de Jos",
+      "authority_refs": [
+        {
+          "url": "https://www.government.nl/documents/question-and-answer/when-should-i-register-with-the-personal-records-database-as-a-resident",
+          "what_it_proves": "For stays over four months, resident BRP registration; RNI may hold nonresident/short-stay records and both paths can issue a BSN."
+        },
+        {
+          "url": "https://ind.nl/en/forms/8004.pdf",
+          "what_it_proves": "IND 8004 is an application for a permanent residence document, normally after five years lawful residence, not the standard proof of Dutch domicile for any Romanian CRDS applicant."
+        }
+      ],
+      "red_flag": "BSN sau RNI nu dovedește singur domiciliul în Țările de Jos; IND 8004 nu este formularul universal CRDS.",
+      "check_for": "Distinge extrasul de înregistrare ca rezident BRP cu adresă actuală de RNI/BSN; verifică acceptarea extrasului concret la DGP/eConsulat.",
+      "prohibited_claims": [
+        "Numărul BSN demonstrează domiciliul olandez.",
+        "Înscrierea RNI este echivalentă cu înregistrarea rezidențială BRP.",
+        "Toți românii completează formularul IND 8004 pentru CRDS."
+      ],
+      "cases": [
+        {
+          "scenario": "first_crds",
+          "case": "Cetățean român cu BSN și înscriere RNI, fără extras de rezident BRP",
+          "must_not": "Promite că BSN/RNI este dovadă suficientă a domiciliului în Olanda",
+          "must_do": "Solicita dovada clară de rezidență cu adresă și confirmarea acceptării românești."
+        },
+        {
+          "scenario": "renewal",
+          "case": "Titular CRDS Olanda cu BSN, dar adresă/înregistrare curentă neclară",
+          "must_not": "Recomanda IND 8004 ca pas obligatoriu de reînnoire CRDS",
+          "must_do": "Identifica dovada actuală a domiciliului și documentul românesc anterior."
+        },
+        {
+          "scenario": "lost",
+          "case": "Titular CRDS Olanda cu pașaport pierdut, înscris doar RNI",
+          "must_not": "Echivala RNI cu domiciliul olandez și garanta emiterea pașaportului",
+          "must_do": "Separa incidentul de dovada rezidenței și verificarea consulară."
+        }
+      ]
+    },
+    "IE": {
+      "name": "Irlanda",
+      "authority_refs": [
+        {
+          "url": "https://www.gov.ie/en/department-of-social-protection/services/get-a-personal-public-service-pps-number/",
+          "what_it_proves": "PPS numbers may be requested by individuals living outside Ireland, therefore PPS is not proof of residence by itself."
+        },
+        {
+          "url": "https://www.irishimmigration.ie/registering-your-immigration-permission/",
+          "what_it_proves": "Irish immigration registration primarily applies to people outside EU/UK/Switzerland, not a universal requirement for Romanian EU citizens."
+        },
+        {
+          "url": "https://www.irishimmigration.ie/wp-content/uploads/2026/05/Explanatory-leaflet-for-Form-EUTR2.pdf",
+          "what_it_proves": "EUTR2 is a conditional EEA/UK permanent-residence certificate application, generally involving five qualifying years or exceptions."
+        }
+      ],
+      "red_flag": "PPS nu dovedește singur domiciliul; IRP nu este obligatoriu standard pentru români UE; EUTR2 nu este cerință generală CRDS.",
+      "check_for": "Verifică dovezile efective de locuire/activitate și acceptarea românească, fără a impune automat permis IRP sau certificat EUTR2.",
+      "prohibited_claims": [
+        "Numărul PPS dovedește domiciliul în Irlanda.",
+        "Orice român din Irlanda trebuie să obțină IRP.",
+        "EUTR2 este formularul obligatoriu pentru primul pașaport CRDS."
+      ],
+      "cases": [
+        {
+          "scenario": "first_crds",
+          "case": "Cetățean român din Irlanda are PPS, fără document doveditor de domiciliu",
+          "must_not": "Echivala PPS cu domiciliul sau solicita automat IRP",
+          "must_do": "Identifica dovezi reale de rezidență și solicita confirmarea acceptării de către autoritatea română."
+        },
+        {
+          "scenario": "renewal",
+          "case": "Titular CRDS Irlanda cu PPS, fără IRP",
+          "must_not": "Afirma că IRP este obligatoriu pentru un cetățean UE",
+          "must_do": "Verifica documentul anterior și dovezile actuale de rezidență."
+        },
+        {
+          "scenario": "lost",
+          "case": "Titular CRDS Irlanda pierde pașaportul și deține doar PPS",
+          "must_not": "Garanta refacerea pe baza PPS sau cere EUTR2 ca pas universal",
+          "must_do": "Separa declarația pierderii de acceptarea documentelor de domiciliu."
+        }
+      ]
+    }
+  },
+  "guide_gates": [
+    {
+      "guide_key": "B1_BE",
+      "country": "BE",
+      "scenario": "first_crds",
+      "route": "B1_FIRST_CRDS",
+      "case": "Cetățean român cu doar Anexa 19 și dosar înregistrare în analiză",
+      "must_not": "Garanta CRDS sau trata cererea belgiană ca aprobarea dreptului de ședere",
+      "must_do": "Verifica stadiul documentului și acceptarea dovezii de către autoritatea română.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_RENEWAL_BE",
+      "country": "BE",
+      "scenario": "renewal",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Belgia cu Anexa 19, pașaport anterior și alt statut neclar",
+      "must_not": "Deduce automat că dovada belgiană veche rămâne suficientă",
+      "must_do": "Verifica tipul dovezii curente și datele pașaportului CRDS.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_LOST_BE",
+      "country": "BE",
+      "scenario": "lost",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Belgia cu pașaport pierdut și dovadă belgiană incompletă",
+      "must_not": "Echivala pierderea pașaportului cu pierderea dreptului de ședere sau cere automat poliție pentru simpla pierdere",
+      "must_do": "Separa declarația pierderii de dovada domiciliului și identifica autoritatea competentă.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B1_NL",
+      "country": "NL",
+      "scenario": "first_crds",
+      "route": "B1_FIRST_CRDS",
+      "case": "Cetățean român cu BSN și înscriere RNI, fără extras de rezident BRP",
+      "must_not": "Promite că BSN/RNI este dovadă suficientă a domiciliului în Olanda",
+      "must_do": "Solicita dovada clară de rezidență cu adresă și confirmarea acceptării românești.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_RENEWAL_NL",
+      "country": "NL",
+      "scenario": "renewal",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Olanda cu BSN, dar adresă/înregistrare curentă neclară",
+      "must_not": "Recomanda IND 8004 ca pas obligatoriu de reînnoire CRDS",
+      "must_do": "Identifica dovada actuală a domiciliului și documentul românesc anterior.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_LOST_NL",
+      "country": "NL",
+      "scenario": "lost",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Olanda cu pașaport pierdut, înscris doar RNI",
+      "must_not": "Echivala RNI cu domiciliul olandez și garanta emiterea pașaportului",
+      "must_do": "Separa incidentul de dovada rezidenței și verificarea consulară.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B1_IE",
+      "country": "IE",
+      "scenario": "first_crds",
+      "route": "B1_FIRST_CRDS",
+      "case": "Cetățean român din Irlanda are PPS, fără document doveditor de domiciliu",
+      "must_not": "Echivala PPS cu domiciliul sau solicita automat IRP",
+      "must_do": "Identifica dovezi reale de rezidență și solicita confirmarea acceptării de către autoritatea română.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_RENEWAL_IE",
+      "country": "IE",
+      "scenario": "renewal",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Irlanda cu PPS, fără IRP",
+      "must_not": "Afirma că IRP este obligatoriu pentru un cetățean UE",
+      "must_do": "Verifica documentul anterior și dovezile actuale de rezidență.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    },
+    {
+      "guide_key": "B5_LOST_IE",
+      "country": "IE",
+      "scenario": "lost",
+      "route": "B5_EXISTING_CRDS",
+      "case": "Titular CRDS Irlanda pierde pașaportul și deține doar PPS",
+      "must_not": "Garanta refacerea pe baza PPS sau cere EUTR2 ca pas universal",
+      "must_do": "Separa declarația pierderii de acceptarea documentelor de domiciliu.",
+      "private_d1_content_reviewed": false,
+      "romanian_consular_acceptance_confirmed": false,
+      "editorial_clearance": "NO"
+    }
+  ]
+}
