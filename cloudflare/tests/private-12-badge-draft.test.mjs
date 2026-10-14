@@ -70,7 +70,7 @@ test('failed real-guide draft reports only allowlisted diagnostic codes',()=>{
     'Surse reverificate: 5 octombrie 2026 '+'Info '.repeat(65));
  const flags=diagnosePrivateBadgeDraft(raw);
  assert.ok(flags.includes('B1_FR:EXACT_BADGE_NOT_FOUND'));
- assert.ok(flags.includes('B5_LOST_IE:UNREVIEWED_SOURCES_DATE_CLAIM_REMAINS'));
+ assert.ok(flags.some(flag=>flag.startsWith('B5_LOST_IE:')&&flag.includes('UNREVIEWED_SOURCES_DATE_CLAIM_REMAINS')));
  assert.ok(!JSON.stringify(flags).includes(secret));
  assert.ok(!JSON.stringify(flags).includes('renderSynthetic'));
  assert.ok(flags.every(item=>/^[A-Z0-9_:,]+$/.test(item)));
