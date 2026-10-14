@@ -35,6 +35,20 @@ function visibleCss(){
  const html=readFileSync(join(root,'index.html'),'utf8');
  return [...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/gi)].map(m=>m[0]).join('\n');
 }
+// Use the EXACT publicly shipped helper, never an invented stand-in.
+// The private D1 scripts reference it as an external frontend dependency.
+export function publicMiniFormPreviewSource(html){
+ const needle='function miniFormPreview(title,anexa){';
+ const start=html.indexOf(needle);
+ if(start<0||html.indexOf(needle,start+needle.length)!==-1)
+   throw Error('PUBLIC_HELPER_MISSING_OR_AMBIGUOUS');
+ const end=html.indexOf('\n}\n',start);
+ if(end<0||end-start>4000)throw Error('PUBLIC_HELPER_CHANGED');
+ const helper=html.slice(start,end+2);
+ if(!helper.includes('real-doc-page')||!helper.includes('doc-mini'))
+   throw Error('PUBLIC_HELPER_SIGNATURE_CHANGED');
+ return helper;
+}
 function baseAnswers(country,key){
  const first=key.startsWith('B1_');
  const lost=key.startsWith('B5_LOST_');
@@ -48,7 +62,7 @@ function baseAnswers(country,key){
    b5case:lost?'LOST':'RENEWAL',travel_urgent_basis:'CONTINUE_JOURNEY'
  };
 }
-async function renderOne(browser,scenario,row,outputDir,css){
+async function renderOne(browser,scenario,row,outputDir,css,publicHelper){
  const {guide_key:key,script_js:script}=row;
  const selected=rendererFor(key,script);
  const label=key+'-'+scenario.name;
@@ -88,6 +102,8 @@ async function renderOne(browser,scenario,row,outputDir,css){
      window.showResult=()=>{throw Error('FALLBACK_TO_UNPAID_RESULT')};
      window.reset=()=>{};
    },{country:selected.country,key,answers:baseAnswers(selected.country,key)});
+   phase='PUBLIC_HELPER_LOAD';
+   await page.addScriptTag({content:publicHelper});
    phase='PRIVATE_SCRIPT_LOAD';
    await page.addScriptTag({content:script});
    phase='GUIDE_ENTRYPOINT_CALL';
@@ -188,12 +204,13 @@ async function main(){
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
    outdir=privateFolder(argv[0]);
    const css=visibleCss();
+   const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
    for(const scenario of modes){
      const browser=await scenario.browser.launch({headless:true});
      try{
        for(const row of rows){
-         results.push(await renderOne(browser,scenario,row,outdir,css));
+         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper));
        }
      }finally{await browser.close()}
    }
