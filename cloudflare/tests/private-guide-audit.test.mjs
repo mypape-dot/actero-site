@@ -88,3 +88,49 @@ test('CLI refuses input paths inside the public repository',()=>{
   assert.equal(run.status,2);
   assert.match(run.stderr,/OUTSIDE the ActeRO repository/);
 });
+
+
+test('private reference inventory counts official PDF signals without disclosing URLs',()=>{
+  const rows=normal();
+  rows[0].script_js=String.raw`
+    function privateDraft(){
+      const official='https://pasapoarte.mai.gov.ro/wp-content/uploads/2024/10/PRIVATE_GUIDE_A.pdf';
+      const gov='https://www.gov.uk/evisa?source=PRIVATE_CODE_1';
+      const suspicious='http://example.com/PRIVATE_CODE_2';
+      const outside='https://tracking.invalid/PRIVATE_CODE_3';
+      const badLink='<a href="javascript:alert(1)">bad</a>';
+      fetch('https://tracking.invalid/PRIVATE_CODE_3');
+      window.localStorage.getItem('accessToken');
+    }
+  `;
+  const report=auditPrivateGuides(rows);
+  assert.equal(report.structurally_valid,true);
+  const first=report.reference_signals.find(r=>r.key==='B1_ES');
+  assert.equal(first.static_url_count,4);
+  assert.equal(first.official_domain_url_count,2);
+  assert.equal(first.static_pdf_url_count,1);
+  assert.equal(first.other_domain_url_count,2);
+  assert.equal(first.insecure_http_url_count,1);
+  assert.equal(first.placeholder_url_count,2);
+  for(const code of ['INSECURE_HTTP_REFERENCE','PLACEHOLDER_REFERENCE',
+      'POSSIBLE_UNSAFE_OR_PLACEHOLDER_HREF','GUIDE_PERFORMS_NETWORK_REQUEST_REVIEW',
+      'GUIDE_READS_BROWSER_STATE_REVIEW','OTHER_DOMAIN_REVIEW']){
+    assert.ok(report.warnings.some(w=>w.key==='B1_ES'&&w.code===code),code);
+  }
+  const output=JSON.stringify(report);
+  for(const text of ['PRIVATE_GUIDE_A.pdf','PRIVATE_CODE_1','PRIVATE_CODE_2',
+      'PRIVATE_CODE_3','accessToken','tracking.invalid'])
+    assert.ok(!output.includes(text),'Source leaked: '+text);
+  assert.equal(report.sale_approved,0);
+  assert.equal(report.legal_review_completed,false);
+});
+
+test('offline reference counts never imply every guide includes direct PDFs',()=>{
+  const result=auditPrivateGuides(normal());
+  assert.equal(result.reference_signals.length,43);
+  for(const row of result.reference_signals){
+    assert.equal(row.static_pdf_url_count,0);
+    assert.ok(result.warnings.some(w=>w.key===row.key&&w.code==='NO_KNOWN_OFFICIAL_DOMAIN_URL'));
+  }
+  assert.equal(result.legal_review_completed,false);
+});
