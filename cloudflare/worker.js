@@ -326,7 +326,23 @@ export default {
       const token=request.headers.get('X-Actero-Access-Token');
       try{
         const grant=await getAccess(env,caseId,token);
-        if(path==='/access')return grant?reply(request,{ok:true,paid:grant.status==='paid'&&!grant.revoked_at,status:grant.revoked_at?'revoked':grant.status,route:grant.route}):reply(request,{ok:true,paid:false,status:'not_found'});
+        if(path==='/access'){
+          if(!grant)return reply(request,{ok:true,paid:false,status:'not_found'});
+          const paid=grant.status==='paid'&&!grant.revoked_at;
+          // Paid entitlement and approved content availability are different facts.
+          // Do not tell a customer their guide is ready if its approval was withdrawn.
+          let guideAvailable=false;
+          if(paid){
+            const ready=await env.DB.prepare(`SELECT g.script_js,a.script_sha256
+              FROM guide_scripts AS g INNER JOIN guide_approvals AS a
+              ON a.guide_key=g.guide_key AND a.route=g.route AND a.status='approved'
+              WHERE g.guide_key=? AND g.route=? LIMIT 1`).bind(grant.guide_key,grant.route).first();
+            guideAvailable=!!(ready&&typeof ready.script_js==='string'&&ready.script_js.trim()&&
+              typeof ready.script_sha256==='string'&&(await digest(ready.script_js))===ready.script_sha256);
+          }
+          return reply(request,{ok:true,paid,guide_available:guideAvailable,
+            status:grant.revoked_at?'revoked':grant.status,route:grant.route});
+        }
         if(!grant||grant.status!=='paid'||grant.revoked_at)return reply(request,{ok:false,error:'payment_required'},402);
         if(path==='/guide-script'){
           const key=url.searchParams.get('guide_key');
