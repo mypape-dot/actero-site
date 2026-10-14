@@ -8,7 +8,7 @@ import {EXPECTED,inspectPrivateExport} from './private-12-guide-preflight-local.
 
 const BADGE='Procedură verificată';
 const KNOWN_SOURCE=/Surse reverificate:\s*5 octombrie 2026/gi;
-const GENERIC_VERIFIED=/Verificat.{0,80}5 octombrie 2026/gi;
+const GENERIC_VERIFIED=/(?<!\p{L})Verificat(?!\p{L}).{0,80}5 octombrie 2026/giu;
 const TYPES=[
  ['VERIFIED_ON_DATE',/^Verificat\s+la\s*:?\s*5 octombrie 2026$/i],
  ['VERIFIED_DATE_LABEL',/^Verificat\s*:?\s*5 octombrie 2026$/i],
@@ -33,7 +33,7 @@ export function countEditorialClaims(raw){
    const datedSourceCount=[...source.matchAll(KNOWN_SOURCE)].length;
    // Removal of the exact source label distinguishes overlapping generic
    // regex matches from separate, genuinely unreviewed dated references.
-   const remainder=source.replace(KNOWN_SOURCE,'');
+   const remainder=source.replace(KNOWN_SOURCE,'').replaceAll(BADGE,'');
    const remaining=[...remainder.matchAll(GENERIC_VERIFIED)];
    const buckets=Object.fromEntries(TYPES.map(([id])=>[id,0]));
    buckets.UNCLASSIFIED_SEPARATE_DATE=0;
