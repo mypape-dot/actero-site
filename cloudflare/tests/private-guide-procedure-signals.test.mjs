@@ -1,7 +1,7 @@
 // Tests use synthetic snippets only; no actual customer or premium D1 content.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessRenderedGuide,compareViewportSignals} from '../private-guide-procedure-signals.mjs';
+import {assessRenderedGuide,compareViewportSignals} from '../procedure-signal-classifier.mjs';
 
 const body='Text pentru test sintetic de afisare. '.repeat(18);
 const scan=(key,extra)=>assessRenderedGuide(key,body+' '+extra);
