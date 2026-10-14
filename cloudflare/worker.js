@@ -28,6 +28,19 @@ const isKey = s => typeof s==='string' && /^[A-Z0-9_]{3,120}$/.test(s);
 const isRoute = isKey;
 const safeId = s => typeof s==='string' && s.length>0 && s.length<128 && /^[a-zA-Z0-9_-]+$/.test(s);
 const digest = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(s)))].map(v=>v.toString(16).padStart(2,'0')).join('');
+// Four B5 scripts branch by country at runtime. A single script-level signoff is
+// insufficient: all ten country outputs must be independently approved first.
+// This conservative, all-country gate avoids trusting client-supplied country data.
+const SHARED_B5_KEYS = new Set(['B5_STOLEN','B5_DAMAGED','B5_DATA_CHANGE','B5_MOVED']);
+async function hasAllCountryApprovals(env,guideKey,route,scriptHash){
+  if(!SHARED_B5_KEYS.has(guideKey))return true;
+  const result=await env.DB.prepare(`SELECT COUNT(*) AS approved_count
+    FROM guide_country_approvals
+    WHERE guide_key=? AND route=? AND script_sha256=? AND status='approved'
+      AND country IN ('ES','IT','DE','AT','FR','GB','BE','NL','IE','CH')`)
+    .bind(guideKey,route,scriptHash).first();
+  return Number(result?.approved_count)===10;
+}
 function constantTimeEqual(a,b){
   if(a.length!==b.length) return false;
   let diff=0; for(let i=0;i<a.length;i++)diff |= a[i]^b[i]; return diff===0;
@@ -160,6 +173,8 @@ export default {
         if(!guide||guide.route!==route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
           typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
           return reply(request,{ok:false,error:'guide_not_available'},409);
+        if(!(await hasAllCountryApprovals(env,guideKey,route,guide.script_sha256)))
+          return reply(request,{ok:false,error:'guide_country_review_incomplete'},409);
         const current=await env.DB.prepare('SELECT status,route,guide_key,access_token_hash FROM access_grants WHERE case_id=? LIMIT 1').bind(caseId).first();
         // New checkouts must prove a server-issued evaluation session.
         // Existing pending checkouts can still be retried with their access token,
@@ -328,6 +343,8 @@ export default {
           if(!guide||guide.route!==grant.route||typeof guide.script_js!=='string'||!guide.script_js.trim()||
             typeof guide.script_sha256!=='string'||(await digest(guide.script_js))!==guide.script_sha256)
             return reply(request,{ok:false,error:'guide_not_available'},503);
+          if(!(await hasAllCountryApprovals(env,key,grant.route,guide.script_sha256)))
+            return reply(request,{ok:false,error:'guide_country_review_incomplete'},503);
           return new Response(guide.script_js,{status:200,headers:{...cors(request),...NOCACHE,'Content-Type':'application/javascript; charset=utf-8'}});
         }
         return reply(request,{ok:false,error:'not_found'},404);
