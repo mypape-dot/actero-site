@@ -61,3 +61,15 @@ bash cloudflare/audit-private-12-badge-on-mac.sh "$HOME/actero-private-12-badge-
 ```
 
 Scop: **12/12** drafturi pregătite, **24/24** randări offline fără claim-ul vechi. Acest rezultat nu conferă aprobare de vânzare și nu se aplică automat în D1. Trimite numai `PRIVATE BADGE DRAFT`, `PRIVATE VISUAL QA`, `SAFE_DIAGNOSTIC` și codurile `REVIEW`, fără fișiere private sau conținut premium.
+
+## Verificare vizibilă fără fișiere private (după inventar)
+
+Numărătorile din scriptul brut pot include fragmente neafișate sau potriviri între propoziții. Noua comandă
+`bash cloudflare/audit-private-12-visible-claims-on-mac.sh` citește cele 12 scripturi prin SELECT, le redă în Chromium și WebKit local, dar **nu salvează capturi sau exporturi**. Afișează câte o linie `VISIBLE_CLAIMS` pe ghid cu:
+
+- `badge` — aparițiile exacte ale etichetei „Procedură verificată” în textul afișat;
+- `source_date` — aparițiile exacte „Surse reverificate: 5 octombrie 2026”;
+- `other_dates` — alte mențiuni vizibile ale datei, chiar dacă nu reprezintă o afirmație de verificare; necesită revizuire manuală;
+- `mobile_match` — dacă numărătorile coincid în randarea desktop și WebKit mobil.
+
+Este un test offline cu date sintetice de stare, **nu Safari real**, nu verifică linkuri externe, nu aprobă conținutul legal și nu atinge D1/Shopify. Următorul draft de editare se va face numai după compararea rezultatelor vizibile cu regulile editoriale. Nu rula încă scriptul de modificare `audit-private-12-badge-on-mac.sh`.
