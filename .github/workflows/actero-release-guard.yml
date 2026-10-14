@@ -53,6 +53,11 @@ jobs:
           node --check cloudflare/private-12-render-selector.mjs
           bash -n cloudflare/audit-private-12-visual-on-mac.sh
           node --test cloudflare/tests/private-12-render-selector.test.mjs
+      - name: Verify confidential exact editorial badge draft with synthetic-only fixtures
+        run: |
+          node --check cloudflare/prepare-private-12-badge-draft.mjs
+          bash -n cloudflare/audit-private-12-badge-on-mac.sh
+          node --test cloudflare/tests/private-12-badge-draft.test.mjs
       - name: Verify shared-country review registry contains 40 explicit signoffs
         run: node --test cloudflare/tests/guide-country-review-register.test.mjs
       - name: Verify server checkout requires exact guide and all-country approval
@@ -108,6 +113,19 @@ jobs:
           output="$RUNNER_TEMP/actero-12-visual-synthetic"
           node cloudflare/tests/private-12-visual-synthetic-fixture.mjs | node cloudflare/private-12-guide-render-local.mjs "$output"
           test -f "$output/diagnostic-summary.json"
+      - name: Test private UNDEPLOYED neutral-badge draft with 24 synthetic renders
+        run: |
+          draft="$RUNNER_TEMP/actero-12-badge-draft"
+          output="$RUNNER_TEMP/actero-12-badge-render"
+          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --editorial-badge |
+            node cloudflare/prepare-private-12-badge-draft.mjs "$draft"
+          node cloudflare/private-12-guide-render-local.mjs "$output" < "$draft/private-draft.json"
+          node --input-type=module -e "
+            import {readFileSync} from 'node:fs';
+            const a=JSON.parse(readFileSync(process.argv[1]));
+            if(a.checked!==24 || a.render_ok!==24 || a.review!==0)
+              process.exit(1);
+          " "$output/diagnostic-summary.json"
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
