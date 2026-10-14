@@ -1,0 +1,43 @@
+{
+  "audit_date": "2026-10-14",
+  "sales_approved": false,
+  "scope": "public COUNTRY_OFFICIAL_DOCS: FR BE NL IE; applicability assessment only, never an automatic legal approval",
+  "validation_standard": "The URL may be an official original PDF yet not be a required, accepted, or appropriate document for the user's CRDS scenario. Check Romanian authority acceptance separately.",
+  "countries": {
+    "FR": {
+      "doc_role": "romanian_crds_country_specific_reference",
+      "source_url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+      "status": "PENDING_CURRENT_RULE_REVIEW",
+      "unconditional_application_instruction": false,
+      "review_note": "DGP France country reference dated 2022. Subsidiary Carte Vitale/licence evidence only under specific already-CRDS circumstances; no automatic substitution for first CRDS."
+    },
+    "BE": {
+      "doc_role": "eu_residence_document_type_catalog_not_romania_crds_proof_list",
+      "source_url": "https://home-affairs.ec.europa.eu/system/files/2021-09/list-of-residence-permits-issued-by-member-states.pdf",
+      "status": "PENDING_CONSULAR_APPLICABILITY",
+      "unconditional_application_instruction": false,
+      "review_note": "2021 EU-wide catalogue gives example types, NOT a personal proof of Belgian domicile, annex 19 approval or Romanian CRDS accepted document checklist."
+    },
+    "NL": {
+      "doc_role": "dutch_eu_permanent_residence_application_form_8004",
+      "source_url": "https://ind.nl/en/forms/8004.pdf",
+      "status": "CONDITIONAL_FORM_NOT_DEFAULT",
+      "unconditional_application_instruction": false,
+      "review_note": "IND 8004 applies to qualifying long-term permanent residence applications (normally at least five years). It is NOT an automatic CRDS form, BRP extract, or proof of Dutch domicile."
+    },
+    "IE": {
+      "doc_role": "irish_eutr2_permanent_residence_certificate_application",
+      "source_url": "https://www.irishimmigration.ie/wp-content/uploads/2026/05/Form-EUTR2.pdf",
+      "status": "CONDITIONAL_FORM_NOT_DEFAULT",
+      "unconditional_application_instruction": false,
+      "review_note": "EUTR2 is a conditional permanent residence certificate application, NOT a default document all Romanian citizens need for CRDS. PPS/IRP also must not be presented as universal proof."
+    }
+  },
+  "mandatory_before_sale": [
+    "Confirm actual country-specific Romanian CRDS requirements from DGP/consulate, including the acceptability of each named foreign source",
+    "Ensure conditional foreign applications are not labeled default forms needed by everyone",
+    "Show explicit label for source type: Romanian CRDS reference, foreign residence application, or illustrative document",
+    "Validate actual PDF links, titles and previews in Safari mobile and browser desktop",
+    "Approve each exact private guide with dated evidence and manual review; preserve sale_approved=NO until then"
+  ]
+}
