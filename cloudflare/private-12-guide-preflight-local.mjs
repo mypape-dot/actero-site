@@ -60,18 +60,18 @@ export function inspectPrivateExport(raw){
     if(!SOURCE_CUES[entry.country].some(v=>lower.includes(v.toLowerCase())))
       signals.push('REVIEW_COUNTRY_OFFICIAL_SOURCE_NOT_LOCATED');
     // An official link being present does NOT guarantee it is current or accepted.
-    if(!/https?:\\/\\//i.test(code))signals.push('REVIEW_NO_ABSOLUTE_SOURCE_LINK');
-    if(/(?:Procedură verificată|Surse reverificate:\\s*5 octombrie 2026|Verificat.{0,80}5 octombrie 2026)/i.test(code))
+    if(!/https?:\/\//i.test(code))signals.push('REVIEW_NO_ABSOLUTE_SOURCE_LINK');
+    if(/(?:Procedură verificată|Surse reverificate:\s*5 octombrie 2026|Verificat.{0,80}5 octombrie 2026)/i.test(code))
       signals.push('REVIEW_UNSUPPORTED_VERIFICATION_BADGE');
     if(/(?:lorem ipsum|TODO|FIXME|de înlocuit)/i.test(code))
       signals.push('REVIEW_EDITORIAL_PLACEHOLDER');
     if(entry.country==='FR'&&key==='B1_FR'&&/Carte Vitale/i.test(code))
       signals.push('REVIEW_FR_SUBSIDIARY_PROOF_IN_FIRST_CRDS');
-    if(entry.country==='BE'&&/Annex(?:e)?\\s*19|Anexa 19/i.test(code))
+    if(entry.country==='BE'&&/Annex(?:e)?\s*19|Anexa 19/i.test(code))
       signals.push('REVIEW_BE_PENDING_APPLICATION_VS_APPROVED_STATUS');
-    if(entry.country==='NL'&&/\\bBSN\\b|\\bRNI\\b/i.test(code))
+    if(entry.country==='NL'&&/\bBSN\b|\bRNI\b/i.test(code))
       signals.push('REVIEW_NL_RESIDENT_VS_NONRESIDENT_EVIDENCE');
-    if(entry.country==='IE'&&/\\bPPS\\b|\\bIRP\\b/i.test(code))
+    if(entry.country==='IE'&&/\bPPS\b|\bIRP\b/i.test(code))
       signals.push('REVIEW_IE_ID_VS_RESIDENCE_EVIDENCE');
   }
   output.push({guide_key:key,structure_ok:failures.length===0,failures,manual_signals:[...new Set(signals)]});
