@@ -78,4 +78,29 @@ await reversal('refunds/create',{order_id:gOrder,refund_line_items:[]});
 const gLate=await webhook(order(checkoutId(gc.data.checkoutUrl),gOrder));
 check('F-04 unknown refund before payment blocks grant',gLate.data.ignored==='revoked_prior_to_payment'&&!(await access(g,gc.data.accessToken)).data.paid);
 
+// Between checkout and a signed paid order, content can be withdrawn or edited.
+// The customer may still be charged by Shopify: record/alert for manual resolution
+// rather than silently issue a paid grant for an unreviewed/missing script.
+const h=await makeCase(),hc=await checkout(h),hOrder='88888005';
+db.prepare("UPDATE guide_approvals SET status='revoked' WHERE guide_key='B1_IT'").run();
+const preAlerts=alerts;
+const withdrawn=await webhook(order(checkoutId(hc.data.checkoutUrl),hOrder));
+check('withdrawn guide after checkout: paid order flagged for review',
+  withdrawn.status===200&&withdrawn.data.needs_review===true&&
+  withdrawn.data.reason==='guide_unavailable_after_checkout'&&alerts===preAlerts+1);
+check('withdrawn guide after checkout: no paid grant',
+  db.prepare('SELECT status FROM access_grants WHERE case_id=?').get(h).status==='pending');
+check('withdrawn guide after checkout: incident persisted',
+  db.prepare('SELECT result FROM payment_events WHERE shopify_order_id=?').get(hOrder).result==='needs_review');
+
+db.prepare("UPDATE guide_approvals SET status='approved' WHERE guide_key='B1_IT'").run();
+const i=await makeCase(),ic=await checkout(i),iOrder='88888006';
+db.prepare("UPDATE guide_scripts SET script_js='window.changedSinceCheckout=true' WHERE guide_key='B1_IT'").run();
+const drift=await webhook(order(checkoutId(ic.data.checkoutUrl),iOrder));
+check('content changed after checkout: do not grant now-unapproved script',
+  drift.status===200&&drift.data.needs_review===true&&
+  drift.data.reason==='guide_unavailable_after_checkout'&&
+  db.prepare('SELECT status FROM access_grants WHERE case_id=?').get(i).status==='pending');
+db.prepare('UPDATE guide_scripts SET script_js=? WHERE guide_key=?').run(approvedJs,'B1_IT');
+
 console.log(`SUMMARY ${passed}/${passed} PASS — simulated D1/Shopify, not production`);
