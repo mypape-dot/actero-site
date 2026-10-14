@@ -4,8 +4,8 @@ const codes=['FR','BE','NL','IE'];
 const countryNames={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
 const pairs=[
  ['B1_','B1_FIRST_CRDS','showB1','ValidatedGuide'],
- ['B5_RENEWAL_','B5_EXISTING_CRDS','showB5Renewal','ValidatedGuide'],
- ['B5_LOST_','B5_EXISTING_CRDS','showB5Lost','ValidatedGuide']
+ ['B5_RENEWAL_','B5_EXISTING_CRDS','showB2','ValidatedGuide'],
+ ['B5_LOST_','B5_EXISTING_CRDS','showB3','ValidatedGuide']
 ];
 const output=[];
 for(const country of codes){
