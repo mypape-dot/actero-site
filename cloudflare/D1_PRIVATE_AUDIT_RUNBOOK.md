@@ -62,3 +62,25 @@ Nu aproba ghiduri printr-un script automat care copiază date din catalog; catal
 ## 5. Prag minim de lansare
 
 Fără merge în `main`, fără deploy Cloudflare, fără activarea Shopify și fără migrare production până când metadatele, conținutul și plățile au fost verificate în staging, backup-ul/restaurarea au fost testate, iar utilizatorul aprobă explicit lansarea.
+
+## 6. Verificarea locală a surselor și PDF-urilor, fără expunerea ghidurilor
+
+Un export privat cu câmpurile `guide_key`, `route`, `script_js` poate fi verificat numai pe calculatorul operatorului, **în afara repository-ului public**:
+
+```bash
+cd ~/Desktop/actero-site
+git pull --ff-only origin fix/engine-logic-audit-20261013
+node cloudflare/audit-private-guides.mjs "$HOME/actero-all-guides-private.json" > "$HOME/actero-private-audit-report.json"
+```
+
+Raportul include numai cheile deja prezente în catalog și semnale structurale agregate: rute, chei duplicate/lipsă, compilarea JavaScript fără execuție, scripturi identice, număr de URL-uri statice, domenii instituționale cunoscute și URL-uri PDF. **Nu afișează conținutul, adresele URL, titlurile sau tokenurile**.
+
+Avertizările `NO_KNOWN_OFFICIAL_DOMAIN_URL`, `OTHER_DOMAIN_REVIEW`, `INSECURE_HTTP_REFERENCE`, `PLACEHOLDER_REFERENCE` și `POSSIBLE_UNSAFE_OR_PLACEHOLDER_HREF` sunt indicii pentru verificare, nu dovezi ale unei erori. `GUIDE_PERFORMS_NETWORK_REQUEST_REVIEW` și `GUIDE_READS_BROWSER_STATE_REVIEW` cer evaluarea motivului pentru care codul solicită date sau accesează stocarea browserului.
+
+Un PDF construit din variabile poate lipsi din numărul `static_pdf_url_count`. Un URL prezent nu dovedește că linkul se deschide, că documentul este actual sau că formularul este acceptat la consulat. Validarea fiecărui PDF se face manual, în browser și, pentru disponibilitatea mobilă, pe iPhone Safari real.
+
+Pentru fiecare ghid, păstrează separat dovada: instituție, procedură, document exact, URL oficial, scop (formular / informații / document de descărcat), data verificării, taxă, termen, condiții și diferențe între țări/consulate. Nu transforma niciun raport automat în `sale_approved=YES` sau `guide_approvals.status='approved'`.
+
+Dacă operatorul are momentan numai exporturile private pentru `B5_DAMAGED` și `B5_DATA_CHANGE`, raportul poate identifica acele două ghiduri, dar va marca celelalte 41 ca lipsă **din fișierul verificat**, nu din D1. CLI va încheia cu cod 1 pentru că inventarul analizat este incomplet.
+
+Nu încărca exporturi D1 cu `script_js` în GitHub, PR, CI, chat sau issue-uri. Comunică numai totalurile și codurile de avertizare, fără fragmente private.
