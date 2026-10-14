@@ -16,7 +16,7 @@ const KNOWN_REVIEW_CODES=[
   ['VERIFICATION_CLAIM',/verificat[ăa]?\s+la\s+\d|procedur[ăa]\s+verificat[ăa]|surse\s+oficiale\s+verificate/i],
   ['EDITORIAL_PLACEHOLDER',/\bTODO\b|\bFIXME\b|\bTBD\b|lorem\s+ipsum|text\s+de\s+completat/i],
   ['FEE_REQUIRES_CURRENT_SOURCE',/\b\d+(?:[.,]\d+)?\s*(?:EUR|EURO|RON|LEI|CHF)\b/i],
-  ['UK_BR P_CLAIM',/\bBRP\b/i],
+  ['UK_BRP_REFERENCE',/\bBRP\b/i],
   ['SWISS_PERMIT_CLAIM',/\b(?:permis(?:ul)?\s+[BCLG]|permit\s+[BCLG])\b/i],
 ];
 
@@ -60,7 +60,7 @@ export function auditPrivateGuides(rows){
     if(!shaToKeys.has(fp))shaToKeys.set(fp,[]);
     shaToKeys.get(fp).push(key);
     for(const [code,re] of KNOWN_REVIEW_CODES){
-      if(re.test(row.script_js))warnings.push({code:code.replace('UK_BR P','UK_BRP'),key});
+      if(re.test(row.script_js))warnings.push({code,key});
     }
     // Some generators build URLs dynamically; absence of static URLs is advisory only.
     const urls=row.script_js.match(/https?:\/\/[A-Za-z0-9./?=&_%#~+:-]+/g)||[];
