@@ -59,3 +59,19 @@ test('recognized wrapper format matches Cloudflare wrangler JSON',()=>{
  assert.equal(inspectPrivateExport([f]).found,12);
  assert.equal(inspectPrivateExport(f.results).found,12);
 });
+
+test('differentiate explicit dated verification claims from unrelated nearby calendar dates',()=>{
+ const f=fixture();
+ const row=f.results.find(x=>x.guide_key==='B1_NL');
+ const make=x=>'function sample(){return '+JSON.stringify(
+   x+' ; '+url.NL+' '+('context '.repeat(45)))+';}';
+ row.script_js=make('Acest document a fost verificat ca format. Data informativă: 5 octombrie 2026');
+ let flags=inspectPrivateExport(f).rows.find(x=>x.guide_key==='B1_NL').manual_signals;
+ assert.ok(!flags.includes('REVIEW_UNSUPPORTED_VERIFICATION_BADGE'));
+ row.script_js=make('Verificat la 5 octombrie 2026');
+ flags=inspectPrivateExport(f).rows.find(x=>x.guide_key==='B1_NL').manual_signals;
+ assert.ok(flags.includes('REVIEW_UNSUPPORTED_VERIFICATION_BADGE'));
+ row.script_js=make('Surse reverificate: 5 octombrie 2026');
+ flags=inspectPrivateExport(f).rows.find(x=>x.guide_key==='B1_NL').manual_signals;
+ assert.ok(flags.includes('REVIEW_UNSUPPORTED_VERIFICATION_BADGE'));
+});
