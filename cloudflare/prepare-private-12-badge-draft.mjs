@@ -10,6 +10,30 @@ import {inspectPrivateExport,EXPECTED} from './private-12-guide-preflight-local.
 
 export const SOURCE_CLAIM='Procedură verificată';
 export const NEUTRAL_LABEL='Ghid informativ';
+export const HISTORICAL_CLAIM_NEUTRAL='Surse de consultat';
+// Only B1_FR and B1_BE were confirmed by an authorized private, code-free
+// diagnostic to contain this exact dated verification claim.
+// Do not broaden to arbitrary dates or "verified" text.
+const DATED_CLAIM_GUIDES=new Set(['B1_FR','B1_BE']);
+const DATED_SOURCE_CLAIM=/Surse reverificate:\s*5 octombrie 2026/gi;
+const OTHER_DATED_VERIFICATION=/Verificat.{0,80}5 octombrie 2026/i;
+export function editorialReplacements(guideKey,script){
+ const badgeCount=script.split(SOURCE_CLAIM).length-1;
+ assert.ok(badgeCount>=1&&badgeCount<=4,'VISIBLE_CLAIM_ANCHOR_COUNT');
+ const badgeOnly=script.replaceAll(SOURCE_CLAIM,NEUTRAL_LABEL);
+ const matches=[...badgeOnly.matchAll(DATED_SOURCE_CLAIM)];
+ if(DATED_CLAIM_GUIDES.has(guideKey)){
+   assert.ok(matches.length>=1&&matches.length<=2,'DATED_CLAIM_COUNT_CHANGED');
+ }else{
+   assert.equal(matches.length,0,'DATE_CLAIM_UNEXPECTED_COUNTRY');
+ }
+ const revised=badgeOnly.replace(DATED_SOURCE_CLAIM,HISTORICAL_CLAIM_NEUTRAL);
+ // A second, distinct dated claim is not authorized for automatic editing.
+ assert.ok(!OTHER_DATED_VERIFICATION.test(revised),'OTHER_UNAPPROVED_DATE_CLAIM');
+ assert.ok(!DATED_SOURCE_CLAIM.test(revised),'DATED_CLAIM_REMAINS');
+ return {revised,badgeCount,datedCount:matches.length};
+}
+
 export function sha(value){
  return createHash('sha256').update(value,'utf8').digest('hex');
 }
@@ -25,12 +49,9 @@ export function reviseOne(row){
  assert.equal(row.route,EXPECTED.get(row.guide_key).route,'GUIDE_ROUTE_MISMATCH');
  const original=row.script_js;
  assert.ok(typeof original==='string'&&original.length>=200,'SCRIPT_MISSING');
- const count=original.split(SOURCE_CLAIM).length-1;
- // Fail closed if the template changed or the claim appears unexpectedly often.
- assert.ok(count>=1&&count<=4,'VISIBLE_CLAIM_ANCHOR_COUNT');
- const revised=original.split(SOURCE_CLAIM).join(NEUTRAL_LABEL);
+ const {revised,badgeCount,datedCount}=editorialReplacements(row.guide_key,original);
  assert.notEqual(original,revised,'NO_CHANGE');
- assert.equal(revised,original.replaceAll(SOURCE_CLAIM,NEUTRAL_LABEL),'UNEXPECTED_CONTENT_DIFF');
+ // The function above accepts only two literal kinds of wording edit.
  assert.ok(!revised.includes(SOURCE_CLAIM),'CLAIM_REMAINS');
  new Script(revised,{filename:'PRIVATE_DO_NOT_PRINT.js'});
  const otherClaims=[];
@@ -40,7 +61,7 @@ export function reviseOne(row){
    draft:{guide_key:row.guide_key,route:row.route,script_js:revised},
    record:{
      guide_key:row.guide_key,source_sha256:sha(original),draft_sha256:sha(revised),
-     exact_badge_replacements:count,other_claim_flags:otherClaims,
+     exact_badge_replacements:badgeCount,dated_claim_replacements:datedCount,other_claim_flags:otherClaims,
      editorial_approved:false
    }
  };
@@ -65,6 +86,7 @@ export function preparePrivateBadgeDraft(raw){
    checked:updates.length,
    changed:updates.length,
    exact_badge_replacements:updates.reduce((sum,x)=>sum+x.record.exact_badge_replacements,0),
+   dated_claim_replacements:updates.reduce((sum,x)=>sum+x.record.dated_claim_replacements,0),
    all_edits_exact:true,
    editorial_approved:false,
    sale_approved:false,
@@ -104,13 +126,21 @@ export function diagnosePrivateBadgeDraft(raw){
    const count=code.split(SOURCE_CLAIM).length-1;
    if(count===0)errors.push('EXACT_BADGE_NOT_FOUND');
    if(count>4)errors.push('BADGE_OCCURS_MORE_THAN_FOUR_TIMES');
-   // These are other verification claims not removed by the exact text diff.
-   if(/Surse reverificate:\s*5 octombrie 2026/i.test(code))
-    errors.push('UNREVIEWED_SOURCES_DATE_CLAIM_REMAINS');
-   if(/Verificat.{0,80}5 octombrie 2026/i.test(code))
-    errors.push('UNREVIEWED_DATE_CLAIM_REMAINS');
-   try{new Script(code.split(SOURCE_CLAIM).join(NEUTRAL_LABEL))}
-   catch{errors.push('DRAFT_SYNTAX_INVALID')}
+   try{
+     const draft=editorialReplacements(key,code).revised;
+     new Script(draft);
+   }catch{
+     const matched=[...code.matchAll(DATED_SOURCE_CLAIM)].length;
+     if(DATED_CLAIM_GUIDES.has(key)){
+       if(matched===0)errors.push('EXPECTED_DATED_CLAIM_MISSING');
+       if(matched>2)errors.push('DATED_CLAIM_TOO_MANY');
+     }else if(matched)errors.push('UNEXPECTED_DATED_CLAIM');
+     const cleaned=code.replaceAll(SOURCE_CLAIM,NEUTRAL_LABEL)
+       .replace(DATED_SOURCE_CLAIM,HISTORICAL_CLAIM_NEUTRAL);
+     if(OTHER_DATED_VERIFICATION.test(cleaned))
+       errors.push('OTHER_UNAPPROVED_DATE_CLAIM');
+     if(!errors.length)errors.push('DRAFT_VALIDATION_OR_SYNTAX_FAILED');
+   }
   }
   if(errors.length)flags.push(key+':'+errors.join(','));
  }
@@ -141,9 +171,10 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
    writeFileSync(join(outdir,'private-draft.json'),JSON.stringify(result.privateDraft),{mode:0o600,flag:'wx'});
    writeFileSync(join(outdir,'safe-summary.json'),JSON.stringify(result.report,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE BADGE DRAFT: '+result.report.changed+'/'+result.report.checked+
-     ' guide scripts prepared; '+result.report.exact_badge_replacements+' exact visible-claim substitutions.');
+     ' guide scripts prepared; '+result.report.exact_badge_replacements+' badge substitutions; '+result.report.dated_claim_replacements+' dated-source substitutions.');
    for(const row of result.report.guide_reviews){
-     console.log('DRAFT_ONLY '+row.guide_key+' | replacements='+row.exact_badge_replacements+
+     console.log('DRAFT_ONLY '+row.guide_key+' | badge_edits='+row.exact_badge_replacements+
+       ' | source_date_edits='+row.dated_claim_replacements+
        (row.other_claim_flags.length?' | '+row.other_claim_flags.join(','):''));
    }
    console.log('NOT FOR SALE: 0 editorial approvals, 0 Cloudflare D1 updates, 0 Shopify writes.');
