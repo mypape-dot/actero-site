@@ -13,7 +13,7 @@ function fixture(){
  return {results:[...EXPECTED].map(([guide_key,route],i)=>({
   guide_key,route:route.route,
   script_js:'function syntheticGuide'+i+'(){return '+JSON.stringify(
-    'Fixture about country source '+url[route.country]+' '.repeat(12))+';}'
+    'Fixture about country source '+url[route.country]+' '.repeat(250))+';}'
  }))};
 }
 test('all 12 private guide shapes can be checked without running code',()=>{
@@ -41,7 +41,7 @@ test('syntax errors and unsupported verification claims are signalled without le
  const a=fixture(),secret='DO_NOT_LOG_PRIVATE_GUIDE_CONTENT';
  a.results[0].script_js='function ??? '+secret+' '.repeat(50);
  const row=a.results.find(x=>x.guide_key==='B1_FR');
- row.script_js='function broken( { '+secret+' '.repeat(35);
+ row.script_js='function broken( { '+secret.repeat(12);
  const r=inspectPrivateExport(a),lines=summaryLines(r).join('\n');
  assert.equal(r.structure_ok,false);
  assert.ok(lines.includes('SCRIPT_SYNTAX_REVIEW'));
