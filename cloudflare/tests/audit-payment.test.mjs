@@ -104,4 +104,20 @@ check('content changed after checkout: do not grant now-unapproved script',
   db.prepare('SELECT status FROM access_grants WHERE case_id=?').get(i).status==='pending');
 db.prepare('UPDATE guide_scripts SET script_js=? WHERE guide_key=?').run(approvedJs,'B1_IT');
 
+const paidBeforeRevocation=(await access(f,fc.data.accessToken)).data;
+check('paid entitlement reports guide available with intact approval',
+  paidBeforeRevocation.paid===true&&paidBeforeRevocation.guide_available===true);
+db.prepare("UPDATE guide_approvals SET status='revoked' WHERE guide_key='B1_IT'").run();
+const paidDuringRevocation=(await access(f,fc.data.accessToken)).data;
+check('already paid customer remains paid but is warned guide is unavailable',
+  paidDuringRevocation.paid===true&&paidDuringRevocation.guide_available===false);
+const noScript=await api('GET','/guide-script?case_id='+f+'&guide_key=B1_IT',undefined,
+  {'X-Actero-Access-Token':fc.data.accessToken});
+check('withdrawn content is never delivered to an existing paid customer',
+  noScript.status===503&&noScript.data.error==='guide_not_available');
+db.prepare("UPDATE guide_approvals SET status='approved' WHERE guide_key='B1_IT'").run();
+const restored=(await access(f,fc.data.accessToken)).data;
+check('restored exact approval makes guide available without a second payment',
+  restored.paid===true&&restored.guide_available===true);
+
 console.log(`SUMMARY ${passed}/${passed} PASS — simulated D1/Shopify, not production`);
