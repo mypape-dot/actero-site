@@ -9,13 +9,13 @@ const ORIGIN='https://mypape-dot.github.io';
 const APPROVED_SCRIPT='window.acteroReviewed=true;';
 const hash=value=>createHash('sha256').update(value,'utf8').digest('hex');
 
-function harness(){
+function harness(guideKey='B1_ES',guideRoute='B1_FIRST_CRDS'){
  const sql=new DatabaseSync(':memory:');
  sql.exec('CREATE TABLE access_grants(case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT); CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
- for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql','008-guide-approvals.sql'])
+ for(const n of ['001-guide-variants.sql','002-shopify-checkout.sql','003-payment-events.sql','004-revocations.sql','005-recovery.sql','006-request-quotas.sql','007-evaluation-sessions.sql','008-guide-approvals.sql','009-guide-country-approvals.sql'])
    sql.exec(readFileSync(new URL('../'+n,import.meta.url),'utf8'));
  sql.prepare('INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES(?,?,?,?)')
-   .run('B1_ES','B1_FIRST_CRDS','Spain',APPROVED_SCRIPT);
+   .run(guideKey,guideRoute,'Guide fixture',APPROVED_SCRIPT);
  const stmt=(query,args=[])=>({bind:(...v)=>stmt(query,v),
    first:async()=>sql.prepare(query).get(...args)??null,
    run:async()=>({meta:{changes:sql.prepare(query).run(...args).changes}}),
@@ -36,12 +36,12 @@ function harness(){
  async function checkout(){
    const sess=await request('/session');
    assert.equal(sess.status,200);
-   return request('/checkout',{case_id:sess.data.case_id,route:'B1_FIRST_CRDS',
-     guide_key:'B1_ES'},sess.data.session_token);
+   return request('/checkout',{case_id:sess.data.case_id,route:guideRoute,
+     guide_key:guideKey},sess.data.session_token);
  }
- const approve=(status='approved',script=APPROVED_SCRIPT,route='B1_FIRST_CRDS')=>
+ const approve=(status='approved',script=APPROVED_SCRIPT,route=guideRoute)=>
    sql.prepare('INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES(?,?,?,?,?,?)')
-   .run('B1_ES',route,hash(script),status,'private-review-fixture','2026-10-13');
+   .run(guideKey,route,hash(script),status,'private-review-fixture','2026-10-13');
  return {sql,checkout,approve};
 }
 test('a stored guide without review cannot reach Shopify checkout',async()=>{
@@ -86,4 +86,50 @@ test('missing approval migration fails closed without creating a checkout',async
  assert.equal(res.status,500);
  assert.equal(res.data.error,'checkout_database_error');
  assert.equal(h.sql.prepare('SELECT count(*) n FROM checkout_intents').get().n,0);
+});
+
+const COUNTRIES=['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'];
+function approveCountry(h,guideKey,country,{status='approved',script=APPROVED_SCRIPT,route='B5_EXISTING_CRDS'}={}){
+  h.sql.prepare(`INSERT INTO guide_country_approvals
+    (guide_key,route,country,script_sha256,status,reviewer_reference,approved_at)
+    VALUES(?,?,?,?,?,?,?)`)
+    .run(guideKey,route,country,hash(script),status,'independent-fixture-'+country,'2026-10-14');
+}
+test('shared B5 guide stays blocked if only 9 of 10 countries are reviewed',async()=>{
+  const key='B5_DAMAGED',h=harness(key,'B5_EXISTING_CRDS');
+  h.approve();
+  assert.equal((await h.checkout()).data.error,'guide_country_review_incomplete');
+  for(const country of COUNTRIES.slice(0,9))approveCountry(h,key,country);
+  const nine=await h.checkout();
+  assert.equal(nine.status,409);
+  assert.equal(nine.data.error,'guide_country_review_incomplete');
+  assert.equal(h.sql.prepare('SELECT COUNT(*) n FROM checkout_intents').get().n,0);
+  approveCountry(h,key,COUNTRIES[9]);
+  const ten=await h.checkout();
+  assert.equal(ten.status,200);
+  assert.ok(ten.data.checkoutUrl);
+});
+test('shared B5 country gate rejects revoked, wrong-hash, or wrong-route country signoff',async()=>{
+  for(const variant of ['revoked','wrong-hash','wrong-route']){
+    const key='B5_STOLEN',h=harness(key,'B5_EXISTING_CRDS');
+    h.approve();
+    for(const country of COUNTRIES.slice(0,9))approveCountry(h,key,country);
+    approveCountry(h,key,'CH',{
+      status:variant==='revoked'?'revoked':'approved',
+      script:variant==='wrong-hash'?'window.notReviewed=true;':APPROVED_SCRIPT,
+      route:variant==='wrong-route'?'B1_FIRST_CRDS':'B5_EXISTING_CRDS'
+    });
+    const res=await h.checkout();
+    assert.equal(res.status,409,variant);
+    assert.equal(res.data.error,'guide_country_review_incomplete',variant);
+  }
+});
+test('missing country-approvals migration fails closed for all shared B5 variants',async()=>{
+  for(const key of ['B5_STOLEN','B5_DAMAGED','B5_DATA_CHANGE','B5_MOVED']){
+    const h=harness(key,'B5_EXISTING_CRDS');h.approve();
+    h.sql.exec('DROP TABLE guide_country_approvals');
+    const res=await h.checkout();
+    assert.equal(res.status,500,key);
+    assert.equal(res.data.error,'checkout_database_error',key);
+  }
 });
