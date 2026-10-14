@@ -140,6 +140,7 @@ async function renderOne(browser,scenario,row,outputDir,css){
    return {
      guide_key:key,viewport:scenario.name,
      status:flags.length?'REVIEW':'RENDER_OK',
+     rendered:result.chars>0&&result.heading,
      flags,summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
  }catch(error){
@@ -175,12 +176,14 @@ async function main(){
    }
    const summary={
      checked:results.length,render_ok:results.filter(x=>x.status==='RENDER_OK').length,
+     visually_rendered:results.filter(x=>x.rendered===true).length,
      review:results.filter(x=>x.status==='REVIEW').length,
      notes:'VISUAL STRUCTURE ONLY. NOT LEGAL/CONSULAR APPROVAL. NO PAID CHECKOUT TEST.',
      results
    };
    writeFileSync(join(outdir,'diagnostic-summary.json'),JSON.stringify(summary,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE VISUAL QA: '+summary.render_ok+'/'+summary.checked+' renders without automatic review flags.');
+   console.log('VISUALLY DISPLAYED (including review flags): '+summary.visually_rendered+'/'+summary.checked+'.');
    for(const result of results){
      console.log(result.status+' '+result.guide_key+' '+result.viewport+' | '+(result.flags.join(',')||'STRUCTURAL_RENDER_ONLY'));
      if(result.candidate_function_identifiers)
