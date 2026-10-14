@@ -10,7 +10,7 @@ Rularea privată pe Mac a arătat `VISUALLY DISPLAYED: 24/24`, însă toate cele
 
 - Execută o interogare D1 **SELECT**, local și numai pe calculatorul autorizat.
 - Confirmă **toate cele 12 chei + rute** așteptate; refuză duplicate, lipsuri, scripturi prea scurte, erori de sintaxă, modificări neașteptate și etichete absente.
-- Înlocuiește **numai șirul exact** `Procedură verificată` cu `Ghid informativ` în fiecare script, într-o **copie privată**. Nu înlocuiește automat alte afirmații și nu schimbă pași, taxe, formulare sau linkuri.
+- Înlocuiește **numai șirul exact** `Procedură verificată` cu `Ghid informativ` în fiecare script, într-o **copie privată**. Pentru **B1_FR și B1_BE exclusiv**, neutralizează și formularea confirmată `Surse reverificate: 5 octombrie 2026` ca `Surse de consultat`. Dacă textul este diferit, absent, apare prea des sau rămâne o altă afirmație de verificare datată, blochează draftul. Nu schimbă pași, taxe, formulare sau linkuri.
 - Compilează sintactic noile scripturi, verifică egalitatea cu înlocuirea exactă, înregistrează identificatorii și amprentele SHA-256 înainte/după.
 - Generează `private-draft.json` și `safe-summary.json` **numai pe Mac**, într-un folder nou, privat, în afara checkout-ului GitHub. Nu scrie în D1.
 - Execută offline un test Chromium/WebKit al draftului (`24` randări) și salvează capturi locale într-un al doilea folder. Nu testează magazinul și nu validează legea sau acceptarea consulară.
@@ -47,3 +47,17 @@ Trimite în chat **doar** mesajele `PRIVATE BADGE DRAFT:`, `DRAFT_ONLY` și `PRI
 | Irlanda | PPS și IRP nu sunt dovezi generale de domiciliu pentru români | EUTR2 se aplică condiționat; confirmă dovezi concrete de rezidență |
 
 Îndepărtarea etichetei nu ridică niciunul dintre blocajele editoriale de mai sus.
+
+## Actualizare după diagnosticul privat 14.10.2026, ora 22:00
+
+Screenshotul local a confirmat `SAFE_DIAGNOSTIC` pentru `B1_FR` și `B1_BE`, cu două semnale suprapuse pentru aceeași expresie datată; detectorul mai general caută și subșirul „verificat” din „reverificate”. Am introdus o **singură modificare editorială controlată** pentru formula exactă `Surse reverificate: 5 octombrie 2026`, doar în aceste două scripturi. Nici alte date, nici alte afirmații și nici instrucțiuni procedurale nu pot fi schimbate automat. Alte claim-uri datate rămân blocante.
+
+După actualizarea GitHub, se folosește un folder nou, fără ștergerea rezultatelor anterioare:
+
+```bash
+cd ~/Desktop/actero-site
+git pull --ff-only origin audit/private-12-editorial-badge-draft-20261014
+bash cloudflare/audit-private-12-badge-on-mac.sh "$HOME/actero-private-12-badge-review-v3"
+```
+
+Scop: **12/12** drafturi pregătite, **24/24** randări offline fără claim-ul vechi. Acest rezultat nu conferă aprobare de vânzare și nu se aplică automat în D1. Trimite numai `PRIVATE BADGE DRAFT`, `PRIVATE VISUAL QA`, `SAFE_DIAGNOSTIC` și codurile `REVIEW`, fără fișiere private sau conținut premium.
