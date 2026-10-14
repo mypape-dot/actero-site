@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 import {EXPECTED} from '../private-12-guide-preflight-local.mjs';
 import {preparePrivateBadgeDraft,diagnosePrivateBadgeDraft,reviseOne,SOURCE_CLAIM,NEUTRAL_LABEL,HISTORICAL_CLAIM_NEUTRAL,sha} from '../prepare-private-12-badge-draft.mjs';
 
-function fixture(){
- const datedGuideSet=new Set(['B1_FR','B1_BE',
+const datedGuideSet=new Set(['B1_FR','B1_BE',
  'B5_RENEWAL_FR','B5_RENEWAL_BE','B5_RENEWAL_NL','B5_RENEWAL_IE',
  'B5_LOST_FR','B5_LOST_BE','B5_LOST_NL','B5_LOST_IE']);
+function fixture(){
  const rows=[...EXPECTED].map(([guide_key,x],i)=>{
    const source='Guide sintetic pentru '+guide_key+' '+SOURCE_CLAIM+' '+
      (datedGuideSet.has(guide_key)?'Surse reverificate: 5 octombrie 2026; ':'')+
