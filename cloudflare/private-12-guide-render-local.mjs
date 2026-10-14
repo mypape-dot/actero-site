@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
 import {rendererFor,diagnosticEntrypoints,scriptShape} from './private-12-render-selector.mjs';
+import {assessRenderedGuide,compareViewportSignals} from './private-guide-procedure-signals.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
@@ -62,7 +63,7 @@ function baseAnswers(country,key){
    b5case:lost?'LOST':'RENEWAL',travel_urgent_basis:'CONTINUE_JOURNEY'
  };
 }
-async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsOnly=false){
+async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsOnly=false,evidenceOnly=false){
  const {guide_key:key,script_js:script}=row;
  const selected=rendererFor(key,script);
  const label=key+'-'+scenario.name;
@@ -137,7 +138,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
        'INVOCATION_'+invocation.kind+'_'+invocation.detail]
    };
    phase='RENDER_INSPECTION';
-   const result=await page.evaluate(()=>{
+   const result=await page.evaluate(evidenceOnly=>{
      const root=document.querySelector('#screen');
      const text=(root.innerText||'').trim();
      const links=[...root.querySelectorAll('a[href]')];
@@ -146,6 +147,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
      const clipped=cards.some(el=>el.clientWidth>0&&el.scrollWidth>el.clientWidth+3);
      return {
        chars:text.length,
+       private_visible_text:evidenceOnly?text:null,
        heading:!!root.querySelector('h1,h2'),
        headingText:(root.querySelector('h1,h2')?.innerText||'').trim(),
        steps:root.querySelectorAll('.real-guide-step,.guide-step,[data-step]').length,
@@ -169,7 +171,8 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
        placeholders:/\b(?:TODO|FIXME|undefined|UNRESOLVED|OUT_OF_SCOPE)\b/i.test(text),
        overflow,clipped
      };
-   });
+   },evidenceOnly);
+   const evidenceScan=evidenceOnly?assessRenderedGuide(key,result.private_visible_text):null;
    const flags=[];
    if(result.chars<400||!result.heading)flags.push('RESULT_EMPTY_OR_MISSING_HEADING');
    if(result.heading&&!result.headingText.toLocaleLowerCase('ro-RO').includes(countries[selected.country].toLocaleLowerCase('ro-RO')))
@@ -181,7 +184,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
    if(result.overflow)flags.push('PAGE_HORIZONTAL_OVERFLOW');
    if(result.clipped)flags.push('CARD_CONTENT_OVERFLOW');
    if(pageErrors.length)flags.push('BROWSER_JAVASCRIPT_EXCEPTION');
-   if(result.chars>0&&!claimsOnly){
+   if(result.chars>0&&!claimsOnly&&!evidenceOnly){
      // This image is proprietary paid-guide content. Never upload to GitHub/ChatGPT.
      phase='PRIVATE_SCREENSHOT';
      await page.screenshot({path:join(outputDir,label+'.png'),fullPage:true,timeout:15000});
@@ -191,6 +194,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
      status:flags.length?'REVIEW':'RENDER_OK',
      rendered:result.chars>0&&result.heading,
      flags,claim_counts:result.visibleClaimCounts,
+     evidence_scan:evidenceScan,
      summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
  }catch(error){
@@ -208,13 +212,14 @@ async function main(){
    const argv=process.argv.slice(2);
    if(argv.length!==1)throw Error('ONE_OUTPUT_ARGUMENT_REQUIRED');
    const claimsOnly=argv[0]==='--claims-only';
+   const evidenceOnly=argv[0]==='--evidence-only';
    // Read the private source only from stdin; no exported JS gets saved to disk.
    const input=readFileSync(0,'utf8');
    if(input.length>16*1024*1024)throw Error('PRIVATE_EXPORT_TOO_LARGE');
    const {raw,rows}=extractRows(input);
    const preflight=inspectPrivateExport(raw);
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
-   if(!claimsOnly)outdir=privateFolder(argv[0]);
+   if(!claimsOnly&&!evidenceOnly)outdir=privateFolder(argv[0]);
    const css=visibleCss();
    const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
@@ -222,7 +227,7 @@ async function main(){
      const browser=await scenario.browser.launch({headless:true});
      try{
        for(const row of rows){
-         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly));
+         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly,evidenceOnly));
        }
      }finally{await browser.close()}
    }
@@ -233,6 +238,28 @@ async function main(){
      notes:'VISUAL STRUCTURE ONLY. NOT LEGAL/CONSULAR APPROVAL. NO PAID CHECKOUT TEST.',
      results
    };
+   if(evidenceOnly){
+     const keys=[...new Set(results.map(r=>r.guide_key))].sort();
+     console.log('PRIVATE PROCEDURE SIGNALS: '+results.filter(r=>r.evidence_scan).length+
+       '/24 offline customer-facing renders inspected. NO APPROVAL.');
+     for(const key of keys){
+       const pair=results.filter(r=>r.guide_key===key);
+       const desktop=pair.find(r=>r.viewport==='chromium-1280');
+       const mobile=pair.find(r=>r.viewport==='webkit-390');
+       if(!desktop?.evidence_scan||!mobile?.evidence_scan){
+         console.log('EVIDENCE_REVIEW '+key+' | INCOMPLETE_RENDER');
+         process.exitCode=2;
+         continue;
+       }
+       const scan=desktop.evidence_scan;
+       console.log('EVIDENCE_REVIEW '+key+' | markers='+
+         (scan.markers.join(',')||'NONE')+' | flags='+scan.signals.join(',')+
+         ' | mobile_match='+compareViewportSignals(scan,mobile.evidence_scan));
+     }
+     console.log('All results require human review of actual context and official documents.');
+     console.log('READ ONLY: NO EXPORT, NO SCREENSHOTS, NO D1 WRITES, NO SALE APPROVAL.');
+     return;
+   }
    if(claimsOnly){
      const ordered=[...new Set(results.map(r=>r.guide_key))].sort();
      console.log('VISIBLE CLAIM AUDIT: '+results.filter(r=>r.rendered===true).length+
