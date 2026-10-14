@@ -40,6 +40,11 @@ jobs:
         run: node --test cloudflare/tests/guide-review-register.test.mjs
       - name: Verify FR/BE/NL/IE official-evidence checklist across 12 guide variants
         run: node --test cloudflare/tests/four-country-b1-b5-editorial.test.mjs
+      - name: Validate private-read-only guide auditing tools using synthetic fixtures
+        run: |
+          node --check cloudflare/private-12-guide-preflight-local.mjs
+          bash -n cloudflare/audit-private-12-on-mac.sh
+          node --test cloudflare/tests/private-12-guide-preflight.test.mjs
       - name: Verify shared-country review registry contains 40 explicit signoffs
         run: node --test cloudflare/tests/guide-country-review-register.test.mjs
       - name: Verify server checkout requires exact guide and all-country approval
