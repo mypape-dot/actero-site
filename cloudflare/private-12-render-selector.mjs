@@ -31,7 +31,22 @@ export function rendererFor(guideKey,script){
 // when a private B5 script has a generic renderer not covered by the allowlist.
 export function diagnosticEntrypoints(script){
  if(typeof script!=='string')return [];
- const expr=/(?:^|[\s;])(?:async\s+)?function\s+(showB[15][A-Za-z0-9_$]{1,70})\s*\(|(?:^|[\s;])(?:const|let|var)\s+(showB[15][A-Za-z0-9_$]{1,70})\s*=/gm;
- const names=[...script.matchAll(expr)].map(x=>x[1]||x[2]);
- return [...new Set(names)].sort().slice(0,12);
+ // Identifiers are metadata only. Never emit function bodies or raw script text.
+ const patterns=[
+  /(?:^|[\s;])(?:async\s+)?function\s+([A-Za-z_$][\w$]{1,70})\s*\(/gm,
+  /(?:^|[\s;])(?:const|let|var)\s+([A-Za-z_$][\w$]{1,70})\s*=\s*(?:async\s*)?(?:function\b|\([^)]{0,160}\)\s*=>)/gm,
+  /(?:^|[\s;])(?:window|globalThis)\.([A-Za-z_$][\w$]{1,70})\s*=\s*(?:async\s*)?(?:function\b|\([^)]{0,160}\)\s*=>)/gm
+ ];
+ const result=[];
+ for(const expr of patterns)for(const m of script.matchAll(expr))result.push(m[1]);
+ return [...new Set(result)].sort().slice(0,20);
+}
+export function scriptShape(script){
+ if(typeof script!=='string')return {functions:0,directDomWrite:false,windowAssignment:false,hasModuleExport:false};
+ return {
+  functions:diagnosticEntrypoints(script).length,
+  directDomWrite:/(?:\.innerHTML\s*=|\.insertAdjacentHTML\s*\(|\.replaceChildren\s*\()/i.test(script),
+  windowAssignment:/\bwindow\.[A-Za-z_$][\w$]{1,70}\s*=/.test(script),
+  hasModuleExport:/\bexport\s+(?:default|function|const|let|class)\b/.test(script)
+ };
 }
