@@ -1,7 +1,7 @@
 // No paid script source is included in these tests.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rendererFor,diagnosticEntrypoints} from '../private-12-render-selector.mjs';
+import {rendererFor,diagnosticEntrypoints,scriptShape} from '../private-12-render-selector.mjs';
 test('B1 selects only its matching national renderer',()=>{
  const text='function showB1FRValidatedGuide(){return 1;}\nfunction showB1BEValidatedGuide(){return 2;}';
  assert.deepEqual(rendererFor('B1_FR',text),{
@@ -30,6 +30,16 @@ test('diagnostic lists only bounded renderer identifier metadata without body te
    'const showB5PreviewGuide=()=>42;\n'+
    'function renderInternalSecret(){ return "'+secret+'"; }';
  const names=diagnosticEntrypoints(fixture);
- assert.deepEqual(names,['showB5PreviewGuide','showB5SharedGuide']);
+ assert.deepEqual(names,['renderInternalSecret','showB5PreviewGuide','showB5SharedGuide']);
  assert.equal(names.join(' ').includes(secret),false);
+});
+
+test('diagnostic metadata distinguishes direct DOM render and window registration',()=>{
+ const code='const makeDocument=()=>42;\nwindow.renderGuide=function(){ screen.innerHTML="<h1>Test</h1>"; };';
+ const shape=scriptShape(code);
+ assert.equal(shape.directDomWrite,true);
+ assert.equal(shape.windowAssignment,true);
+ assert.equal(shape.functions,2);
+ assert.equal(shape.hasModuleExport,false);
+ assert.deepEqual(diagnosticEntrypoints(code),['makeDocument','renderGuide']);
 });
