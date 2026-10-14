@@ -61,7 +61,8 @@ export function inspectPrivateExport(raw){
       signals.push('REVIEW_COUNTRY_OFFICIAL_SOURCE_NOT_LOCATED');
     // An official link being present does NOT guarantee it is current or accepted.
     if(!/https?:\/\//i.test(code))signals.push('REVIEW_NO_ABSOLUTE_SOURCE_LINK');
-    if(/(?:Procedură verificată|Surse reverificate:\s*5 octombrie 2026|Verificat.{0,80}5 octombrie 2026)/i.test(code))
+    // Match explicit verification claims, not an unrelated date within 80 chars.
+    if(/(?:Procedură verificată|Surse reverificate:\s*5 octombrie 2026|\bVerificat\s+(?:la|pe)\s*:?\s*5 octombrie 2026|\bData verificării\s*:?\s*5 octombrie 2026)/i.test(code))
       signals.push('REVIEW_UNSUPPORTED_VERIFICATION_BADGE');
     if(/(?:lorem ipsum|TODO|FIXME|de înlocuit)/i.test(code))
       signals.push('REVIEW_EDITORIAL_PLACEHOLDER');
