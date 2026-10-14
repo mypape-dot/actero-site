@@ -45,7 +45,7 @@ Testele rulează pe o bază **SQLite simulând D1**, cu plăți și webhook-uri 
 ## Limitări și blocaje pentru lansare
 
 - Un cumpărător **deja** plătit poate pierde accesul dacă ulterior aprobarea ghidului este retrasă sau scriptul se modifică. Endpoint-ul `/guide-script` refuză intenționat livrarea conținutului neaprobat. Sistemul nu păstrează încă versiunile achiziționate și nu automatizează notificarea sau rambursarea acestor cazuri.
-- `/access` raportează statusul grantului, nu garantează că scriptul este încă livrabil. Acest decalaj necesită rezolvare UX și operațională înainte de lansare.
+- `/access` raportează **separat** `paid:true` (plata confirmată) și `guide_available:false` (conținutul aprobabil nu mai este disponibil). `confirmare.html` afișează un mesaj explicit despre indisponibilitate și recomandă evitarea unei noi plăți, fără a permite deschiderea ghidului. Testele verifică scenariul pe Chromium desktop și WebKit mobil simulat. **Suportul și rambursarea efectivă nu sunt automatizate.**
 - Verificarea în webhook reduce intervalul de risc, dar nu înlocuiește o strategie de **versionare imutabilă**, audit editorial pe hash și reconciliere de plată.
 - `sale_approved=NO` pentru toate cele 43 de variante; migrarea 008 și plățile în producție nu trebuie activate pe baza acestor teste.
 
