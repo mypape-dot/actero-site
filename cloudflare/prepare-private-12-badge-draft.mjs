@@ -77,6 +77,45 @@ export function preparePrivateBadgeDraft(raw){
   }
  };
 }
+// Safe failure analysis: never print or return the paid guide's JavaScript,
+// extracted strings, URLs, credentials, SQL results, or exception messages.
+export function diagnosePrivateBadgeDraft(raw){
+ let rows;
+ try{rows=d1Rows(raw)}catch{return ['INPUT_FORMAT_UNRECOGNIZED']}
+ const flags=[];
+ if(rows.length!==EXPECTED.size)flags.push('GUIDE_COUNT_MISMATCH');
+ try{
+  if(!inspectPrivateExport(raw).structure_ok)
+   flags.push('ORIGINAL_STRUCTURE_PREFLIGHT_FAILED');
+ }catch{flags.push('ORIGINAL_STRUCTURE_PREFLIGHT_FAILED')}
+ const seen=new Set();
+ for(const row of rows){
+  const key=typeof row?.guide_key==='string'&&EXPECTED.has(row.guide_key)
+    ? row.guide_key:'UNKNOWN_GUIDE';
+  if(key==='UNKNOWN_GUIDE'){flags.push('UNKNOWN_GUIDE_KEY');continue}
+  if(seen.has(key)){flags.push('DUPLICATE_GUIDE_KEY');continue}
+  seen.add(key);
+  const errors=[];
+  if(row.route!==EXPECTED.get(key).route)errors.push('ROUTE_MISMATCH');
+  const code=row.script_js;
+  if(typeof code!=='string'||code.length<200){
+   errors.push('SOURCE_MISSING_OR_TOO_SHORT');
+  }else{
+   const count=code.split(SOURCE_CLAIM).length-1;
+   if(count===0)errors.push('EXACT_BADGE_NOT_FOUND');
+   if(count>4)errors.push('BADGE_OCCURS_MORE_THAN_FOUR_TIMES');
+   // These are other verification claims not removed by the exact text diff.
+   if(/Surse reverificate:\s*5 octombrie 2026/i.test(code))
+    errors.push('UNREVIEWED_SOURCES_DATE_CLAIM_REMAINS');
+   if(/Verificat.{0,80}5 octombrie 2026/i.test(code))
+    errors.push('UNREVIEWED_DATE_CLAIM_REMAINS');
+   try{new Script(code.split(SOURCE_CLAIM).join(NEUTRAL_LABEL))}
+   catch{errors.push('DRAFT_SYNTAX_INVALID')}
+  }
+  if(errors.length)flags.push(key+':'+errors.join(','));
+ }
+ return flags.length?flags:['UNCLASSIFIED_STOP_REQUIRES_LOCAL_REVIEW'];
+}
 function safePrivateOutputFolder(outdir){
  assert.ok(typeof outdir==='string'&&isAbsolute(outdir),'ABSOLUTE_PRIVATE_DIRECTORY_REQUIRED');
  assert.ok(!existsSync(outdir),'DIRECTORY_ALREADY_EXISTS');
@@ -87,13 +126,18 @@ function safePrivateOutputFolder(outdir){
  return outdir;
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+ let parsed=null;
+ let stage='INPUT';
  try{
    if(process.argv.length!==3)throw Error('OUTPUT_DIR_ARGUMENT_REQUIRED');
    const input=readFileSync(0,'utf8');
    if(input.length>16*1024*1024)throw Error('D1_EXPORT_TOO_LARGE');
-   const parsed=JSON.parse(input);
+   parsed=JSON.parse(input);
+   stage='EXACT_EDIT_VALIDATION';
    const result=preparePrivateBadgeDraft(parsed); // validate fully BEFORE writing any file
+   stage='PRIVATE_OUTPUT_PATH';
    const outdir=safePrivateOutputFolder(process.argv[2]);
+   stage='PRIVATE_FILES_WRITE';
    writeFileSync(join(outdir,'private-draft.json'),JSON.stringify(result.privateDraft),{mode:0o600,flag:'wx'});
    writeFileSync(join(outdir,'safe-summary.json'),JSON.stringify(result.report,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE BADGE DRAFT: '+result.report.changed+'/'+result.report.checked+
@@ -105,8 +149,18 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
    console.log('NOT FOR SALE: 0 editorial approvals, 0 Cloudflare D1 updates, 0 Shopify writes.');
    console.log('Sensitive draft stored ONLY on this Mac; do not upload private-draft.json to GitHub or chat.');
  }catch{
-   // Exceptions could echo source code and secrets. Never print stack or message.
-   console.error('PRIVATE BADGE DRAFT BLOCKED: source format, expected label, syntax or output safety check failed.');
+   // Exceptions may quote private source, so NEVER print message/stack.
+   console.error('PRIVATE BADGE DRAFT BLOCKED | STAGE_'+stage);
+   if(stage==='EXACT_EDIT_VALIDATION'&&parsed!==null){
+     for(const code of diagnosePrivateBadgeDraft(parsed))
+       console.error('SAFE_DIAGNOSTIC '+code);
+   }else if(stage==='PRIVATE_OUTPUT_PATH'){
+     console.error('SAFE_DIAGNOSTIC PRIVATE_OUTPUT_PATH_NOT_AVAILABLE_OR_ALREADY_EXISTS');
+   }else if(stage==='PRIVATE_FILES_WRITE'){
+     console.error('SAFE_DIAGNOSTIC PRIVATE_FILE_WRITE_FAILED');
+   }else{
+     console.error('SAFE_DIAGNOSTIC CHECK_LOCAL_INPUT_OR_WRANGLER_RESPONSE');
+   }
    process.exitCode=2;
  }
 }
