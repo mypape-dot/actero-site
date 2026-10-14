@@ -10,7 +10,7 @@ import {chromium, webkit} from 'playwright';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const server=createServer((request,response)=>{
   const name=new URL(request.url,'http://localhost').pathname.slice(1)||'index.html';
-  if(!['index.html','actero-config.js'].includes(name)){
+  if(!['index.html','confirmare.html','actero-config.js'].includes(name)){
     response.writeHead(404);response.end();return;
   }
   response.writeHead(200,{'Content-Type':name.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8','Cache-Control':'no-store'});
@@ -170,6 +170,34 @@ try{
         await page.waitForFunction(()=>S.current.startsWith('STOP_'));
         assert.equal(await page.locator('#unlockResult').count(),0);
         assert.match(await page.locator('#screen h1').innerText(),/Permisul G/);
+      },{isMobile:mobile});
+
+      await browserCase(browser,kind+'-paid-but-guide-unavailable',async page=>{
+        const caseId='AR-11111111-1111-4111-8111-111111111111';
+        await page.addInitScript(({id})=>{
+          localStorage.setItem('actero_active_case',id);
+          localStorage.setItem('actero_access_'+id,'a'.repeat(80));
+        },{id:caseId});
+        // Run the actual confirmation script with a fake HTTPS payment API.
+        // Requests are fulfilled in the test; nothing leaves the browser.
+        await page.route('**/actero-config.js',r=>r.fulfill({
+          status:200,contentType:'text/javascript',
+          body:"window.ACTERO_PAYMENT_API='https://worker.invalid';"
+        }));
+        await page.route('https://worker.invalid/**',r=>{
+          if(r.request().method()==='OPTIONS')return r.fulfill({status:204,headers:{
+            'Access-Control-Allow-Origin':'*',
+            'Access-Control-Allow-Headers':'X-Actero-Access-Token, Content-Type',
+            'Access-Control-Allow-Methods':'GET,OPTIONS'}});
+          return r.fulfill({status:200,contentType:'application/json',headers:{
+            'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'X-Actero-Access-Token'},
+            body:JSON.stringify({ok:true,paid:true,guide_available:false,status:'paid',route:'B1_FIRST_CRDS'})});
+        });
+        await page.goto(url.replace('index.html','confirmare.html'),{waitUntil:'domcontentloaded'});
+        await page.waitForFunction(()=>document.getElementById('heading')?.textContent?.includes('temporar indisponibil'));
+        assert.equal(await page.locator('#openGuide').isDisabled(),true);
+        assert.match(await page.locator('#lead').innerText(),/Nu trebuie să plătești din nou/);
+        assert.match(await page.locator('#statusMessage').innerText(),/confirmarea Shopify/);
       },{isMobile:mobile});
     }finally{await browser.close()}
   }
