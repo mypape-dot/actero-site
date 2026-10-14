@@ -39,7 +39,13 @@ test('four-country independent review matrix maps exactly to 12 catalog keys',()
   assert.ok(country,'Missing country policy');
   assert.deepEqual(row.official_country_evidence,country.sources.map(s=>s.url));
   assert.ok(country.sources.some(s=>s.url.includes('pasapoarte.mai.gov.ro')));
-  assert.ok(country.sources.some(s=>!s.url.includes('pasapoarte.mai.gov.ro')));
+  // France has a Romanian government country-specific evidence PDF.
+  // For BE/NL/IE, foreign government sources establish local document meaning,
+  // not Romanian acceptance; the Romanian DGP general rule is still required.
+  if(row.country==='FR')
+    assert.ok(country.sources.some(s=>s.kind==='DGP_COUNTRY_PDF_2022'));
+  else
+    assert.ok(country.sources.some(s=>!s.url.includes('pasapoarte.mai.gov.ro')));
  }
 });
 test('source categories distinguish foreign status from Romanian consular acceptance',()=>{
