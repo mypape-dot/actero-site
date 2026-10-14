@@ -16,8 +16,11 @@ for(const country of codes){
   const html='<h1>Ghid de test '+countryNames[country]+'</h1><section class="real-guide-step"><h3>Pasul de test</h3><p>'+
     filler+'</p></section><div class="personal-check">Document demonstrativ</div>'+
     '<a href="https://example.org/official-document.pdf">Document de test</a>';
+  // Prove the offline harness loads the actual public miniFormPreview helper
+  // before invoking a synthetic paid-guide function. Do not mock it in CI.
+  const callPublicHelper=key==='B1_FR'?'void miniFormPreview("Test sintetic","DGP");':'';
   output.push({guide_key:key,route,
-    script_js:'function '+fn+'(){document.getElementById("screen").innerHTML='+JSON.stringify(html)+';}'});
+    script_js:'function '+fn+'(){'+callPublicHelper+'document.getElementById("screen").innerHTML='+JSON.stringify(html)+';}'});
  }
 }
 process.stdout.write(JSON.stringify([{results:output}]));
