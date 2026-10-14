@@ -23,7 +23,7 @@ test('distinguishes exact dated claim from independent verification date',()=>{
 test('inventory text contains no source text',()=>{
  const lines=safeLines(fixture()).join('\n');
  assert.ok(lines.includes('PRIVATE CLAIM INVENTORY: 12/12'));
- assert.equal((lines.match(/CLAIM_COUNT /g)||[]).length,12);
+ assert.equal(lines.split('\n').filter(line=>line.startsWith('CLAIM_COUNT ')).length,12);
  assert.equal(lines.includes('CONTINUT_TEST_NU_AFISA'),false);
  assert.equal(lines.includes('function sample'),false);
 });
