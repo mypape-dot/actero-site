@@ -42,6 +42,11 @@ test('source-preview and document-card helpers have separate semantics',()=>{
  assert.ok(html.includes('function countryOfficialDocCard(cfg){'));
  assert.ok(html.includes('function officialPdfPageImageUrl('));
  assert.ok(html.includes('function isOfficialPdfUrl('));
+ assert.ok(html.includes('ILUSTRAȚIE — NU DOCUMENT OFICIAL'));
+ assert.ok(html.includes('Ilustrație orientativă, nu imaginea unui PDF oficial.'));
+ assert.ok(html.includes("const conditionalResource=['BE','NL','IE'].includes(code);"));
+ assert.ok(html.includes('Document de referință, cu aplicabilitate limitată'));
+ assert.ok(html.includes('Nu reprezintă automat documentul de domiciliu necesar pentru pașaportul CRDS.'));
  // This check DOES NOT prove live PDF fetch, correct first-page imagery or
  // lawful applicability, which remain BLOCKED for human review.
 });
