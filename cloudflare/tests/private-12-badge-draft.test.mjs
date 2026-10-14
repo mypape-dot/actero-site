@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXPECTED} from '../private-12-guide-preflight-local.mjs';
-import {preparePrivateBadgeDraft,reviseOne,SOURCE_CLAIM,NEUTRAL_LABEL,sha} from '../prepare-private-12-badge-draft.mjs';
+import {preparePrivateBadgeDraft,diagnosePrivateBadgeDraft,reviseOne,SOURCE_CLAIM,NEUTRAL_LABEL,sha} from '../prepare-private-12-badge-draft.mjs';
 
 function fixture(){
  const rows=[...EXPECTED].map(([guide_key,x],i)=>{
@@ -58,4 +58,24 @@ test('unapproved historical source-date claims cannot slip through under a neutr
  row.script_js=row.script_js.replace('Info '.repeat(70),
    'Surse reverificate: 5 octombrie 2026; '+'Info '.repeat(65));
  assert.throws(()=>preparePrivateBadgeDraft(raw),/DRAFT_STILL_HAS_UNVERIFIED_BADGE/);
+});
+
+test('failed real-guide draft reports only allowlisted diagnostic codes',()=>{
+ const secret='PAID_PRIVATE_SCRIPT_SECRET_TEST_VALUE';
+ const raw=fixture();
+ const first=raw[0].results.find(r=>r.guide_key==='B1_FR');
+ first.script_js=first.script_js.replace(SOURCE_CLAIM,NEUTRAL_LABEL)+secret;
+ const second=raw[0].results.find(r=>r.guide_key==='B5_LOST_IE');
+ second.script_js=second.script_js.replace('Info '.repeat(70),
+    'Surse reverificate: 5 octombrie 2026 '+'Info '.repeat(65));
+ const flags=diagnosePrivateBadgeDraft(raw);
+ assert.ok(flags.includes('B1_FR:EXACT_BADGE_NOT_FOUND'));
+ assert.ok(flags.includes('B5_LOST_IE:UNREVIEWED_SOURCES_DATE_CLAIM_REMAINS'));
+ assert.ok(!JSON.stringify(flags).includes(secret));
+ assert.ok(!JSON.stringify(flags).includes('renderSynthetic'));
+ assert.ok(flags.every(item=>/^[A-Z0-9_:,]+$/.test(item)));
+});
+test('success case never outputs private source as diagnostic',()=>{
+ const result=diagnosePrivateBadgeDraft(fixture());
+ assert.deepEqual(result,['UNCLASSIFIED_STOP_REQUIRES_LOCAL_REVIEW']);
 });
