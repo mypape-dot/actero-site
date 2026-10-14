@@ -53,6 +53,11 @@ jobs:
           node --check cloudflare/private-12-render-selector.mjs
           bash -n cloudflare/audit-private-12-visual-on-mac.sh
           node --test cloudflare/tests/private-12-render-selector.test.mjs
+      - name: Verify read-only editorial inventory
+        run: |
+          node --check cloudflare/inventory-private-12-claims-local.mjs
+          bash -n cloudflare/audit-private-12-claims-on-mac.sh
+          node --test cloudflare/tests/inventory-private-12-claims.test.mjs
       - name: Verify confidential exact editorial badge draft with synthetic-only fixtures
         run: |
           node --check cloudflare/prepare-private-12-badge-draft.mjs
