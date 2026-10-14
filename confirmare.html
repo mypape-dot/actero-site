@@ -109,6 +109,12 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
      if(!response.ok)throw Error('access_unavailable');
      const data=await response.json();
      if(data&&data.ok===true&&data.paid===true){
+       if(data.guide_available===false){
+         state('missing','Plata confirmată, ghid temporar indisponibil',
+           'Plata ta este înregistrată, dar ghidul aferent este momentan în revizuire. Nu trebuie să plătești din nou.',
+           'Păstrează confirmarea Shopify și contactează suportul magazinului pentru rezolvare sau rambursare.');
+         working=false;return;
+       }
        paid=true;state('ok','Plata ta a fost confirmată!','Ghidul personalizat ActeRO este pregătit. Îți mulțumim!','Poți continua acum către pașii și documentele pentru situația ta.');
        working=false;return;
      }
