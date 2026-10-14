@@ -2,6 +2,13 @@
 // NEVER create this fixture from real D1 scripts or upload premium code.
 const codes=['FR','BE','NL','IE'];
 const includeUnverifiedClaim=process.argv.includes('--editorial-badge');
+const includeEvidenceExamples=process.argv.includes('--evidence-examples');
+const evidenceExample={
+ B1_FR:'Carte Vitale fără calificare în primul ghid CRDS.',
+ B5_RENEWAL_BE:'Anexa 19 este prezentată ca documentul pentru înregistrare.',
+ B1_NL:'Numărul BSN și înregistrarea RNI.',
+ B5_LOST_IE:'Numărul PPS, cardul IRP și formularul EUTR2.'
+};
 const countryNames={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
 const pairs=[
  ['B1_','B1_FIRST_CRDS','showB1','ValidatedGuide'],
@@ -21,7 +28,9 @@ for(const country of codes){
     (includeUnverifiedClaim && !['B1_NL','B1_IE'].includes(key)
       ?'<span class="source-check">Surse reverificate: 5 octombrie 2026</span>':'')+
     (includeUnverifiedClaim
-      ?'<span class="date-note">Data informativă: 5 octombrie 2026</span>':'');
+      ?'<span class="date-note">Data informativă: 5 octombrie 2026</span>':'')+
+    (includeEvidenceExamples&&evidenceExample[key]
+      ?'<p class="synthetic-evidence-example">'+evidenceExample[key]+'</p>':'');
   // Prove the offline harness loads the actual public miniFormPreview helper
   // before invoking a synthetic paid-guide function. Do not mock it in CI.
   const callPublicHelper=key==='B1_FR'?'void miniFormPreview("Test sintetic","DGP");':'';
