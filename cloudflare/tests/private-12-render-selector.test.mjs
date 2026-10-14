@@ -43,3 +43,23 @@ test('diagnostic metadata distinguishes direct DOM render and window registratio
  assert.equal(shape.hasModuleExport,false);
  assert.deepEqual(diagnosticEntrypoints(code),['makeDocument','renderGuide']);
 });
+
+test('selects exact private B2-renewal and B3-lost functions for all four countries',()=>{
+ for(const country of ['FR','BE','NL','IE']){
+  const source=[
+   'function showB2'+country+'ValidatedGuide(){}',
+   'function showB3'+country+'ValidatedGuide(){}',
+   'function showB3RemainingValidatedGuide(){}'
+  ].join('\n');
+  assert.equal(rendererFor('B5_RENEWAL_'+country,source).entrypoint,'showB2'+country+'ValidatedGuide');
+  assert.equal(rendererFor('B5_LOST_'+country,source).entrypoint,'showB3'+country+'ValidatedGuide');
+  assert.equal(rendererFor('B5_LOST_'+country,source).country,country);
+ }
+});
+test('never substitutes generic B3Remaining, unrelated B2/B3, or wrong-country renderer',()=>{
+ const source='function showB3RemainingValidatedGuide(){}\n'+
+   'function showB3FRValidatedGuide(){}\n'+
+   'function showB2FRValidatedGuide(){}';
+ assert.equal(rendererFor('B5_LOST_BE',source).reason,'NO_KNOWN_ENTRYPOINT');
+ assert.equal(rendererFor('B5_RENEWAL_IE',source).reason,'NO_KNOWN_ENTRYPOINT');
+});
