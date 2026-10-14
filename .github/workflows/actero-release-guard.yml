@@ -57,7 +57,7 @@ jobs:
           node --test cloudflare/tests/private-12-render-selector.test.mjs
       - name: Verify private procedural evidence signal detection is conservative and nondisclosing
         run: |
-          node --check cloudflare/private-guide-procedure-signals.mjs
+          node --check cloudflare/procedure-signal-classifier.mjs
           node --check cloudflare/private-12-guide-render-local.mjs
           bash -n cloudflare/audit-private-12-procedure-signals-on-mac.sh
           node --test cloudflare/tests/private-guide-procedure-signals.test.mjs
