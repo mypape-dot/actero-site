@@ -137,6 +137,7 @@ jobs:
           node --check cloudflare/private-12-guide-render-local.mjs
           node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --editorial-badge |
             node cloudflare/private-12-guide-render-local.mjs --claims-only > "$RUNNER_TEMP/visible-claim-counts.txt"
+          cat "$RUNNER_TEMP/visible-claim-counts.txt" # Synthetic fixtures only; no private D1 data.
           test "$(grep -c '^VISIBLE_CLAIMS ' "$RUNNER_TEMP/visible-claim-counts.txt")" = 12
           grep -qF 'VISIBLE_CLAIMS B1_FR | badge=1 | source_date=1 | other_dates=0 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
           grep -qF 'VISIBLE_CLAIMS B1_NL | badge=1 | source_date=0 | other_dates=0 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
