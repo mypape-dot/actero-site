@@ -11,26 +11,34 @@ import {inspectPrivateExport,EXPECTED} from './private-12-guide-preflight-local.
 export const SOURCE_CLAIM='Procedură verificată';
 export const NEUTRAL_LABEL='Ghid informativ';
 export const HISTORICAL_CLAIM_NEUTRAL='Surse de consultat';
-// Only B1_FR and B1_BE were confirmed by an authorized private, code-free
-// diagnostic to contain this exact dated verification claim.
-// Do not broaden to arbitrary dates or "verified" text.
-const DATED_CLAIM_GUIDES=new Set(['B1_FR','B1_BE']);
+// Operator's read-only rendered-text audit (14 Oct 2026, 22:28 RO)
+// confirmed exactly one visible dated SOURCE label for ten guide variants;
+// B1_NL and B1_IE have none. Unrelated date mentions are never auto-edited.
+export const DATED_CLAIM_GUIDES=new Set([
+ 'B1_FR','B1_BE',
+ 'B5_RENEWAL_FR','B5_RENEWAL_BE','B5_RENEWAL_NL','B5_RENEWAL_IE',
+ 'B5_LOST_FR','B5_LOST_BE','B5_LOST_NL','B5_LOST_IE'
+]);
 const DATED_SOURCE_CLAIM=/Surse reverificate:\s*5 octombrie 2026/gi;
-const OTHER_DATED_VERIFICATION=/Verificat.{0,80}5 octombrie 2026/i;
+// Avoid the historical proximity regex: it conflated an unrelated date
+// with a preceding "verificat" word. Independent dates are tracked for
+// manual review, not edited or declared legally valid.
+const OTHER_EXPLICIT_VERIFICATION=/(?:\bVerificat\s+(?:la|pe)\s*:?|\bData verificării\s*:?)\s*5 octombrie 2026\b/i;
 export function editorialReplacements(guideKey,script){
  const badgeCount=script.split(SOURCE_CLAIM).length-1;
  assert.ok(badgeCount>=1&&badgeCount<=4,'VISIBLE_CLAIM_ANCHOR_COUNT');
  const badgeOnly=script.replaceAll(SOURCE_CLAIM,NEUTRAL_LABEL);
  const matches=[...badgeOnly.matchAll(DATED_SOURCE_CLAIM)];
  if(DATED_CLAIM_GUIDES.has(guideKey)){
-   assert.ok(matches.length>=1&&matches.length<=2,'DATED_CLAIM_COUNT_CHANGED');
+   assert.equal(matches.length,1,'DATED_CLAIM_COUNT_CHANGED');
  }else{
    assert.equal(matches.length,0,'DATE_CLAIM_UNEXPECTED_COUNTRY');
  }
  const revised=badgeOnly.replace(DATED_SOURCE_CLAIM,HISTORICAL_CLAIM_NEUTRAL);
- // A second, distinct dated claim is not authorized for automatic editing.
- assert.ok(!OTHER_DATED_VERIFICATION.test(revised),'OTHER_UNAPPROVED_DATE_CLAIM');
- assert.ok(!DATED_SOURCE_CLAIM.test(revised),'DATED_CLAIM_REMAINS');
+ // An independently explicit claim of verification must still block edits.
+ // Ordinary date mentions remain unchanged for separate editorial review.
+ assert.ok(!OTHER_EXPLICIT_VERIFICATION.test(revised),'OTHER_EXPLICIT_VERIFICATION_REQUIRES_REVIEW');
+ assert.ok(!/Surse reverificate/i.test(revised),'OTHER_SOURCE_VERIFICATION_CLAIM_REMAINS');
  return {revised,badgeCount,datedCount:matches.length};
 }
 
@@ -56,7 +64,7 @@ export function reviseOne(row){
  new Script(revised,{filename:'PRIVATE_DO_NOT_PRINT.js'});
  const otherClaims=[];
  if(/Surse reverificate/i.test(revised))otherClaims.push('REVIEW_OTHER_REVERIFIED_SOURCES_CLAIM');
- if(/Verificat.{0,80}5 octombrie 2026/i.test(revised))otherClaims.push('REVIEW_HISTORIC_VERIFICATION_DATE');
+ if(/5 octombrie 2026/i.test(revised))otherClaims.push('REVIEW_REMAINING_DATES_MANUALLY');
  return {
    draft:{guide_key:row.guide_key,route:row.route,script_js:revised},
    record:{
@@ -132,13 +140,14 @@ export function diagnosePrivateBadgeDraft(raw){
    }catch{
      const matched=[...code.matchAll(DATED_SOURCE_CLAIM)].length;
      if(DATED_CLAIM_GUIDES.has(key)){
-       if(matched===0)errors.push('EXPECTED_DATED_CLAIM_MISSING');
-       if(matched>2)errors.push('DATED_CLAIM_TOO_MANY');
+       if(matched!==1)errors.push('EXPECTED_EXACTLY_ONE_DATED_CLAIM');
      }else if(matched)errors.push('UNEXPECTED_DATED_CLAIM');
      const cleaned=code.replaceAll(SOURCE_CLAIM,NEUTRAL_LABEL)
        .replace(DATED_SOURCE_CLAIM,HISTORICAL_CLAIM_NEUTRAL);
-     if(OTHER_DATED_VERIFICATION.test(cleaned))
-       errors.push('OTHER_UNAPPROVED_DATE_CLAIM');
+     if(OTHER_EXPLICIT_VERIFICATION.test(cleaned))
+       errors.push('OTHER_EXPLICIT_VERIFICATION_REQUIRES_REVIEW');
+     if(/Surse reverificate/i.test(cleaned))
+       errors.push('OTHER_SOURCE_VERIFICATION_CLAIM_REMAINS');
      if(!errors.length)errors.push('DRAFT_VALIDATION_OR_SYNTAX_FAILED');
    }
   }
