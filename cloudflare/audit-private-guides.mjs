@@ -99,7 +99,7 @@ export function auditPrivateGuides(rows){
     if(refs.insecure_http_url_count)warnings.push({code:'INSECURE_HTTP_REFERENCE',key});
     if(refs.placeholder_url_count)warnings.push({code:'PLACEHOLDER_REFERENCE',key});
     if(refs.other_domain_url_count)warnings.push({code:'OTHER_DOMAIN_REVIEW',key});
-    if(/href\s*=\s*(['"])\s*(?:javascript:|data:|#)\1/i.test(row.script_js))
+    if(/href\s*=\s*['"]\s*(?:javascript:|data:|#)/i.test(row.script_js))
       warnings.push({code:'POSSIBLE_UNSAFE_OR_PLACEHOLDER_HREF',key});
     if(/\b(?:fetch\s*\(|XMLHttpRequest\b|sendBeacon\s*\()/i.test(row.script_js))
       warnings.push({code:'GUIDE_PERFORMS_NETWORK_REQUEST_REVIEW',key});
