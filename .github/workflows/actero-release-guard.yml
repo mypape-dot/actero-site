@@ -131,6 +131,15 @@ jobs:
             if(a.checked!==24 || a.render_ok!==24 || a.review!==0)
               process.exit(1);
           " "$output/diagnostic-summary.json"
+      - name: Verify visible claim counts on 24 synthetic guide renders without screenshots
+        run: |
+          bash -n cloudflare/audit-private-12-visible-claims-on-mac.sh
+          node --check cloudflare/private-12-guide-render-local.mjs
+          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --editorial-badge |
+            node cloudflare/private-12-guide-render-local.mjs --claims-only > "$RUNNER_TEMP/visible-claim-counts.txt"
+          test "$(grep -c '^VISIBLE_CLAIMS ' "$RUNNER_TEMP/visible-claim-counts.txt")" = 12
+          grep -qF 'VISIBLE_CLAIMS B1_FR | badge=1 | source_date=1 | other_dates=0 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
+          grep -qF 'VISIBLE_CLAIMS B1_NL | badge=1 | source_date=0 | other_dates=0 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
