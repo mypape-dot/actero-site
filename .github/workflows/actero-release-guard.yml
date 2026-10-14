@@ -33,6 +33,8 @@ jobs:
         run: node --test cloudflare/tests/quiz-history.test.mjs
       - name: Verify engine routing and unresolved-case regressions
         run: node --test cloudflare/tests/engine-logic-regression.test.mjs
+      - name: Verify public copy avoids unsupported official verification claims
+        run: node --test cloudflare/tests/public-copy-integrity.test.mjs
       - name: Verify private guide audit CLI does not disclose content
         run: node --test cloudflare/tests/private-guide-audit.test.mjs
       - name: Verify complete questionnaire journeys across 43 guide keys
