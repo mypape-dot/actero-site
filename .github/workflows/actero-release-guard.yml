@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "fix/**"
+      - "audit/**"
       - "feature/**"
   pull_request:
     branches:
@@ -37,6 +38,8 @@ jobs:
         run: node --test cloudflare/tests/engine-full-journeys.test.mjs
       - name: Verify guide review register and block incomplete approvals
         run: node --test cloudflare/tests/guide-review-register.test.mjs
+      - name: Verify FR/BE/NL/IE official-evidence checklist across 12 guide variants
+        run: node --test cloudflare/tests/four-country-b1-b5-editorial.test.mjs
       - name: Verify shared-country review registry contains 40 explicit signoffs
         run: node --test cloudflare/tests/guide-country-review-register.test.mjs
       - name: Verify server checkout requires exact guide and all-country approval

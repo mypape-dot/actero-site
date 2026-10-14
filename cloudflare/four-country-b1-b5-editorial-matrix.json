@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-14",
+  "scope": "12 individual B1 / B5 renewal / B5 lost guide variants for FR BE NL IE. Documentation-only; no private D1 scripts inspected.",
+  "sale_approved": false,
+  "general_rule_source": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+  "countries": {
+    "FR": {
+      "name": "Franța",
+      "sources": [
+        {
+          "url": "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+          "kind": "DGP_COUNTRY_PDF_2022",
+          "caveat": "Fișa din 2022; verificați procedura curentă la oficiul consular."
+        },
+        {
+          "url": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+          "kind": "DGP_CURRENT_GENERAL",
+          "caveat": "Cerințe generale, nu validare individuală."
+        }
+      ],
+      "review_focus": "Nu prezenta Carte Vitale/permisul auto ca dovadă principală; lista subsidiară din fișa DGP se aplică doar unui titular cu pașaport CRDS pentru Franța care nu poate prezenta dovezile principale.",
+      "conditions": [
+        "Verifică dacă solicitantul are deja CRDS cu mențiunea Franța înainte de orice dovadă subsidiară.",
+        "Verifică dacă dovezile principale sunt disponibile; verifică vechimea anumitor atestări.",
+        "Verifică actualitatea scutirilor de traducere conform documentului precis."
+      ]
+    },
+    "BE": {
+      "name": "Belgia",
+      "sources": [
+        {
+          "url": "https://dofi.ibz.be/en/news/changes-residence-applications-eu-citizens",
+          "kind": "BELGIAN_OFFICIAL_REGISTRATION_2025",
+          "caveat": "Descrie procedura belgiană, nu acceptarea documentelor la CRDS românesc."
+        },
+        {
+          "url": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+          "kind": "DGP_CURRENT_GENERAL",
+          "caveat": "Cerințe românești generale, nu dovadă de acceptare pentru anexa 19."
+        }
+      ],
+      "review_focus": "Anexa 19 reprezintă etapa de solicitare a înregistrării, nu dovada automată a dreptului de ședere acordat; la 1 septembrie 2025 documentele justificative trebuiau prezentate de la prima vizită.",
+      "conditions": [
+        "Solicită tipul documentului belgian și stadiul cererii, nu doar expresia «am anexă 19».",
+        "Nu promite acceptare CRDS sau scutire de traducere în lipsa confirmării românești actuale."
+      ]
+    },
+    "NL": {
+      "name": "Țările de Jos",
+      "sources": [
+        {
+          "url": "https://www.government.nl/documents/question-and-answer/when-should-i-register-with-the-personal-records-database-as-a-resident",
+          "kind": "DUTCH_OFFICIAL_RESIDENT_RNI",
+          "caveat": "Descrie registrul olandez, nu documentele admise de consulatul român."
+        },
+        {
+          "url": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+          "kind": "DGP_CURRENT_GENERAL",
+          "caveat": "Cerințe românești generale."
+        }
+      ],
+      "review_focus": "BRP conține rezidenți și nerezidenți RNI. Un BSN sau o înregistrare RNI poate exista fără domiciliu în Țările de Jos.",
+      "conditions": [
+        "Distingem extrasul cu rezidență/adresă în Olanda de simplul număr BSN sau RNI.",
+        "Confirmă documentul concret admis pentru CRDS și eventuala traducere la oficiul român."
+      ]
+    },
+    "IE": {
+      "name": "Irlanda",
+      "sources": [
+        {
+          "url": "https://www.gov.ie/en/department-of-social-protection/services/get-a-personal-public-service-pps-number/",
+          "kind": "IRISH_OFFICIAL_PPS",
+          "caveat": "PPS poate fi emis și rezidenților din afara Irlandei."
+        },
+        {
+          "url": "https://www.irishimmigration.ie/registering-your-immigration-permission/information-on-registering/irish-residence-permit/",
+          "kind": "IRISH_OFFICIAL_IRP",
+          "caveat": "Descrie înregistrarea permisiunii de imigrare pentru persoane din afara UE/Elveției; nu e obligatoriu în mod obișnuit cetățenilor UE."
+        },
+        {
+          "url": "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/",
+          "kind": "DGP_CURRENT_GENERAL",
+          "caveat": "Nu identifică un document irlandez admis automat."
+        }
+      ],
+      "review_focus": "Nu confunda numărul PPS cu dovada domiciliului și nu cere automat IRP unui cetățean român; dovezile de rezidență trebuie analizate individual.",
+      "conditions": [
+        "Separă necesitatea numărului PPS de domiciliul în Irlanda.",
+        "Verifică dovada concretă de rezidență și acceptarea românească, inclusiv traduceri."
+      ]
+    }
+  },
+  "guide_checks": [
+    {
+      "guide_key": "B1_FR",
+      "route": "B1_FIRST_CRDS",
+      "country": "FR",
+      "scenario": "first_crds",
+      "review_questions": [
+        "Prima stabilire a domiciliului străin: nu presupune existența unui pașaport CRDS anterior.",
+        "Verifică dacă solicitantul are deja CRDS cu mențiunea Franța înainte de orice dovadă subsidiară.",
+        "Verifică dacă dovezile principale sunt disponibile; verifică vechimea anumitor atestări.",
+        "Verifică actualitatea scutirilor de traducere conform documentului precis."
+      ],
+      "official_country_evidence": [
+        "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_RENEWAL_FR",
+      "route": "B5_EXISTING_CRDS",
+      "country": "FR",
+      "scenario": "renewal",
+      "review_questions": [
+        "Reînnoire CRDS: confirmă statul de domiciliu înscris, documentul anterior și dovada curentă.",
+        "Verifică dacă solicitantul are deja CRDS cu mențiunea Franța înainte de orice dovadă subsidiară.",
+        "Verifică dacă dovezile principale sunt disponibile; verifică vechimea anumitor atestări.",
+        "Verifică actualitatea scutirilor de traducere conform documentului precis."
+      ],
+      "official_country_evidence": [
+        "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_LOST_FR",
+      "route": "B5_EXISTING_CRDS",
+      "country": "FR",
+      "scenario": "lost",
+      "review_questions": [
+        "Pierderea pașaportului: distinge declararea incidentului de dovada actuală a domiciliului și de acte civile.",
+        "Verifică dacă solicitantul are deja CRDS cu mențiunea Franța înainte de orice dovadă subsidiară.",
+        "Verifică dacă dovezile principale sunt disponibile; verifică vechimea anumitor atestări.",
+        "Verifică actualitatea scutirilor de traducere conform documentului precis."
+      ],
+      "official_country_evidence": [
+        "https://pasapoarte.mai.gov.ro/wp-content/uploads/2022/07/PDF-Franta.pdf",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B1_BE",
+      "route": "B1_FIRST_CRDS",
+      "country": "BE",
+      "scenario": "first_crds",
+      "review_questions": [
+        "Prima stabilire a domiciliului străin: nu presupune existența unui pașaport CRDS anterior.",
+        "Solicită tipul documentului belgian și stadiul cererii, nu doar expresia «am anexă 19».",
+        "Nu promite acceptare CRDS sau scutire de traducere în lipsa confirmării românești actuale."
+      ],
+      "official_country_evidence": [
+        "https://dofi.ibz.be/en/news/changes-residence-applications-eu-citizens",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_RENEWAL_BE",
+      "route": "B5_EXISTING_CRDS",
+      "country": "BE",
+      "scenario": "renewal",
+      "review_questions": [
+        "Reînnoire CRDS: confirmă statul de domiciliu înscris, documentul anterior și dovada curentă.",
+        "Solicită tipul documentului belgian și stadiul cererii, nu doar expresia «am anexă 19».",
+        "Nu promite acceptare CRDS sau scutire de traducere în lipsa confirmării românești actuale."
+      ],
+      "official_country_evidence": [
+        "https://dofi.ibz.be/en/news/changes-residence-applications-eu-citizens",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_LOST_BE",
+      "route": "B5_EXISTING_CRDS",
+      "country": "BE",
+      "scenario": "lost",
+      "review_questions": [
+        "Pierderea pașaportului: distinge declararea incidentului de dovada actuală a domiciliului și de acte civile.",
+        "Solicită tipul documentului belgian și stadiul cererii, nu doar expresia «am anexă 19».",
+        "Nu promite acceptare CRDS sau scutire de traducere în lipsa confirmării românești actuale."
+      ],
+      "official_country_evidence": [
+        "https://dofi.ibz.be/en/news/changes-residence-applications-eu-citizens",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B1_NL",
+      "route": "B1_FIRST_CRDS",
+      "country": "NL",
+      "scenario": "first_crds",
+      "review_questions": [
+        "Prima stabilire a domiciliului străin: nu presupune existența unui pașaport CRDS anterior.",
+        "Distingem extrasul cu rezidență/adresă în Olanda de simplul număr BSN sau RNI.",
+        "Confirmă documentul concret admis pentru CRDS și eventuala traducere la oficiul român."
+      ],
+      "official_country_evidence": [
+        "https://www.government.nl/documents/question-and-answer/when-should-i-register-with-the-personal-records-database-as-a-resident",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_RENEWAL_NL",
+      "route": "B5_EXISTING_CRDS",
+      "country": "NL",
+      "scenario": "renewal",
+      "review_questions": [
+        "Reînnoire CRDS: confirmă statul de domiciliu înscris, documentul anterior și dovada curentă.",
+        "Distingem extrasul cu rezidență/adresă în Olanda de simplul număr BSN sau RNI.",
+        "Confirmă documentul concret admis pentru CRDS și eventuala traducere la oficiul român."
+      ],
+      "official_country_evidence": [
+        "https://www.government.nl/documents/question-and-answer/when-should-i-register-with-the-personal-records-database-as-a-resident",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_LOST_NL",
+      "route": "B5_EXISTING_CRDS",
+      "country": "NL",
+      "scenario": "lost",
+      "review_questions": [
+        "Pierderea pașaportului: distinge declararea incidentului de dovada actuală a domiciliului și de acte civile.",
+        "Distingem extrasul cu rezidență/adresă în Olanda de simplul număr BSN sau RNI.",
+        "Confirmă documentul concret admis pentru CRDS și eventuala traducere la oficiul român."
+      ],
+      "official_country_evidence": [
+        "https://www.government.nl/documents/question-and-answer/when-should-i-register-with-the-personal-records-database-as-a-resident",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B1_IE",
+      "route": "B1_FIRST_CRDS",
+      "country": "IE",
+      "scenario": "first_crds",
+      "review_questions": [
+        "Prima stabilire a domiciliului străin: nu presupune existența unui pașaport CRDS anterior.",
+        "Separă necesitatea numărului PPS de domiciliul în Irlanda.",
+        "Verifică dovada concretă de rezidență și acceptarea românească, inclusiv traduceri."
+      ],
+      "official_country_evidence": [
+        "https://www.gov.ie/en/department-of-social-protection/services/get-a-personal-public-service-pps-number/",
+        "https://www.irishimmigration.ie/registering-your-immigration-permission/information-on-registering/irish-residence-permit/",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_RENEWAL_IE",
+      "route": "B5_EXISTING_CRDS",
+      "country": "IE",
+      "scenario": "renewal",
+      "review_questions": [
+        "Reînnoire CRDS: confirmă statul de domiciliu înscris, documentul anterior și dovada curentă.",
+        "Separă necesitatea numărului PPS de domiciliul în Irlanda.",
+        "Verifică dovada concretă de rezidență și acceptarea românească, inclusiv traduceri."
+      ],
+      "official_country_evidence": [
+        "https://www.gov.ie/en/department-of-social-protection/services/get-a-personal-public-service-pps-number/",
+        "https://www.irishimmigration.ie/registering-your-immigration-permission/information-on-registering/irish-residence-permit/",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    },
+    {
+      "guide_key": "B5_LOST_IE",
+      "route": "B5_EXISTING_CRDS",
+      "country": "IE",
+      "scenario": "lost",
+      "review_questions": [
+        "Pierderea pașaportului: distinge declararea incidentului de dovada actuală a domiciliului și de acte civile.",
+        "Separă necesitatea numărului PPS de domiciliul în Irlanda.",
+        "Verifică dovada concretă de rezidență și acceptarea românească, inclusiv traduceri."
+      ],
+      "official_country_evidence": [
+        "https://www.gov.ie/en/department-of-social-protection/services/get-a-personal-public-service-pps-number/",
+        "https://www.irishimmigration.ie/registering-your-immigration-permission/information-on-registering/irish-residence-permit/",
+        "https://pasapoarte.mai.gov.ro/documente-necesare-pentru-pasaport-simplu-electronic-simplu-temporar-cu-mentionarea-statului-de-domiciliu-c-r-d-s/"
+      ],
+      "editorial_clearance": "NO",
+      "consular_acceptance_confirmed": false
+    }
+  ]
+}
