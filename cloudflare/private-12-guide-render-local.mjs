@@ -7,7 +7,7 @@ import {resolve,dirname,sep,isAbsolute,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
-import {rendererFor} from './private-12-render-selector.mjs';
+import {rendererFor,diagnosticEntrypoints} from './private-12-render-selector.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
@@ -54,7 +54,8 @@ async function renderOne(browser,scenario,row,outputDir,css){
  const label=key+'-'+scenario.name;
  if(!selected.entrypoint)return {
    guide_key:key,viewport:scenario.name,status:'REVIEW',
-   flags:['RENDER_ENTRYPOINT_'+selected.reason]
+   flags:['RENDER_ENTRYPOINT_'+selected.reason],
+   candidate_function_identifiers:diagnosticEntrypoints(script)
  };
  const context=await browser.newContext({
    viewport:{width:scenario.width,height:scenario.height},
@@ -107,6 +108,7 @@ async function renderOne(browser,scenario,row,outputDir,css){
      return {
        chars:text.length,
        heading:!!root.querySelector('h1,h2'),
+       headingText:(root.querySelector('h1,h2')?.innerText||'').trim(),
        steps:root.querySelectorAll('.real-guide-step,.guide-step,[data-step]').length,
        documents:root.querySelectorAll('.personal-check,.document-card').length,
        links:links.length,
@@ -121,6 +123,8 @@ async function renderOne(browser,scenario,row,outputDir,css){
    });
    const flags=[];
    if(result.chars<400||!result.heading)flags.push('RESULT_EMPTY_OR_MISSING_HEADING');
+   if(result.heading&&!result.headingText.toLocaleLowerCase('ro-RO').includes(countries[selected.country].toLocaleLowerCase('ro-RO')))
+     flags.push('REVIEW_COUNTRY_HEADING_MISMATCH');
    if(result.steps<1)flags.push('REVIEW_STEP_STRUCTURE');
    if(result.links<1||result.suspiciousLinks)flags.push('REVIEW_OFFICIAL_LINKS');
    if(result.verificationBadge)flags.push('REVIEW_VISIBLE_VERIFICATION_CLAIM');
@@ -177,7 +181,12 @@ async function main(){
    };
    writeFileSync(join(outdir,'diagnostic-summary.json'),JSON.stringify(summary,null,2),{mode:0o600,flag:'wx'});
    console.log('PRIVATE VISUAL QA: '+summary.render_ok+'/'+summary.checked+' renders without automatic review flags.');
-   for(const result of results)console.log(result.status+' '+result.guide_key+' '+result.viewport+' | '+(result.flags.join(',')||'STRUCTURAL_RENDER_ONLY'));
+   for(const result of results){
+     console.log(result.status+' '+result.guide_key+' '+result.viewport+' | '+(result.flags.join(',')||'STRUCTURAL_RENDER_ONLY'));
+     if(result.candidate_function_identifiers)
+       console.log('  FUNCTION_IDENTIFIERS_ONLY '+result.guide_key+' | '+
+         (result.candidate_function_identifiers.join(',')||'NONE'));
+   }
    console.log('Screenshots and diagnostics saved privately outside repository. DO NOT upload premium screenshots/code.');
    console.log('NO SALE APPROVAL. D1, Shopify and deployment unchanged.');
    if(summary.review)process.exitCode=2;
