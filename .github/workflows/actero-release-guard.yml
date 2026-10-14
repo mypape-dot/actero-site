@@ -40,6 +40,8 @@ jobs:
         run: node --test cloudflare/tests/guide-review-register.test.mjs
       - name: Verify FR/BE/NL/IE official-evidence checklist across 12 guide variants
         run: node --test cloudflare/tests/four-country-b1-b5-editorial.test.mjs
+      - name: Verify Belgian Dutch Irish evidence semantics across 9 guide routes
+        run: node --test cloudflare/tests/be-nl-ie-evidence-gates.test.mjs
       - name: Guard default official document URLs and conditional form applicability
         run: node --test cloudflare/tests/official-doc-applicability.test.mjs
       - name: Validate private-read-only guide auditing tools using synthetic fixtures
