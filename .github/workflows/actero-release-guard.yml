@@ -45,6 +45,12 @@ jobs:
           node --check cloudflare/private-12-guide-preflight-local.mjs
           bash -n cloudflare/audit-private-12-on-mac.sh
           node --test cloudflare/tests/private-12-guide-preflight.test.mjs
+      - name: Verify private visual renderer entrypoint logic with synthetic source
+        run: |
+          node --check cloudflare/private-12-guide-render-local.mjs
+          node --check cloudflare/private-12-render-selector.mjs
+          bash -n cloudflare/audit-private-12-visual-on-mac.sh
+          node --test cloudflare/tests/private-12-render-selector.test.mjs
       - name: Verify shared-country review registry contains 40 explicit signoffs
         run: node --test cloudflare/tests/guide-country-review-register.test.mjs
       - name: Verify server checkout requires exact guide and all-country approval
@@ -95,6 +101,11 @@ jobs:
         run: |
           npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium webkit
+      - name: Verify private visual QA on 12 synthetic guides (24 offline renders)
+        run: |
+          output="$RUNNER_TEMP/actero-12-visual-synthetic"
+          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs | node cloudflare/private-12-guide-render-local.mjs "$output"
+          test -f "$output/diagnostic-summary.json"
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
