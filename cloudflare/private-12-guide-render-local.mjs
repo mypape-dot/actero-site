@@ -7,7 +7,7 @@ import {resolve,dirname,sep,isAbsolute,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
-import {rendererFor,diagnosticEntrypoints} from './private-12-render-selector.mjs';
+import {rendererFor,diagnosticEntrypoints,scriptShape} from './private-12-render-selector.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
@@ -55,7 +55,8 @@ async function renderOne(browser,scenario,row,outputDir,css){
  if(!selected.entrypoint)return {
    guide_key:key,viewport:scenario.name,status:'REVIEW',
    flags:['RENDER_ENTRYPOINT_'+selected.reason],
-   candidate_function_identifiers:diagnosticEntrypoints(script)
+   candidate_function_identifiers:diagnosticEntrypoints(script),
+   script_shape:scriptShape(script)
  };
  const context=await browser.newContext({
    viewport:{width:scenario.width,height:scenario.height},
@@ -90,13 +91,35 @@ async function renderOne(browser,scenario,row,outputDir,css){
    phase='PRIVATE_SCRIPT_LOAD';
    await page.addScriptTag({content:script});
    phase='GUIDE_ENTRYPOINT_CALL';
-   const called=await page.evaluate(async ({name,mode})=>{
+   // Catch errors INSIDE the browser; Playwright errors otherwise include
+   // source excerpts or proprietary function bodies. Only sanitized categories escape.
+   const invocation=await page.evaluate(async ({name,mode})=>{
      const fn=window[name];
-     if(typeof fn!=='function')return false;
-     await fn(mode);
-     return true;
+     if(typeof fn!=='function')return {called:false,kind:'ENTRYPOINT_NOT_EXPOSED'};
+     try{
+       await fn(mode);
+       return {called:true};
+     }catch(error){
+       const value=String(error?.message||'');
+       const knownTypes=['ReferenceError','TypeError','SyntaxError','RangeError','Error'];
+       const kind=knownTypes.includes(error?.name)?error.name:'OTHER';
+       let detail='UNCLASSIFIED';
+       const ref=/^([a-zA-Z_$][\w$]{0,50}) is not defined$/.exec(value);
+       if(ref)detail='UNDEFINED_IDENTIFIER_'+ref[1];
+       else if(/^Cannot read properties of (undefined|null)/.test(value))
+         detail='NULL_OR_MISSING_OBJECT';
+       else if(/ is not a function$/.test(value))
+         detail='NOT_CALLABLE';
+       else if(/Cannot set properties of (undefined|null)/.test(value))
+         detail='MISSING_DOM_OR_STATE';
+       return {called:false,kind,detail};
+     }
    },{name:selected.entrypoint,mode:selected.mode});
-   if(!called)return {guide_key:key,viewport:scenario.name,status:'REVIEW',flags:['ENTRYPOINT_NOT_EXPOSED']};
+   if(!invocation.called)return {
+     guide_key:key,viewport:scenario.name,status:'REVIEW',
+     flags:[invocation.kind==='ENTRYPOINT_NOT_EXPOSED'?'ENTRYPOINT_NOT_EXPOSED':
+       'INVOCATION_'+invocation.kind+'_'+invocation.detail]
+   };
    phase='RENDER_INSPECTION';
    const result=await page.evaluate(()=>{
      const root=document.querySelector('#screen');
@@ -189,6 +212,9 @@ async function main(){
      if(result.candidate_function_identifiers)
        console.log('  FUNCTION_IDENTIFIERS_ONLY '+result.guide_key+' | '+
          (result.candidate_function_identifiers.join(',')||'NONE'));
+     if(result.script_shape)
+       console.log('  SCRIPT_SHAPE '+result.guide_key+' | '+
+         Object.entries(result.script_shape).map(([k,v])=>k+'='+v).join(','));
    }
    console.log('Screenshots and diagnostics saved privately outside repository. DO NOT upload premium screenshots/code.');
    console.log('NO SALE APPROVAL. D1, Shopify and deployment unchanged.');
