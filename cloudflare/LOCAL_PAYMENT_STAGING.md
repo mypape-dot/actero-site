@@ -69,6 +69,16 @@ Worker publicat. `npm audit` a raportat zero vulnerabilități la 15 octombrie 2
 
 ## Staging găzduit: încă nevalidat
 
+Worker-ul ActeRO existent și `actero-db` nu sunt confirmate ca staging și nu
+trebuie modificate. Configurația nelegată de resurse și pașii condiționați de
+aprobare sunt în [`staging/README.md`](staging/README.md).
+
+`npm run test:staging:failures` rulează suplimentar 9 teste pe workerd/D1 locale:
+email indisponibil și retry, alertă de plată indisponibilă, revocare cu alertă
+eșuată, anulare/dispută înaintea plății, link expirat, link emis înaintea revocării,
+consum concurent și limita de emailuri concurente. Comanda `npm run test:staging`
+rulează această suită înaintea fluxului în browser. Niciun serviciu extern nu este apelat.
+
 Nu trata simulatorul ca dovadă pentru formatul curent al payload-urilor Shopify,
 aplicarea reală a proprietăților permalink-ului, Test Mode al magazinului, email
 livrat sau migrații D1 remote. Acestea necesită un mediu izolat configurat și

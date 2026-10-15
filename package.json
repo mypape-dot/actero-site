@@ -8,7 +8,8 @@
   "scripts": {
     "test": "node scripts/test-unit.mjs",
     "test:payments": "node --test cloudflare/tests/payment-security.test.mjs",
-    "test:staging": "node cloudflare/tests/payment-journey.browser.mjs",
+    "test:staging": "npm run test:staging:failures && node cloudflare/tests/payment-journey.browser.mjs",
+    "test:staging:failures": "node --test cloudflare/tests/payment-failures.integration.mjs",
     "test:browser": "node cloudflare/tests/browser-smoke.mjs",
     "check:public": "node scripts/check-public-surface.mjs"
   },

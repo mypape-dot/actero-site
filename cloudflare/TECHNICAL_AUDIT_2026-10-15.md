@@ -150,3 +150,32 @@ a fost retestat cu ele. Acestea sunt unelte de dezvoltare, nu dependențe ale Wo
 
 Rezultatul este un candidat tehnic reviewabil, cu teste locale reproductibile,
 nu o autorizare de lansare sau de publicare a ghidurilor premium.
+
+## Continuare: infrastructura existentă nu este confirmată ca staging
+
+Proprietarul a precizat că Worker-ul ActeRO și `actero-db` există, dar nu este
+confirmat un mediu separat. Nu au fost făcute apeluri Cloudflare remote și nu
+au fost create sau modificate resurse. Verificarea de către proprietar este în curs.
+
+Au fost adăugate:
+
+- `cloudflare/staging/wrangler.json.example`: șablon JSON nelegat de cont/D1,
+  checkout oprit, mod `test`, fără routes, workers.dev sau preview URLs. Numele
+  propuse nu sunt resurse confirmate. Placeholder-ele nu sunt identificatori reali.
+- `cloudflare/staging/README.md`: plan condiționat de aprobarea proprietarului,
+  separarea resurselor, verificarea binding-ului, schema numai pentru o bază goală,
+  secrete distincte și pașii de acceptanță. Identifică origin-ul și shop/variant
+  fixe în cod ca prerechizite de modificat pentru ținte noi.
+- `cloudflare/tests/payment-failures.integration.mjs`: **9/9 teste locale PASS**,
+  executate în workerd/D1 temporare cu servicii simulate: cădere email și retry,
+  alertă de plată eșuată, revocare când alerta eșuează, anulare/dispută înaintea
+  plății, link expirat, link emis înaintea revocării, consum concurent și emailuri
+  concurente. Niciun email sau webhook nu a fost trimis unui serviciu extern.
+- `package.json` și `cloudflare/LOCAL_PAYMENT_STAGING.md`: comanda
+  `npm run test:staging:failures` și includerea ei în suita de staging deja rulată de CI.
+
+Aceste 9 teste sunt suplimentare celor 160 de intrări din `npm test`. Nu a fost
+necesară o nouă schimbare a codului Worker sau frontend pentru a le trece.
+Șablonul a fost validat ca JSON, inclusiv valorile de izolare; nu s-a rulat
+Wrangler deploy/dry-run și nu se afirmă că infrastructura găzduită este pregătită.
+Guard-ul suprafeței publice și `git diff --check` au trecut.

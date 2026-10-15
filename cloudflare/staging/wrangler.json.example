@@ -1,0 +1,30 @@
+{
+  "name": "actero-unbound-do-not-deploy",
+  "main": "../worker.js",
+  "compatibility_date": "2025-09-27",
+  "account_id": "UNBOUND_REQUIRES_OWNER_APPROVAL",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "env": {
+    "staging": {
+      "name": "actero-staging-synthetic-proposed",
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [],
+      "vars": {
+        "SHOPIFY_CHECKOUT_ENABLED": "false",
+        "SHOPIFY_PAYMENT_MODE": "test",
+        "RECOVERY_REQUIRED": "true",
+        "RECOVERY_PAGE_URL": "https://staging.invalid/recuperare.html"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "actero-staging-synthetic-proposed",
+          "database_id": "UNBOUND_REQUIRES_SEPARATE_STAGING_DATABASE"
+        }
+      ]
+    }
+  }
+}
