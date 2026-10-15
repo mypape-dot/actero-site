@@ -58,3 +58,16 @@ test('different browser signals trigger review rather than automatic pass',()=>{
  const b=scan('B1_NL','BSN este doar un număr; BRP este pentru rezident.');
  assert.equal(compareViewportSignals(a,b),false);
 });
+
+test('Unicode Romanian verification badge does not get missed for B1_IE or B1_NL',()=>{
+ for(const key of ['B1_IE','B1_NL','B1_FR','B1_BE']){
+  const result=scan(key,'Ghid informativ pentru comparație. Procedură verificată.');
+  assert.ok(result.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'),key);
+  const source=scan(key,'Surse reverificate: 5 octombrie 2026.');
+  assert.ok(source.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'),key);
+  const none=scan(key,'Material informativ — textul a fost reverificat fără aprobare.');
+  assert.ok(!none.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'),key);
+  const similar=scan(key,'prefixProcedură verificatăSufix și xSurse reverificateY');
+  assert.ok(!similar.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'),key);
+ }
+});
