@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {chromium,webkit} from 'playwright';
 import {inspectPrivateExport} from './private-12-guide-preflight-local.mjs';
 import {rendererFor,diagnosticEntrypoints,scriptShape} from './private-12-render-selector.mjs';
+import {assessRenderedGuide,compareViewportSignals} from './procedure-signal-classifier.mjs';
 
 const root=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const countries={FR:'Franța',BE:'Belgia',NL:'Țările de Jos',IE:'Irlanda'};
@@ -62,7 +63,7 @@ function baseAnswers(country,key){
    b5case:lost?'LOST':'RENEWAL',travel_urgent_basis:'CONTINUE_JOURNEY'
  };
 }
-async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsOnly=false){
+async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsOnly=false,evidenceOnly=false){
  const {guide_key:key,script_js:script}=row;
  const selected=rendererFor(key,script);
  const label=key+'-'+scenario.name;
@@ -137,7 +138,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
        'INVOCATION_'+invocation.kind+'_'+invocation.detail]
    };
    phase='RENDER_INSPECTION';
-   const result=await page.evaluate(()=>{
+   const result=await page.evaluate(evidenceOnly=>{
      const root=document.querySelector('#screen');
      const text=(root.innerText||'').trim();
      const links=[...root.querySelectorAll('a[href]')];
@@ -146,6 +147,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
      const clipped=cards.some(el=>el.clientWidth>0&&el.scrollWidth>el.clientWidth+3);
      return {
        chars:text.length,
+       private_visible_text:evidenceOnly?text:null,
        heading:!!root.querySelector('h1,h2'),
        headingText:(root.querySelector('h1,h2')?.innerText||'').trim(),
        steps:root.querySelectorAll('.real-guide-step,.guide-step,[data-step]').length,
@@ -169,7 +171,17 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
        placeholders:/\b(?:TODO|FIXME|undefined|UNRESOLVED|OUT_OF_SCOPE)\b/i.test(text),
        overflow,clipped
      };
-   });
+   },evidenceOnly);
+   const evidenceScan=evidenceOnly?assessRenderedGuide(key,result.private_visible_text):null;
+   if(evidenceScan&&(result.visibleClaimCounts.badge>0||result.visibleClaimCounts.dated_source>0)){
+     if(!evidenceScan.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM')){
+       // The independent, historical visual counter is a fail-closed fallback.
+       // A classifier false negative must never silently pass.
+       evidenceScan.signals.push('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM');
+       evidenceScan.signals.push('REVIEW_CLASSIFIER_CLAIM_MISMATCH');
+       evidenceScan.signals.sort();
+     }
+   }
    const flags=[];
    if(result.chars<400||!result.heading)flags.push('RESULT_EMPTY_OR_MISSING_HEADING');
    if(result.heading&&!result.headingText.toLocaleLowerCase('ro-RO').includes(countries[selected.country].toLocaleLowerCase('ro-RO')))
@@ -181,7 +193,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
    if(result.overflow)flags.push('PAGE_HORIZONTAL_OVERFLOW');
    if(result.clipped)flags.push('CARD_CONTENT_OVERFLOW');
    if(pageErrors.length)flags.push('BROWSER_JAVASCRIPT_EXCEPTION');
-   if(result.chars>0&&!claimsOnly){
+   if(result.chars>0&&!claimsOnly&&!evidenceOnly){
      // This image is proprietary paid-guide content. Never upload to GitHub/ChatGPT.
      phase='PRIVATE_SCREENSHOT';
      await page.screenshot({path:join(outputDir,label+'.png'),fullPage:true,timeout:15000});
@@ -191,6 +203,7 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
      status:flags.length?'REVIEW':'RENDER_OK',
      rendered:result.chars>0&&result.heading,
      flags,claim_counts:result.visibleClaimCounts,
+     evidence_scan:evidenceScan,
      summary:{step_count:result.steps,document_count:result.documents,link_count:result.links}
    };
  }catch(error){
@@ -204,28 +217,43 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
 }
 async function main(){
  let outdir;
+ let safeStage='VALIDATE_ARGUMENTS';
+ let safeGuide='NONE';
  try{
    const argv=process.argv.slice(2);
    if(argv.length!==1)throw Error('ONE_OUTPUT_ARGUMENT_REQUIRED');
    const claimsOnly=argv[0]==='--claims-only';
+   const evidenceOnly=argv[0]==='--evidence-only';
    // Read the private source only from stdin; no exported JS gets saved to disk.
+   safeStage='READ_WRANGLER_INPUT';
    const input=readFileSync(0,'utf8');
    if(input.length>16*1024*1024)throw Error('PRIVATE_EXPORT_TOO_LARGE');
+   safeStage='PARSE_WRANGLER_JSON';
    const {raw,rows}=extractRows(input);
+   safeStage='PREFLIGHT_PRIVATE_GUIDES';
    const preflight=inspectPrivateExport(raw);
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
-   if(!claimsOnly)outdir=privateFolder(argv[0]);
+   if(!claimsOnly&&!evidenceOnly)outdir=privateFolder(argv[0]);
+   safeStage='LOAD_PUBLIC_CSS';
    const css=visibleCss();
+   safeStage='LOAD_PUBLIC_HELPER';
    const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
    for(const scenario of modes){
+     safeStage=scenario.name==='chromium-1280'?'LAUNCH_CHROMIUM':'LAUNCH_WEBKIT';
      const browser=await scenario.browser.launch({headless:true});
      try{
+       safeStage=scenario.name==='chromium-1280'?'RENDER_CHROMIUM':'RENDER_WEBKIT';
        for(const row of rows){
-         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly));
+         safeGuide=row.guide_key; // preflight has already restricted to 12 public IDs
+         results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly,evidenceOnly));
        }
-     }finally{await browser.close()}
+     }finally{
+       safeStage=scenario.name==='chromium-1280'?'CLOSE_CHROMIUM':'CLOSE_WEBKIT';
+       await browser.close();
+     }
    }
+   safeStage='BUILD_SAFE_SUMMARY';
    const summary={
      checked:results.length,render_ok:results.filter(x=>x.status==='RENDER_OK').length,
      visually_rendered:results.filter(x=>x.rendered===true).length,
@@ -233,6 +261,31 @@ async function main(){
      notes:'VISUAL STRUCTURE ONLY. NOT LEGAL/CONSULAR APPROVAL. NO PAID CHECKOUT TEST.',
      results
    };
+   if(evidenceOnly){
+     safeStage='OUTPUT_SAFE_PROCEDURAL_MARKERS';
+     const keys=[...new Set(results.map(r=>r.guide_key))].sort();
+     console.log('PRIVATE PROCEDURE SIGNALS: '+results.filter(r=>r.evidence_scan).length+
+       '/24 offline customer-facing renders inspected. NO APPROVAL.');
+     for(const key of keys){
+       const pair=results.filter(r=>r.guide_key===key);
+       const desktop=pair.find(r=>r.viewport==='chromium-1280');
+       const mobile=pair.find(r=>r.viewport==='webkit-390');
+       if(!desktop?.evidence_scan||!mobile?.evidence_scan){
+         console.log('EVIDENCE_REVIEW '+key+' | INCOMPLETE_RENDER');
+         process.exitCode=2;
+         continue;
+       }
+       const scan=desktop.evidence_scan;
+       const counts=desktop.claim_counts;
+       console.log('EVIDENCE_REVIEW '+key+' | visible_badges='+(counts?.badge??'UNKNOWN')+
+         ' | source_labels='+(counts?.dated_source??'UNKNOWN')+' | markers='+
+         (scan.markers.join(',')||'NONE')+' | flags='+scan.signals.join(',')+
+         ' | mobile_match='+compareViewportSignals(scan,mobile.evidence_scan));
+     }
+     console.log('All results require human review of actual context and official documents.');
+     console.log('READ ONLY: NO EXPORT, NO SCREENSHOTS, NO D1 WRITES, NO SALE APPROVAL.');
+     return;
+   }
    if(claimsOnly){
      const ordered=[...new Set(results.map(r=>r.guide_key))].sort();
      console.log('VISIBLE CLAIM AUDIT: '+results.filter(r=>r.rendered===true).length+
@@ -272,7 +325,18 @@ async function main(){
    console.log('NO SALE APPROVAL. D1, Shopify and deployment unchanged.');
    if(summary.review)process.exitCode=2;
  }catch{
-   console.error('PRIVATE VISUAL QA BLOCKED: prerequisites, browser setup, or private input failed. No premium content printed.');
+   // Never include error.message, stack, URLs, code, full guide text, or raw SQL.
+   // Stage and country/route ID are strictly from our own allowlisted constants.
+   const stages=new Set(['VALIDATE_ARGUMENTS','READ_WRANGLER_INPUT','PARSE_WRANGLER_JSON',
+     'PREFLIGHT_PRIVATE_GUIDES','LOAD_PUBLIC_CSS','LOAD_PUBLIC_HELPER',
+     'LAUNCH_CHROMIUM','LAUNCH_WEBKIT','RENDER_CHROMIUM','RENDER_WEBKIT',
+     'CLOSE_CHROMIUM','CLOSE_WEBKIT','BUILD_SAFE_SUMMARY',
+     'OUTPUT_SAFE_PROCEDURAL_MARKERS']);
+   const keys=new Set(['FR','BE','NL','IE'].flatMap(code=>
+     ['B1_','B5_RENEWAL_','B5_LOST_'].map(prefix=>prefix+code)));
+   console.error('PRIVATE VISUAL QA BLOCKED | STAGE_'+(stages.has(safeStage)?safeStage:'UNKNOWN')+
+     ' | GUIDE_'+(keys.has(safeGuide)?safeGuide:'NONE'));
+   console.error('Only fixed diagnostic identifiers are printed; no premium content.');
    process.exitCode=2;
  }
 }

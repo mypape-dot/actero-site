@@ -55,6 +55,12 @@ jobs:
           node --check cloudflare/private-12-render-selector.mjs
           bash -n cloudflare/audit-private-12-visual-on-mac.sh
           node --test cloudflare/tests/private-12-render-selector.test.mjs
+      - name: Verify private procedural evidence signal detection is conservative and nondisclosing
+        run: |
+          node --check cloudflare/procedure-signal-classifier.mjs
+          node --check cloudflare/private-12-guide-render-local.mjs
+          bash -n cloudflare/audit-private-12-procedure-signals-on-mac.sh
+          node --test cloudflare/tests/private-guide-procedure-signals.test.mjs
       - name: Verify read-only editorial inventory
         run: |
           node --check cloudflare/inventory-private-12-claims-local.mjs
@@ -144,6 +150,32 @@ jobs:
           grep -qF 'VISIBLE_CLAIMS B1_FR | badge=1 | source_date=1 | other_dates=1 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
           grep -qF 'VISIBLE_CLAIMS B1_NL | badge=1 | source_date=0 | other_dates=1 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
           grep -qF 'VISIBLE_CLAIMS B5_LOST_BE | badge=1 | source_date=1 | other_dates=1 | mobile_match=true' "$RUNNER_TEMP/visible-claim-counts.txt"
+      - name: Check sanitized procedural audit diagnostics on an incomplete private input
+        run: |
+          set +e
+          printf '{"results":[{"guide_key":"B1_FR","route":"B1_FIRST_CRDS","script_js":"PRIVATE_SENTINEL_TEST_DO_NOT_PRINT"}]}' |
+            node cloudflare/private-12-guide-render-local.mjs --evidence-only > "$RUNNER_TEMP/safe-qa-block.txt" 2>&1
+          status=$?
+          set -e
+          test "$status" = 2
+          grep -qF 'PRIVATE VISUAL QA BLOCKED | STAGE_PREFLIGHT_PRIVATE_GUIDES | GUIDE_NONE' "$RUNNER_TEMP/safe-qa-block.txt"
+          if grep -qF 'PRIVATE_SENTINEL_TEST_DO_NOT_PRINT' "$RUNNER_TEMP/safe-qa-block.txt"; then
+            echo 'Failure diagnostics leaked synthetic fixture; blocking.'
+            exit 1
+          fi
+      - name: Verify 24 isolated procedural risk scans on synthetic customer-facing guides
+        run: |
+          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --evidence-examples --editorial-badge |
+            node cloudflare/private-12-guide-render-local.mjs --evidence-only > "$RUNNER_TEMP/evidence-synthetic-only.txt"
+          cat "$RUNNER_TEMP/evidence-synthetic-only.txt" # synthetic content only
+          grep -qF 'PRIVATE PROCEDURE SIGNALS: 24/24 offline' "$RUNNER_TEMP/evidence-synthetic-only.txt"
+          test "$(grep -c '^EVIDENCE_REVIEW ' "$RUNNER_TEMP/evidence-synthetic-only.txt")" = 12
+          grep -E '^EVIDENCE_REVIEW B1_FR ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_FR_FIRST_CRDS_CARTE_VITALE_IN_CONTEXT'
+          grep -E '^EVIDENCE_REVIEW B5_RENEWAL_BE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_BE_APPLICATION_NOT_APPROVED_STATUS'
+          grep -E '^EVIDENCE_REVIEW B1_NL ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_NL_BSN_NOT_ADDRESS_PROOF'
+          grep -E '^EVIDENCE_REVIEW B5_LOST_IE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_IE_PPS_NOT_ADDRESS_PROOF'
+          grep -E '^EVIDENCE_REVIEW B1_IE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'
+          grep -E '^EVIDENCE_REVIEW B1_NL ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
