@@ -165,7 +165,7 @@ jobs:
           fi
       - name: Verify 24 isolated procedural risk scans on synthetic customer-facing guides
         run: |
-          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --evidence-examples |
+          node cloudflare/tests/private-12-visual-synthetic-fixture.mjs --evidence-examples --editorial-badge |
             node cloudflare/private-12-guide-render-local.mjs --evidence-only > "$RUNNER_TEMP/evidence-synthetic-only.txt"
           cat "$RUNNER_TEMP/evidence-synthetic-only.txt" # synthetic content only
           grep -qF 'PRIVATE PROCEDURE SIGNALS: 24/24 offline' "$RUNNER_TEMP/evidence-synthetic-only.txt"
@@ -174,6 +174,8 @@ jobs:
           grep -E '^EVIDENCE_REVIEW B5_RENEWAL_BE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_BE_APPLICATION_NOT_APPROVED_STATUS'
           grep -E '^EVIDENCE_REVIEW B1_NL ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_NL_BSN_NOT_ADDRESS_PROOF'
           grep -E '^EVIDENCE_REVIEW B5_LOST_IE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_IE_PPS_NOT_ADDRESS_PROOF'
+          grep -E '^EVIDENCE_REVIEW B1_IE ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'
+          grep -E '^EVIDENCE_REVIEW B1_NL ' "$RUNNER_TEMP/evidence-synthetic-only.txt" | grep -q 'REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM'
       - name: Test questionnaire navigation in Chromium and WebKit
         run: node cloudflare/tests/browser-smoke.mjs
       - name: Test historical B5 renderer across all ten countries
