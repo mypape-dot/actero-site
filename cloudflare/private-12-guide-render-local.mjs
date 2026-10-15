@@ -208,29 +208,43 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
 }
 async function main(){
  let outdir;
+ let safeStage='VALIDATE_ARGUMENTS';
+ let safeGuide='NONE';
  try{
    const argv=process.argv.slice(2);
    if(argv.length!==1)throw Error('ONE_OUTPUT_ARGUMENT_REQUIRED');
    const claimsOnly=argv[0]==='--claims-only';
    const evidenceOnly=argv[0]==='--evidence-only';
    // Read the private source only from stdin; no exported JS gets saved to disk.
+   safeStage='READ_WRANGLER_INPUT';
    const input=readFileSync(0,'utf8');
    if(input.length>16*1024*1024)throw Error('PRIVATE_EXPORT_TOO_LARGE');
+   safeStage='PARSE_WRANGLER_JSON';
    const {raw,rows}=extractRows(input);
+   safeStage='PREFLIGHT_PRIVATE_GUIDES';
    const preflight=inspectPrivateExport(raw);
    if(!preflight.structure_ok)throw Error('PRECHECK_NOT_PASSED');
    if(!claimsOnly&&!evidenceOnly)outdir=privateFolder(argv[0]);
+   safeStage='LOAD_PUBLIC_CSS';
    const css=visibleCss();
+   safeStage='LOAD_PUBLIC_HELPER';
    const publicHelper=publicMiniFormPreviewSource(readFileSync(join(root,'index.html'),'utf8'));
    const results=[];
    for(const scenario of modes){
+     safeStage=scenario.name==='chromium-1280'?'LAUNCH_CHROMIUM':'LAUNCH_WEBKIT';
      const browser=await scenario.browser.launch({headless:true});
      try{
+       safeStage=scenario.name==='chromium-1280'?'RENDER_CHROMIUM':'RENDER_WEBKIT';
        for(const row of rows){
+         safeGuide=row.guide_key; // preflight has already restricted to 12 public IDs
          results.push(await renderOne(browser,scenario,row,outdir,css,publicHelper,claimsOnly,evidenceOnly));
        }
-     }finally{await browser.close()}
+     }finally{
+       safeStage=scenario.name==='chromium-1280'?'CLOSE_CHROMIUM':'CLOSE_WEBKIT';
+       await browser.close();
+     }
    }
+   safeStage='BUILD_SAFE_SUMMARY';
    const summary={
      checked:results.length,render_ok:results.filter(x=>x.status==='RENDER_OK').length,
      visually_rendered:results.filter(x=>x.rendered===true).length,
@@ -239,6 +253,7 @@ async function main(){
      results
    };
    if(evidenceOnly){
+     safeStage='OUTPUT_SAFE_PROCEDURAL_MARKERS';
      const keys=[...new Set(results.map(r=>r.guide_key))].sort();
      console.log('PRIVATE PROCEDURE SIGNALS: '+results.filter(r=>r.evidence_scan).length+
        '/24 offline customer-facing renders inspected. NO APPROVAL.');
@@ -299,7 +314,18 @@ async function main(){
    console.log('NO SALE APPROVAL. D1, Shopify and deployment unchanged.');
    if(summary.review)process.exitCode=2;
  }catch{
-   console.error('PRIVATE VISUAL QA BLOCKED: prerequisites, browser setup, or private input failed. No premium content printed.');
+   // Never include error.message, stack, URLs, code, full guide text, or raw SQL.
+   // Stage and country/route ID are strictly from our own allowlisted constants.
+   const stages=new Set(['VALIDATE_ARGUMENTS','READ_WRANGLER_INPUT','PARSE_WRANGLER_JSON',
+     'PREFLIGHT_PRIVATE_GUIDES','LOAD_PUBLIC_CSS','LOAD_PUBLIC_HELPER',
+     'LAUNCH_CHROMIUM','LAUNCH_WEBKIT','RENDER_CHROMIUM','RENDER_WEBKIT',
+     'CLOSE_CHROMIUM','CLOSE_WEBKIT','BUILD_SAFE_SUMMARY',
+     'OUTPUT_SAFE_PROCEDURAL_MARKERS']);
+   const keys=new Set(['FR','BE','NL','IE'].flatMap(code=>
+     ['B1_','B5_RENEWAL_','B5_LOST_'].map(prefix=>prefix+code)));
+   console.error('PRIVATE VISUAL QA BLOCKED | STAGE_'+(stages.has(safeStage)?safeStage:'UNKNOWN')+
+     ' | GUIDE_'+(keys.has(safeGuide)?safeGuide:'NONE'));
+   console.error('Only fixed diagnostic identifiers are printed; no premium content.');
    process.exitCode=2;
  }
 }
