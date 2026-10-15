@@ -70,10 +70,14 @@ Worker publicat. `npm audit` a raportat zero vulnerabilități la 15 octombrie 2
 
 ## Staging găzduit: încă nevalidat
 
-Proprietarul a confirmat că există numai `actero` și `actero-db`; nu există staging.
-Resursele separate planificate sunt `actero-staging` și `actero-staging-db`, dar
-crearea lor nu este încă aprobată. Configurația, migrarea inițială, pașii din Dashboard
-și verificarea ID-urilor sunt în [`staging/README.md`](staging/README.md).
+Proprietarul a creat separat `actero-staging` și `actero-staging-db` și a aplicat
+bootstrap-ul 0001. Codul și serviciile externe nu sunt încă activate de agent.
+Configurația și pașii următori sunt în [`staging/README.md`](staging/README.md) și
+[planul Shopify Test Mode](staging/SHOPIFY_TEST_SETUP.md).
+
+Fluxul browser folosește acum frontend-ul generat pe o origine staging sintetică,
+un shop, o variantă și un secret distincte. Flag-ul de checkout este activat numai
+în răspunsul interceptat în test; artifactul de publicat rămâne dezactivat.
 
 `npm run check:staging` verifică offline șablonul închis și schema generată.
 `staging-isolation.test.mjs` adaugă 18 teste pentru configurații greșite (inclusiv

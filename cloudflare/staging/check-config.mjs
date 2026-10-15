@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {parseArgs} from 'node:util';
+import {appOrigin,shopifyConfig} from '../environment.js';
 
 const accountPlaceholder = 'UNBOUND_REQUIRES_OWNER_APPROVAL';
 const databasePlaceholder = 'UNBOUND_REQUIRES_SEPARATE_STAGING_DATABASE';
@@ -19,7 +20,7 @@ const closed = (value, label) => {
 
 // This checks a file, never Cloudflare. It does not attest that operator-supplied IDs are authentic.
 // Strictly validates the initial CLOSED staging configuration; later activation needs a reviewed change.
-export function validateConfig(config, {template = false, productionD1Id} = {}) {
+export function validateConfig(config, {template = false, productionD1Id, requireReady = false} = {}) {
   keys(config, ['name', 'main', 'compatibility_date', 'account_id', 'workers_dev', 'preview_urls', 'routes', 'env'], 'root');
   assert.equal(config.name, 'actero-unbound-do-not-deploy', 'root must stay unbound; use explicit staging environment');
   assert.equal(config.main, '../worker.js');
@@ -30,10 +31,16 @@ export function validateConfig(config, {template = false, productionD1Id} = {}) 
   keys(stage, ['name', 'workers_dev', 'preview_urls', 'routes', 'vars', 'd1_databases'], 'staging');
   assert.equal(stage.name, 'actero-staging', 'protected/unknown Worker target');
   closed(stage, 'staging');
-  assert.deepEqual(stage.vars, {
-    SHOPIFY_CHECKOUT_ENABLED: 'false', SHOPIFY_PAYMENT_MODE: 'test',
-    RECOVERY_REQUIRED: 'true', RECOVERY_PAGE_URL: 'https://staging.invalid/recuperare.html'
-  }, 'initial staging must have checkout disabled, test payments and no secrets');
+  keys(stage.vars, ['ACTERO_ENVIRONMENT','APP_ORIGIN','SHOPIFY_SHOP_DOMAIN','SHOPIFY_VARIANT_ID',
+    'SHOPIFY_CHECKOUT_ENABLED','SHOPIFY_PAYMENT_MODE','RECOVERY_REQUIRED','RECOVERY_PAGE_URL'], 'staging vars');
+  assert.equal(stage.vars.ACTERO_ENVIRONMENT,'staging');
+  assert.equal(stage.vars.SHOPIFY_CHECKOUT_ENABLED,'false','checkout must remain disabled');
+  assert.equal(stage.vars.SHOPIFY_PAYMENT_MODE,'test');
+  assert.equal(stage.vars.RECOVERY_REQUIRED,'true');
+  assert(appOrigin(stage.vars),'a separate HTTPS staging origin is required');
+  assert.equal(stage.vars.RECOVERY_PAGE_URL,appOrigin(stage.vars)+'/recuperare.html');
+  const unbound=stage.vars.SHOPIFY_SHOP_DOMAIN==='UNBOUND_STAGING_SHOP' && stage.vars.SHOPIFY_VARIANT_ID==='UNBOUND_STAGING_VARIANT';
+  assert(shopifyConfig(stage.vars) || (!requireReady && unbound),'a separate test shop and variant are required; no production fallback');
   assert(Array.isArray(stage.d1_databases) && stage.d1_databases.length === 1, 'exactly one staging D1 binding required');
   const db = stage.d1_databases[0];
   keys(db, ['binding', 'database_name', 'database_id', 'migrations_dir'], 'D1');
@@ -53,11 +60,11 @@ export function validateConfig(config, {template = false, productionD1Id} = {}) 
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const {values} = parseArgs({options: {template: {type: 'boolean'}, config: {type: 'string'}, 'production-d1-id': {type: 'string'}}});
+  const {values} = parseArgs({options: {template: {type: 'boolean'}, config: {type: 'string'}, 'production-d1-id': {type: 'string'}, 'require-ready': {type: 'boolean'}}});
   try {
     assert(values.config, '--config is required');
     assert(!(values.template && values['production-d1-id']), 'choose template check OR bound configuration check');
-    validateConfig(JSON.parse(readFileSync(values.config, 'utf8')), {template: !!values.template, productionD1Id: values['production-d1-id']});
+    validateConfig(JSON.parse(readFileSync(values.config, 'utf8')), {template: !!values.template, productionD1Id: values['production-d1-id'], requireReady: !!values['require-ready']});
     console.log(values.template ? 'PASS: unbound closed staging template; not ready for deployment.' :
       'PASS: closed staging file has different D1 IDs. Verify actual Dashboard bindings; this is not deployment approval.');
   } catch (error) {

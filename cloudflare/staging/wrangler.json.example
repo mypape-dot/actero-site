@@ -16,7 +16,11 @@
         "SHOPIFY_CHECKOUT_ENABLED": "false",
         "SHOPIFY_PAYMENT_MODE": "test",
         "RECOVERY_REQUIRED": "true",
-        "RECOVERY_PAGE_URL": "https://staging.invalid/recuperare.html"
+        "RECOVERY_PAGE_URL": "https://actero-staging-ui.pages.dev/recuperare.html",
+        "ACTERO_ENVIRONMENT": "staging",
+        "APP_ORIGIN": "https://actero-staging-ui.pages.dev",
+        "SHOPIFY_SHOP_DOMAIN": "UNBOUND_STAGING_SHOP",
+        "SHOPIFY_VARIANT_ID": "UNBOUND_STAGING_VARIANT"
       },
       "d1_databases": [
         {
