@@ -1,113 +1,172 @@
-# Propunere de staging separat — neaprobată, neexecutată
+# ActeRO staging separat — configurație pregătită, resurse necreate
 
-Proprietarul a confirmat existența unui Worker ActeRO și a bazei `actero-db`,
-dar nu a confirmat un mediu separat de staging. **Resursele existente sunt
-protejate: nu le clasificăm drept staging și nu le modificăm.** În această etapă
-se rulează numai teste locale, cu date sintetice și fără acces Cloudflare remote.
+La 15 octombrie 2026, proprietarul a verificat în Dashboard că există **numai**
+Worker-ul `actero` (`https://actero.actedsro.workers.dev`) și D1 `actero-db`.
+Nu există staging. Decizia este de a crea ulterior `actero-staging` și
+`actero-staging-db`. **Crearea, deploy-ul, SQL-ul remote și setarea secretelor
+nu sunt încă aprobate.** Această lucrare pregătește fișiere și teste locale.
 
-## Configurația pregătită
+## Fișierele pregătite
 
-`wrangler.json.example` este un șablon nelegat de vreun cont sau bază de date,
-nu o configurație deployabilă. Nu este încărcat de testele locale și nu există
-un script de deploy în `package.json` sau un job de deploy în CI.
-
-| Element | Propunere / stare |
+| Fișier | Rol |
 |---|---|
-| Worker | `actero-staging-synthetic-proposed`, nume provizoriu; existență neverificată |
-| D1 | `actero-staging-synthetic-proposed`, bază separată și numai sintetică |
-| Account ID / database ID | Placeholder nevalid; nu se copiază ID-ul bazei `actero-db` |
-| Mediu Wrangler | `staging`, binding `DB` definit numai în acest mediu |
-| Checkout | `false` |
-| Payment mode | `test`; nu activează Shopify Test Mode |
-| Recovery | Obligatorie, dar URL-ul `.invalid` este intenționat nefuncțional |
-| Publicare | `workers_dev=false`, `preview_urls=false`, fără routes |
-| Secrete | Niciun secret sau credential real în fișier |
+| `wrangler.json.example` | Worker `actero-staging`, binding `DB` → `actero-staging-db`, mediu explicit `staging`; ID-uri placeholder nevalide |
+| `migrations/0001-empty-staging.sql` | Schema completă pentru D1 nouă și goală: baseline + migrațiile existente 001–010 |
+| `build-schema.mjs` | Generează/verifică offline reproducibilitatea acelei scheme; nu accesează baze |
+| `check-config.mjs` | Verifică offline configurația inițială închisă și respinge ID-ul D1 de producție |
+| `../tests/staging-isolation.test.mjs` | 18 regresii de configurație, schemă și pornire în workerd cu checkout oprit |
 
-Dezactivarea routes nu este o barieră împotriva unui deploy: un operator cu
-permisiuni ar putea crea un Worker fără rută. De aceea, înainte de aprobarea
-proprietarului **nu se execută nici deploy, nici upload de versiune, nici creare
-D1, nici `d1 execute --remote`, nici `secret put`**, chiar dacă checkout este oprit.
+Șablonul nu este autodetectat ca fișier Wrangler. Nivelul implicit rămâne
+`actero-unbound-do-not-deploy`, fără binding D1. Numai `env.staging` definește `DB`.
+Checkout este `false`, payment mode este `test`, recovery este obligatorie,
+iar URL-ul recovery `.invalid` este intenționat nefuncțional. Nu există routes,
+workers.dev public, preview URLs, secrete sau job de deploy în CI.
 
-## Informații de confirmat de proprietar
+`workers_dev=false` nu împiedică singur crearea/deploy-ul unui Worker de către
+un operator autorizat. Numele diferite nu dovedesc singure izolarea bazei.
 
-Nu sunt necesare chei sau parole în chat. Sunt suficiente denumirile și URL-urile
-nesensibile, plus confirmarea că resursele sunt separate:
+## Ce faci în Cloudflare când autorizezi crearea resurselor
 
-- Dacă există deja un Worker de staging și care este numele lui exact.
-- Dacă binding-ul său `DB` indică o bază diferită de `actero-db` și dacă acea bază
-  conține numai date de test. Un nume cu „staging” nu dovedește izolarea.
-- Dacă există un frontend de staging și ce origine HTTPS folosește.
-- Dacă există un magazin Shopify de dezvoltare/test separat; dacă se folosește
-  magazinul existent, orice modificare a acestuia necesită aprobare distinctă.
-- Dacă există un sender și o căsuță de email dedicate testelor.
+Pașii următori sunt pentru proprietar/operator **după decizia explicită de
+creare**, nu sunt operații executate de acest PR. Denumirile meniurilor pot varia
+ușor în Dashboard. Nu conecta repository-ul la un deployment automat.
 
-Nu se presupune că resursele cu numele propuse sunt libere și nu se suprascrie
-nimic dacă există deja. Dacă izolarea nu este confirmată, pregătirea rămâne locală.
+1. În contul corect, deschide **Storage & databases → D1 SQL Database → Create
+   database**. Introdu exact `actero-staging-db`. Creează o bază nouă goală;
+   nu importa/clona `actero-db`. Notează Account ID și UUID-ul noii baze din
+   Overview/Settings. Dacă numele există deja, oprește și verifică proprietatea
+   și conținutul; nu suprascrie nimic.
+2. În **Workers & Pages → Create application → Create Worker** (sau **Start with
+   Hello World**), folosește exact `actero-staging`. Păstrează numai răspunsul
+   Hello World al Cloudflare, fără cod ActeRO, integrare Git sau secrete.
+   Butonul Deploy de aici creează/publică acel placeholder și necesită aprobarea
+   creării; nu reprezintă lansarea aplicației ActeRO.
+3. În **actero-staging → Settings → Domains & Routes**, dezactivează ruta
+   workers.dev și Preview URLs și nu adăuga domenii/rute de producție.
+   Adresa probabilă este `https://actero-staging.actedsro.workers.dev`, dar trebuie
+   confirmată în Dashboard; rămâne dezactivată până la aprobarea testării găzduite.
+4. În **actero-staging → Settings → Bindings → Add binding → D1 database**,
+   pune numele variabilei **`DB`**, selectează **`actero-staging-db`** și salvează.
+   Nu selecta `actero-db` și nu adăuga service bindings spre `actero`.
+5. În pagina **actero-staging-db**, verifică UUID-ul și că nu există tabele de
+   aplicație. În pagina **actero-db**, citește numai UUID-ul pentru comparație;
+   nu executa SQL, import sau migrare în producție. Verifică separat că
+   **actero → Bindings** indică în continuare `actero-db`, fără modificări.
+6. Păstrează o evidență cu cele două nume de Worker, cele două UUID-uri D1 și
+   binding-ul fiecăruia. ID-urile nu sunt parole; nu trimite chei/API tokens în chat.
+   În această etapă nu configura Shopify, secrete sau ghiduri.
 
-## Pași după o eventuală aprobare explicită
+Acești pași creează infrastructura izolată și un placeholder inofensiv. Publicarea
+codului ActeRO, inițializarea D1 și configurarea secretelor sunt operații distincte,
+care rămân condiționate de aprobarea proprietarului.
 
-1. **Confirmarea țintei.** Consemnează numele/ID-urile exacte și ce operații sunt
-   aprobate: creare de resurse noi sau utilizarea unui staging deja existent.
-   Compară binding-ul D1 cu baza protejată; oprire la orice ambiguitate. Aprobarea
-   acestui plan nu este presupusă din existența unui Worker sau a `actero-db`.
-2. **Origine separată.** Alege frontend-ul HTTPS dedicat. Înainte de deploy,
-   pregătește și testează o schimbare coerentă în `worker.js`, `recovery.js` și
-   `evaluation-session.js`: toate trei fixează în prezent originea GitHub Pages.
-   Simpla adăugare a unei variabile `APP_ORIGIN` în șablon nu ar schimba codul.
-   Aliniază și URL-ul de recuperare, configurația publică a copiei frontend și
-   linkul de revenire Shopify. Nu modifica frontend-ul public existent.
-3. **Worker și D1 izolate.** Numai pentru resursele aprobate, completează o copie
-   locală a șablonului cu identificatorii reali. Numele Worker-ului și binding-ul
-   trebuie reverificate înaintea oricărei operații; folosește explicit mediul
-   `staging`. Păstrează checkout oprit și nu prelua routes de producție.
-4. **Schema.** Dacă D1 este demonstrat nouă și goală, schema pentru acest staging
-   sintetic poate porni de la `tests/fixtures/local-baseline.sql`, urmată în ordine
-   de migrațiile 001–010. Acestea au fost aplicate numai local până acum. Dacă baza
-   nu este goală, se oprește bootstrap-ul: inventar de schemă, backup și plan de
-   diferențe separat, fără aplicare oarbă a `ALTER TABLE`. Migrarea 010 se oprește
-   la duplicate de order ID; nu se șterg granturi pentru a o forța să treacă.
-5. **Date.** Numai renderer-ul sintetic din testele existente și o aprobare exclusiv
-   pentru acel fixture. Nicio clonare/exportare a `actero-db`, nicio copiere a
-   ghidurilor premium și nicio aprobare editorială reală.
-6. **Secrete separate.** Pregătește în mediul aprobat valori noi pentru
-   `SHOPIFY_WEBHOOK_SECRET`, `ABUSE_HASH_PEPPER`, `PAYMENT_ALERT_WEBHOOK_URL`,
-   `RECOVERY_EMAIL_PEPPER`, `RECOVERY_EMAIL_API_KEY`, `RECOVERY_EMAIL_FROM`.
-   Nu reutiliza secretele de producție. Stabilirea lor în Cloudflare este o mutație
-   și intră în aprobarea de staging, nu în etapa curentă.
-7. **Expunere controlată.** Stabilește endpoint-ul API și accesul testerilor;
-   configurează numai adresa staging aprobată. Verifică politica CORS, TLS,
-   endpoint-urile protejate și accesul webhook-urilor. O pagină de autentificare
-   Cloudflare Access pe webhook fără o integrare corespunzătoare ar bloca Shopify;
-   nu presupune că o protecție generică rezolvă această configurație.
-8. **Shopify și email.** Verifică explicit Test Mode actual, varianta de 49 RON,
-   valuta, proprietatea `_actero_checkout_id`, cele patru subscriptions și linkul
-   Thank-you/Order-status. Codul are încă shop și variantă fixe: un magazin de test
-   diferit necesită o schimbare de configurație în cod și regresii înainte de
-   utilizare. Activarea checkout-ului sau schimbarea Shopify necesită aprobarea
-   proprietarului. `SHOPIFY_PAYMENT_MODE=test` filtrează webhook-uri, dar nu poate
-   împiedica debitarea unui card dacă magazinul nu este în Test Mode.
-9. **Acceptanță.** Rulează cu tester/adresă deținute: plată de test → acces → ghid
-   sintetic → recuperare → refund/anulare/dispută → acces revocat, plus retry la
-   email/alerte indisponibile. Înregistrează numai rezultate și identificatori de
-   test, fără tokenuri, secrete sau exporturi de date.
-10. **Închidere.** După test, oprește checkout-ul în staging conform planului
-    aprobat. Nu modifica producția și nu șterge automat resurse. Planifică separat
-    retenția datelor sintetice și orice eliminare a infrastructurii.
+## Verificarea configurației înaintea oricărei operații remote
 
-## Ce se poate executa acum
+După ce resursele au fost create și identificate, copiază șablonul **în același
+director** (căile `main` și `migrations_dir` sunt relative la configurație):
 
-Din rădăcina repository-ului, fără Cloudflare CLI sau credențiale:
+```bash
+cp cloudflare/staging/wrangler.json.example cloudflare/staging/wrangler.staging.local.json
+```
+
+În copia ignorată de Git înlocuiește numai `account_id` cu ID-ul contului și
+`env.staging.d1_databases[0].database_id` cu UUID-ul **noii** baze de staging.
+Nu schimba numele, rutele, variabilele sau nivelul implicit. Apoi rulează offline,
+înlocuind `UUID_PROD_CITIT_DIN_DASHBOARD` cu UUID-ul citit independent din producție:
+
+```bash
+node cloudflare/staging/check-config.mjs --config cloudflare/staging/wrangler.staging.local.json --production-d1-id UUID_PROD_CITIT_DIN_DASHBOARD
+npm run check:staging
+```
+
+Validatorul respinge Worker-ul `actero`, numele D1 `actero-db`, UUID-uri identice
+(inclusiv diferențe doar de majuscule), bindings suplimentare/la nivel implicit,
+service bindings, routes, preview URLs, checkout activ, mod live și secrete în
+vars. Lipsa UUID-ului de producție oprește verificarea configurației completate.
+`--template` verifică numai șablonul cu placeholder-e; **nu** validează resurse reale.
+
+Verificarea nu contactează Cloudflare și nu poate autentifica ID-urile introduse.
+PASS-ul trebuie corelat cu binding-urile efective din Dashboard. Pentru eventuale
+operații CLI folosește credențiale dedicate cu permisiunile minime disponibile;
+dacă furnizorul permite doar drepturi D1 la nivel de cont, acestea **nu izolează
+criptografic producția**. Un operator cu acces la ambele resurse poate ocoli
+validatorul. Pentru o limită IAM strictă ar fi necesar un cont separat. Nu putem
+promite risc zero doar din două nume diferite în același cont.
+
+## Schema și migrarea — doar după aprobarea inițializării D1 staging
+
+`0001-empty-staging.sql` este o singură migrare inițială, cu toate cele 11 tabele
+de aplicație. Include indexul unic pentru `shopify_order_id`, sesiuni, cote,
+evenimente, revocări, recuperare și aprobările de ghid. Nu introduce niciun rând,
+ghid, aprobare sau client. Baseline-ul reflectă contractul local al codului;
+nu pretinde că reproduce schema curentă a producției.
+
+- Se aplică **numai unei D1 staging demonstrat goale**. Preexistența oricărui
+  tabel de aplicație cere oprire și analiză separată. Nu se șterg tabele ca să
+  treacă bootstrap-ul. Reaplicarea SQL brut peste ActeRO inițializat eșuează la
+  `CREATE TABLE access_grants` fără a rescrie rândurile existente.
+- Nu aplica separat și `001`–`010`: sunt deja incluse. `migrations_dir` indică
+  exclusiv `./migrations`; Wrangler ține evidența în `d1_migrations`.
+- Pentru verificarea bazei **selectate explicit ca staging**, interogarea read-only
+  este `SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE
+  'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'd1_migrations';`. Înainte de
+  bootstrap trebuie să nu returneze tabele. Aceasta nu se execută pe `actero-db`.
+- După prima aplicare găzduită, îngheață migrarea 0001 și sursele sale; schimbările
+  viitoare primesc migrații numerotate noi. Nu regenera un bootstrap deja aplicat.
+
+Comenzi de referință **neexecutate**, pentru operator cu Wrangler instalat și
+aprobare de migrare acordată. Din rădăcina repository-ului, numai după verificările
+anterioare, fără a omite `--config`, `--env staging` sau numele exact al bazei:
+
+```bash
+wrangler d1 migrations list actero-staging-db --config cloudflare/staging/wrangler.staging.local.json --env staging --remote
+wrangler d1 migrations apply actero-staging-db --config cloudflare/staging/wrangler.staging.local.json --env staging --remote
+```
+
+După aplicare, confirmă în noua bază migrarea `0001-empty-staging.sql` în ledger,
+11 tabele de aplicație și zero rânduri în ele. Nu introduce ghiduri premium.
+În testele locale se adaugă ulterior **numai** renderer-ul sintetic B1_ES și
+aprobarea sa de test. Nu există seed automat pentru resursele Cloudflare.
+Comenzile Wrangler remote și autentificarea nu au fost validate pe un cont real.
+
+## Ce mai trebuie pregătit înaintea testării găzduite
+
+- **Frontend HTTPS separat.** Originea este încă fixată la
+  `https://mypape-dot.github.io` în `worker.js`, `recovery.js` și
+  `evaluation-session.js`. O variabilă inventată `APP_ORIGIN` nu ar schimba codul.
+  Trebuie ales domeniul de staging, configurat și testat coerent CORS/recovery,
+  apoi conectată numai copia frontend de staging la API. Separarea doar printr-un
+  path GitHub Pages nu izolează localStorage. Checkout-ul frontend-ului public rămâne oprit.
+- **Shopify separat.** Shop și variantă sunt încă fixe în cod. Pentru magazinul
+  de dezvoltare trebuie o schimbare explicită și teste. `SHOPIFY_PAYMENT_MODE=test`
+  verifică payload-ul, dar **nu activează Test Mode în Shopify și nu împiedică
+  debitarea unui card** dacă magazinul este live. Nicio activare Shopify acum.
+- **Secrete noi, dedicate testelor**, numai după aprobare:
+  `SHOPIFY_WEBHOOK_SECRET`, `ABUSE_HASH_PEPPER`, `PAYMENT_ALERT_WEBHOOK_URL`,
+  `RECOVERY_EMAIL_PEPPER`, `RECOVERY_EMAIL_API_KEY`, `RECOVERY_EMAIL_FROM`.
+  Fără reutilizarea valorilor de producție; alerte/sender/căsuță dedicate testelor.
+- **Expunere și integrare.** Activarea endpoint-ului staging și schimbarea
+  configurației inițiale închise necesită un nou review. Nu adăuga rute de producție.
+  Configurează cele patru webhook-uri și linkul Thank-you/Order-status numai în
+  magazinul de test aprobat. Cloudflare Access fără integrare pe webhook ar bloca
+  Shopify. `return_url` trimis de frontend nu produce automat revenirea din Shopify.
+- **Acceptanță găzduită.** Plată în Test Mode → acces → ghid sintetic → recuperare
+  → refund/anulare/dispută → revocare, inclusiv retry și validarea livrării email.
+  Apoi checkout staging oprit conform planului aprobat, fără ștergeri automate.
+
+## Teste locale executabile acum
+
+Fără Wrangler, secrete, acces Cloudflare sau modificări Shopify:
 
 ```bash
 npm test
-npm run test:staging:failures
+npm run check:staging
 ACTERO_TEST_BROWSERS=chromium ACTERO_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:staging
 npm run check:public
 ```
 
-`test:staging:failures` verifică indisponibilitatea emailului și alertelor,
-reîncercarea fără pierderea incidentului, consumul/expirarea linkurilor, concurența
-și revocarea înaintea plății, în workerd/D1 locale. Emailurile și alertele sunt
-colectate în memorie; niciun webhook nu este trimis unui serviciu extern.
-
-Planul nu este o aprobare de creare, deploy, migrare, activare Shopify sau vânzare.
+Miniflare aplică exact `migrations/0001-empty-staging.sql` într-o D1 temporară.
+Cele 9 teste de eșec și fluxul E2E existent folosesc această schemă. Browserul și
+Worker-ul blochează traficul extern; Shopify, emailul și alertele sunt simulate.
+CI rulează și WebKit mobil. Testele nu constituie dovadă pentru o plată Shopify
+reală de test sau pentru infrastructura Cloudflare încă necreată.

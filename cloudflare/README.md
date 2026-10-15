@@ -31,7 +31,7 @@ Inspect the actual D1 schema and take a backup BEFORE applying any migration. Th
 010-order-uniqueness.sql
 ```
 
-Do not execute these on live D1 merely because GitHub tests passed. The local harness now bootstraps an empty synthetic database from `tests/fixtures/local-baseline.sql` and migrations 001–010. This fixture is NOT a claim about the live schema. The private guide import and actual database upgrade/backup procedure remain unverified (audit issue F-14). Migration 010 must stop for operator review if duplicate order IDs already exist; it never deletes grants.
+Do not execute these on live D1 merely because GitHub tests passed. The local workerd harness now uses the exact prepared `staging/migrations/0001-empty-staging.sql`, generated from `tests/fixtures/local-baseline.sql` and migrations 001–010. This is only a fresh, empty staging bootstrap, NOT a claim about the live schema. Do not apply 001–010 again after that bootstrap. See [separate staging setup](staging/README.md) for `actero-staging` / `actero-staging-db`, Dashboard instructions and offline target validation. No Cloudflare resources have been created. The private guide import and actual database upgrade/backup procedure remain unverified (audit issue F-14). Migration 010 must stop for operator review if duplicate order IDs already exist; it never deletes grants.
 
 ## Staging secrets and configuration
 

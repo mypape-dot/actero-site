@@ -4,3 +4,4 @@ browser-qa-screenshots/
 .dev.vars*
 .env*
 work/
+cloudflare/staging/wrangler.staging.local.json

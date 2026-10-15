@@ -8,10 +8,11 @@
   "scripts": {
     "test": "node scripts/test-unit.mjs",
     "test:payments": "node --test cloudflare/tests/payment-security.test.mjs",
-    "test:staging": "npm run test:staging:failures && node cloudflare/tests/payment-journey.browser.mjs",
+    "test:staging": "npm run check:staging && npm run test:staging:failures && node cloudflare/tests/payment-journey.browser.mjs",
     "test:staging:failures": "node --test cloudflare/tests/payment-failures.integration.mjs",
     "test:browser": "node cloudflare/tests/browser-smoke.mjs",
-    "check:public": "node scripts/check-public-surface.mjs"
+    "check:public": "node scripts/check-public-surface.mjs",
+    "check:staging": "node cloudflare/staging/build-schema.mjs --check && node cloudflare/staging/check-config.mjs --template --config cloudflare/staging/wrangler.json.example"
   },
   "devDependencies": {
     "esbuild": "0.25.10",

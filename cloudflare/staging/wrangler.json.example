@@ -8,7 +8,7 @@
   "routes": [],
   "env": {
     "staging": {
-      "name": "actero-staging-synthetic-proposed",
+      "name": "actero-staging",
       "workers_dev": false,
       "preview_urls": false,
       "routes": [],
@@ -21,8 +21,9 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "actero-staging-synthetic-proposed",
-          "database_id": "UNBOUND_REQUIRES_SEPARATE_STAGING_DATABASE"
+          "database_name": "actero-staging-db",
+          "database_id": "UNBOUND_REQUIRES_SEPARATE_STAGING_DATABASE",
+          "migrations_dir": "./migrations"
         }
       ]
     }

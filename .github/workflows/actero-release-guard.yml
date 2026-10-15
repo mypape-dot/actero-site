@@ -127,6 +127,8 @@ jobs:
           npx playwright install --with-deps chromium webkit
       - name: Offline payment journey with local Worker and D1
         run: npm run test:staging
+      - name: Validate separate staging configuration and empty D1 bootstrap offline
+        run: node --test cloudflare/tests/staging-isolation.test.mjs
       - name: Verify private visual QA on 12 synthetic guides (24 offline renders)
         run: |
           output="$RUNNER_TEMP/actero-12-visual-synthetic"

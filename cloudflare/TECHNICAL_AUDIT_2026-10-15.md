@@ -151,11 +151,12 @@ a fost retestat cu ele. Acestea sunt unelte de dezvoltare, nu dependențe ale Wo
 Rezultatul este un candidat tehnic reviewabil, cu teste locale reproductibile,
 nu o autorizare de lansare sau de publicare a ghidurilor premium.
 
-## Continuare: infrastructura existentă nu este confirmată ca staging
+## Etapă anterioară: infrastructura existentă nu era confirmată ca staging
 
 Proprietarul a precizat că Worker-ul ActeRO și `actero-db` există, dar nu este
 confirmat un mediu separat. Nu au fost făcute apeluri Cloudflare remote și nu
-au fost create sau modificate resurse. Verificarea de către proprietar este în curs.
+au fost create sau modificate resurse. La această etapă verificarea de către
+proprietar era în curs; decizia ulterioară este documentată mai jos.
 
 Au fost adăugate:
 
@@ -179,3 +180,59 @@ necesară o nouă schimbare a codului Worker sau frontend pentru a le trece.
 Șablonul a fost validat ca JSON, inclusiv valorile de izolare; nu s-a rulat
 Wrangler deploy/dry-run și nu se afirmă că infrastructura găzduită este pregătită.
 Guard-ul suprafeței publice și `git diff --check` au trecut.
+
+## Decizie confirmată: staging complet separat, pregătire offline
+
+Proprietarul a verificat în Dashboard: un singur Worker `actero` la
+`https://actero.actedsro.workers.dev` și o singură D1 `actero-db`. Nu există staging.
+Țintele alese sunt **`actero-staging`** și **`actero-staging-db`**. Nu a fost acordată
+aprobarea creării, deploy-ului, migrării remote sau configurării secretelor.
+Niciuna dintre aceste operații nu a fost executată.
+
+Probleme rezolvate în această continuare:
+
+- Șablonul folosește numele exacte alese, cu ID-uri necompletate, binding exclusiv
+  în `env.staging`, checkout oprit și fără expunere publică sau routes.
+- Migrațiile incrementale nu puteau porni singure o D1 goală. Noua migrare
+  `staging/migrations/0001-empty-staging.sql` reunește baseline-ul și 001–010,
+  cu 11 tabele goale, fără ghiduri, aprobări sau date personale. Generatorul
+  verifică reproducibilitatea; testele verifică echivalența schemei și indexul unic.
+- `staging/check-config.mjs` respinge offline țintele de producție, inclusiv UUID-ul
+  de producție ascuns sub numele de staging, bindings suplimentare, routes,
+  checkout activ, mod live și secrete în vars. UUID-ul producției este obligatoriu
+  pentru verificarea unei configurații completate și trebuie citit independent.
+- Testele workerd/E2E aplică exact migrarea pregătită pentru staging. Testul de
+  inițializare confirmă că baza începe goală și `/session`/`/checkout` răspund 503
+  când checkout-ul este oprit. Reaplicarea bootstrap-ului eșuează fără rescrierea datelor.
+- Runbook-ul conține pașii din Dashboard pentru D1 nouă, Worker placeholder,
+  binding `DB`, verificarea UUID-urilor și schema. Copia locală cu ID-uri este
+  ignorată de Git. Nu s-a adăugat niciun deploy automat sau seed remote.
+
+Fișiere modificate/adăugate în această continuare:
+
+- `cloudflare/staging/wrangler.json.example`, `README.md`, `build-schema.mjs`,
+  `check-config.mjs`, `migrations/0001-empty-staging.sql`.
+- `cloudflare/tests/staging-isolation.test.mjs`, `helpers/local-worker.mjs`,
+  `fixtures/local-baseline.sql`.
+- `package.json`, `.gitignore`, `.github/workflows/actero-release-guard.yml`.
+- `cloudflare/README.md`, `LOCAL_PAYMENT_STAGING.md`, acest raport.
+
+Validare locală: **178/178** intrări `npm test` (include cele **18** noi), **9/9**
+scenarii de eroare workerd/D1 și **6/6** grupuri E2E Chromium cu schema nouă,
+`check:staging`, `check:public` și `git diff --check` PASS. CI include cele 18
+regresii noi și E2E Chromium + WebKit; rezultatul pentru commitul final este
+consemnat în PR Draft #16. WebKit nu poate fi instalat în mediul local curent.
+Nu s-a instalat/rulat Wrangler și nu s-au făcut apeluri remote Cloudflare.
+
+Blocaje rămase: crearea și verificarea resurselor după aprobare; alegerea unui
+frontend HTTPS cu origine distinctă; configurarea și testarea CORS/recovery și
+shop/variant pentru ținte separate (în cod sunt încă fixe); secrete/sender/alerte
+noi; Shopify Test Mode și linkul de revenire; acceptanță găzduită cu email real de
+test. Toate aprobările comerciale/editoriale reale rămân NO. Motorul și ghidurile
+reale nu au fost modificate în această continuare.
+
+Limita verificării de izolare: validatorul nu autentifică ID-urile din Dashboard.
+Binding-ul efectiv trebuie comparat cu UUID-ul bazei de producție. Două resurse
+în același cont, accesibile aceluiași operator administrativ, nu reprezintă o
+barieră IAM absolută. Configurația nu conține legături către resursele protejate;
+acestea nu au fost modificate sau interogate de agent.

@@ -31,8 +31,9 @@ CI rulează implicit Chromium desktop și WebKit la viewport mobil.
 
 ## Izolarea datelor și a rețelei
 
-- Se creează o bază locală goală din `tests/fixtures/local-baseline.sql`, apoi se
-  aplică migrațiile 001–010. Aceasta nu este schema constatată a D1 live.
+- Se creează o bază locală goală aplicând exact migrarea pregătită pentru staging,
+  `staging/migrations/0001-empty-staging.sql` (baseline + 001–010). Testul de
+  echivalență o compară cu migrațiile originale; aceasta nu este schema constatată a D1 live.
 - Se introduce numai un renderer `B1_ES` sintetic, care afișează titlul de test și
   țara din răspunsuri. Aprobarea sa este exclusiv pentru această bază temporară.
   Nu sunt citite sau aprobate ghidurile private reale.
@@ -69,9 +70,15 @@ Worker publicat. `npm audit` a raportat zero vulnerabilități la 15 octombrie 2
 
 ## Staging găzduit: încă nevalidat
 
-Worker-ul ActeRO existent și `actero-db` nu sunt confirmate ca staging și nu
-trebuie modificate. Configurația nelegată de resurse și pașii condiționați de
-aprobare sunt în [`staging/README.md`](staging/README.md).
+Proprietarul a confirmat că există numai `actero` și `actero-db`; nu există staging.
+Resursele separate planificate sunt `actero-staging` și `actero-staging-db`, dar
+crearea lor nu este încă aprobată. Configurația, migrarea inițială, pașii din Dashboard
+și verificarea ID-urilor sunt în [`staging/README.md`](staging/README.md).
+
+`npm run check:staging` verifică offline șablonul închis și schema generată.
+`staging-isolation.test.mjs` adaugă 18 teste pentru configurații greșite (inclusiv
+UUID de producție sub nume de staging), echivalența schemei, bootstrap repetat și
+comportamentul real workerd cu checkout oprit, fără date sau aprobări.
 
 `npm run test:staging:failures` rulează suplimentar 9 teste pe workerd/D1 locale:
 email indisponibil și retry, alertă de plată indisponibilă, revocare cu alertă
