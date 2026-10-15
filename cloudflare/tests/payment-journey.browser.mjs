@@ -1,7 +1,7 @@
 // Real frontend + workerd/D1 locally; Shopify checkout, signed webhook and email
 // are SYNTHETIC. No network request reaches Shopify, Cloudflare or an email provider.
 import assert from 'node:assert/strict';
-import {readFileSync,existsSync} from 'node:fs';
+import {readFileSync,existsSync,mkdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {chromium,webkit} from 'playwright';
 import {localWorker} from './helpers/local-worker.mjs';
@@ -21,11 +21,27 @@ for(const kind of engines){
     browser=await ({chromium,webkit}[kind]).launch({headless:true,...(executablePath?{executablePath}:{})});
     const mobile=kind==='webkit';
     const context=await browser.newContext({viewport:{width:mobile?390:1280,height:900},isMobile:mobile,serviceWorkers:'block'});
-    const pageErrors=[],checkoutUrls=[],apiStatuses=[];
+    const pageErrors=[],checkoutUrls=[],apiStatuses=[],blockedRequests=[];
+    async function waitGuide(target,label){
+      try{await target.locator('#syntheticGuide').waitFor({timeout:10000})}
+      catch(error){
+        console.error('Synthetic journey diagnostic',JSON.stringify({kind,label,apiStatuses,pageErrors,blockedRequests,
+          page:await target.evaluate(()=>({path:location.pathname,message:document.getElementById('message')?.textContent,
+            checkoutError:document.getElementById('checkoutError')?.textContent,
+            current:typeof S==='undefined'?null:S.current,route:typeof S==='undefined'?null:S.route,
+            unlocked:typeof S==='undefined'?null:S.paymentUnlocked}))}));
+        mkdirSync('browser-qa-screenshots',{recursive:true});
+        await target.screenshot({path:'browser-qa-screenshots/payment-'+kind+'-'+label+'.png',fullPage:true}).catch(()=>{});
+        throw error;
+      }
+    }
     async function routeContext(ctx){
       ctx.on('page',page=>page.on('pageerror',error=>pageErrors.push(error.message)));
       await ctx.route('**/*',async route=>{
         const request=route.request(),url=new URL(request.url());
+        // WebKit may expose blob-script loads to interception. These are local
+        // browser objects, not egress: allow the real protected loader to read them.
+        if(url.protocol==='blob:'){await route.continue();return;}
         if(url.origin===API){
           const response=await backend.dispatch(new Request(request.url(),{method:request.method(),headers:{...await request.allHeaders(),'CF-Connecting-IP':'192.0.2.10'},body:request.postDataBuffer()??undefined}));
           apiStatuses.push({path:url.pathname,status:response.status});
@@ -44,6 +60,7 @@ for(const kind of engines){
           checkoutUrls.push(url.href);
           await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><h1>Checkout Shopify SIMULAT — 49 lei</h1><p>Nicio tranzacție nu este efectuată.</p>'});return;
         }
+        blockedRequests.push({protocol:url.protocol,host:url.hostname});
         await route.abort(); // Fonts/other assets cannot cause external traffic either.
       });
     }
@@ -85,13 +102,13 @@ for(const kind of engines){
     assert.equal((await paid.json()).granted,true);
     assert.equal((await (await backend.dispatch(signedRequest(order(cid),{id:'synthetic-paid'}))).json()).duplicate,true);
     await page.reload();await page.waitForFunction(()=>!document.getElementById('openGuide').disabled);
-    await page.locator('#openGuide').click();await page.locator('#syntheticGuide').waitFor();
+    await page.locator('#openGuide').click();await waitGuide(page,'initial-delivery');
     assert.equal(await page.locator('#syntheticCountry').innerText(),'ES');
     assert.equal((await get(guidePath.replace('B1_ES','B1_IT'))).status,403);
     const delivered=await get(guidePath);assert.equal(delivered.status,200);assert.match(delivered.headers.get('Cache-Control'),/no-store/);
     const queryToken=await backend.dispatch(new Request(API+guidePath+'&access_token='+encodeURIComponent(oldToken)));
     assert.equal(queryToken.status,402);
-    await page.reload();await page.locator('#syntheticGuide').waitFor();
+    await page.reload();await waitGuide(page,'refresh');
     assert.equal(await page.evaluate(()=>loadProtectedPaidGuide()),true);
     pass(kind+': signed test payment → exact purchased guide → refresh; other keys and query tokens denied');
 
@@ -107,7 +124,7 @@ for(const kind of engines){
       backend.db.prepare("UPDATE guide_approvals SET script_sha256=? WHERE guide_key='B1_ES'").bind(createHash('sha256').update(revisedScript).digest('hex'))
     ]);
     assert.equal(await page.evaluate(()=>loadProtectedPaidGuide()),false);
-    await page.reload();await page.locator('#syntheticGuide').waitFor();
+    await page.reload();await waitGuide(page,'approved-revision');
     pass(kind+': reopening rechecks approval; changed approved script requires a fresh document');
 
     const second=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
@@ -120,13 +137,7 @@ for(const kind of engines){
     const link=backend.mail[0].text.match(/https:\/\/\S+/)[0];
     const challenge=new URLSearchParams(new URL(link).hash.slice(1)).get('token');
     await recovered.goto(link);
-    try{await recovered.locator('#syntheticGuide').waitFor({timeout:10000})}
-    catch(error){
-      console.error('Synthetic recovery diagnostic',JSON.stringify({apiStatuses,pageErrors,
-        page:await recovered.evaluate(()=>({path:location.pathname,message:document.getElementById('message')?.textContent,
-          current:typeof S==='undefined'?null:S.current,route:typeof S==='undefined'?null:S.route}))}));
-      throw error;
-    }
+    await waitGuide(recovered,'recovery');
     const newToken=await recovered.evaluate(id=>localStorage.getItem('actero_access_'+id),grant.case_id);
     assert.notEqual(newToken,oldToken);assert.equal((await get(guidePath,oldToken)).status,402);
     assert.equal((await get(guidePath,newToken)).status,200);
