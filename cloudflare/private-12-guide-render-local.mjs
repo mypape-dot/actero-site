@@ -173,6 +173,15 @@ async function renderOne(browser,scenario,row,outputDir,css,publicHelper,claimsO
      };
    },evidenceOnly);
    const evidenceScan=evidenceOnly?assessRenderedGuide(key,result.private_visible_text):null;
+   if(evidenceScan&&(result.visibleClaimCounts.badge>0||result.visibleClaimCounts.dated_source>0)){
+     if(!evidenceScan.signals.includes('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM')){
+       // The independent, historical visual counter is a fail-closed fallback.
+       // A classifier false negative must never silently pass.
+       evidenceScan.signals.push('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM');
+       evidenceScan.signals.push('REVIEW_CLASSIFIER_CLAIM_MISMATCH');
+       evidenceScan.signals.sort();
+     }
+   }
    const flags=[];
    if(result.chars<400||!result.heading)flags.push('RESULT_EMPTY_OR_MISSING_HEADING');
    if(result.heading&&!result.headingText.toLocaleLowerCase('ro-RO').includes(countries[selected.country].toLocaleLowerCase('ro-RO')))
@@ -267,7 +276,9 @@ async function main(){
          continue;
        }
        const scan=desktop.evidence_scan;
-       console.log('EVIDENCE_REVIEW '+key+' | markers='+
+       const counts=desktop.claim_counts;
+       console.log('EVIDENCE_REVIEW '+key+' | visible_badges='+(counts?.badge??'UNKNOWN')+
+         ' | source_labels='+(counts?.dated_source??'UNKNOWN')+' | markers='+
          (scan.markers.join(',')||'NONE')+' | flags='+scan.signals.join(',')+
          ' | mobile_match='+compareViewportSignals(scan,mobile.evidence_scan));
      }
