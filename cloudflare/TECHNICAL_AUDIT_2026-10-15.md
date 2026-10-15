@@ -274,8 +274,10 @@ frontend a fost generat numai local, cu API staging și checkout false.
 
 Suita completă locală nu este raportată drept PASS: sandbox-ul blochează workerd
 cu `listen EPERM`, iar testele CLI metadata raportează stdout gol în subprocess.
-Rezultatele CI pentru codul final sunt consemnate în PR #16; E2E găzduit cu Shopify
-rămâne neexecutat. Nu au fost făcute tranzacții reale, deploy, setări de secrete,
+Noua versiune nu a ajuns încă în CI: push-ul terminal nu poate accesa proxy-ul,
+iar scrierea prin conectorul GitHub cere aprobare indisponibilă în această sesiune.
+PR #16 rămâne la versiunea precedentă până la transferul commiturilor locale.
+E2E găzduit cu Shopify rămâne neexecutat. Nu au fost făcute tranzacții reale, deploy, setări de secrete,
 importuri D1, activări Shopify sau aprobări comerciale ale ghidurilor.
 
 Planul operațional actual este [SHOPIFY_TEST_SETUP.md](staging/SHOPIFY_TEST_SETUP.md).
