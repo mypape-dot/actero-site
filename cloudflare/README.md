@@ -1,4 +1,4 @@
-# ActeRO — Cloudflare Worker + D1 (Draft PR #3 only)
+# ActeRO — Cloudflare Worker + D1 (Draft only)
 
 The only maintained backend is `cloudflare/worker.js`. The old KV-based `backend/` directory has been removed **from this draft branch only**. The public source tree has no premium guide scripts or secrets.
 
@@ -16,7 +16,7 @@ The only maintained backend is `cloudflare/worker.js`. The old KV-based `backend
 
 ## Proposed schema changes (STAGING ONLY)
 
-Inspect the actual D1 schema and take a backup BEFORE applying any migration. The numbered files `001` through `009` are ordered incremental migrations, not a complete fresh-install schema. Existing databases may already have some columns/tables.
+Inspect the actual D1 schema and take a backup BEFORE applying any migration. The numbered files `001` through `010` are ordered incremental migrations, not a complete fresh-install schema. Existing databases may already have some columns/tables.
 
 ```
 001-guide-variants.sql
@@ -28,11 +28,23 @@ Inspect the actual D1 schema and take a backup BEFORE applying any migration. Th
 007-evaluation-sessions.sql
 008-guide-approvals.sql
 009-guide-country-approvals.sql
+010-order-uniqueness.sql
 ```
 
-Do not execute these on live D1 merely because GitHub tests passed. A full baseline `schema.sql` and private guide import procedure are not yet reproducible from this repository (audit issue F-14).
+Do not execute these on live D1 merely because GitHub tests passed. The local harness now bootstraps an empty synthetic database from `tests/fixtures/local-baseline.sql` and migrations 001–010. This fixture is NOT a claim about the live schema. The private guide import and actual database upgrade/backup procedure remain unverified (audit issue F-14). Migration 010 must stop for operator review if duplicate order IDs already exist; it never deletes grants.
 
 ## Staging secrets and configuration
+
+`SHOPIFY_PAYMENT_MODE` defaults to `test`: paid events require the literal JSON
+boolean `test: true`. The explicit value `live` requires `test: false`; unknown
+values block checkout and route paid events to operator review. This setting does
+not control Shopify Test Mode and cannot prevent a merchant checkout from charging
+a real card. Verify Shopify separately before any hosted test. No live mode is
+enabled by this branch.
+
+For current reproducible test commands and limits, see
+[`LOCAL_PAYMENT_STAGING.md`](LOCAL_PAYMENT_STAGING.md) and
+[`TECHNICAL_AUDIT_2026-10-15.md`](TECHNICAL_AUDIT_2026-10-15.md).
 
 The Cloudflare Worker needs correctly bound D1 plus HMAC/email/alert/abuse-prevention secrets. Never commit or paste actual values. In particular, `ABUSE_HASH_PEPPER`, `SHOPIFY_WEBHOOK_SECRET`, `PAYMENT_ALERT_WEBHOOK_URL`, `RECOVERY_EMAIL_API_KEY`, `RECOVERY_EMAIL_PEPPER`, and `RECOVERY_EMAIL_FROM` require staging review.
 

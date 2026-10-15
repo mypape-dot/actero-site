@@ -1642,16 +1642,23 @@ function guideKeyForCurrent(){
   }
   return ['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(S.route)?S.route:null;
 }
-let loadedPaidGuideKey=null,loadedPaidCaseId=null;
+let loadedPaidGuideKey=null,loadedPaidCaseId=null,loadedPaidGuideSource=null;
 async function loadProtectedPaidGuide(){
   const key=guideKeyForCurrent(),token=accessTokenForCase();
   if(!paymentApiConfigured()||!S.caseId||!key||!token){S.paymentUnlocked=false;return false}
-  if(loadedPaidGuideKey===key&&loadedPaidCaseId===S.caseId){S.paymentUnlocked=true;showPaidGuide();return true}
+  // Revalidate every opening, including a script already loaded in this tab.
+  // Refunds, token rotation and withdrawn approvals must block future openings.
   try {
     const src=paymentApiBase()+'/guide-script?case_id='+encodeURIComponent(S.caseId)+'&guide_key='+encodeURIComponent(key);
     const response=await fetch(src,{headers:{'X-Actero-Access-Token':token},cache:'no-store'});
     if(!response.ok)throw new Error('guide_denied');
     const js=await response.text();
+    if(loadedPaidGuideKey===key&&loadedPaidCaseId===S.caseId){
+      // Authorization was just rechecked. Avoid redeclaring script-level const/let
+      // in private renderers; changed approved versions require a fresh document.
+      if(js!==loadedPaidGuideSource)throw new Error('guide_version_changed');
+      S.paymentUnlocked=true;showPaidGuide();return true;
+    }
     const objectUrl=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));
     const loaded=await new Promise(resolve=>{
       const tag=document.createElement('script');
@@ -1662,12 +1669,14 @@ async function loadProtectedPaidGuide(){
     });
     URL.revokeObjectURL(objectUrl);
     if(!loaded)throw new Error('guide_script_failed');
-    loadedPaidGuideKey=key;loadedPaidCaseId=S.caseId;S.paymentUnlocked=true;showPaidGuide();return true;
+    loadedPaidGuideKey=key;loadedPaidCaseId=S.caseId;loadedPaidGuideSource=js;S.paymentUnlocked=true;showPaidGuide();return true;
   }catch(e){
     console.warn('Protected ActeRO guide unavailable',e);
     S.paymentUnlocked=false;
     const box=$('checkoutError');
-    if(box){box.classList.remove('hidden');box.textContent='Accesul nu a putut fi confirmat pentru această procedură. Încearcă din nou sau contactează suportul.'}
+    if(box){box.classList.remove('hidden');box.textContent=e?.message==='guide_version_changed'
+      ?'Ghidul a fost actualizat. Reîncarcă pagina pentru a verifica și deschide versiunea curentă.'
+      :'Accesul nu a putut fi confirmat pentru această procedură. Încearcă din nou sau contactează suportul.'}
     return false;
   }
 }

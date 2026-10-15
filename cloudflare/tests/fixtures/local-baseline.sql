@@ -1,0 +1,12 @@
+-- EMPTY LOCAL TEST DATABASE ONLY. Not a migration or a production schema claim.
+-- Historical migrations 001 onward require this pre-existing table.
+CREATE TABLE access_grants (
+  case_id TEXT PRIMARY KEY,
+  status TEXT NOT NULL CHECK (status IN ('pending','paid')),
+  route TEXT,
+  shopify_order_id TEXT,
+  shopify_order_name TEXT,
+  paid_at TEXT,
+  created_at TEXT,
+  updated_at TEXT
+);

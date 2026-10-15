@@ -1,0 +1,6 @@
+node_modules/
+browser-qa-screenshots/
+.wrangler/
+.dev.vars*
+.env*
+work/

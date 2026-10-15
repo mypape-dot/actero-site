@@ -1,0 +1,26 @@
+{
+  "name": "actero-staging-checks",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node scripts/test-unit.mjs",
+    "test:payments": "node --test cloudflare/tests/payment-security.test.mjs",
+    "test:staging": "node cloudflare/tests/payment-journey.browser.mjs",
+    "test:browser": "node cloudflare/tests/browser-smoke.mjs",
+    "check:public": "node scripts/check-public-surface.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "miniflare": "4.20260730.0",
+    "playwright": "1.56.1"
+  },
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.5",
+      "undici": "7.29.1"
+    }
+  }
+}

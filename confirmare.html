@@ -108,6 +108,10 @@ h1{font-size:clamp(30px,4.8vw,44px);letter-spacing:-1.7px;line-height:1.09;margi
      const response=await fetch(API+'/access?case_id='+encodeURIComponent(caseId),{method:'GET',headers:{'Accept':'application/json','X-Actero-Access-Token':token},cache:'no-store'});
      if(!response.ok)throw Error('access_unavailable');
      const data=await response.json();
+     if(data&&data.status==='revoked'){
+       state('missing','Accesul la ghid a fost retras','Comanda a fost rambursată, anulată sau necesită verificarea plății. Contactează suportul dacă ai nevoie de clarificări.','Nu efectua o nouă plată pentru aceeași evaluare.');
+       working=false;return;
+     }
      if(data&&data.ok===true&&data.paid===true){
        paid=true;state('ok','Plata ta a fost confirmată!','Ghidul personalizat ActeRO este pregătit. Îți mulțumim!','Poți continua acum către pașii și documentele pentru situația ta.');
        working=false;return;

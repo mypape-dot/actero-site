@@ -5,9 +5,11 @@ on:
       - "fix/**"
       - "audit/**"
       - "feature/**"
+      - "draft/**"
   pull_request:
     branches:
       - "feature/**"
+      - "audit/**"
       - main
 
 permissions:
@@ -106,6 +108,8 @@ jobs:
           cloudflare/tests/swiss-loop.test.mjs
       - name: Shopify payment and reversal regression harness
         run: node --no-warnings cloudflare/tests/audit-payment.test.mjs
+      - name: Strict payment validation and concurrent recovery regressions
+        run: node --test cloudflare/tests/payment-security.test.mjs
 
   browser-qa:
     runs-on: ubuntu-latest
@@ -119,8 +123,10 @@ jobs:
           node-version: "22"
       - name: Install isolated Playwright test browsers
         run: |
-          npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium webkit
+      - name: Offline payment journey with local Worker and D1
+        run: npm run test:staging
       - name: Verify private visual QA on 12 synthetic guides (24 offline renders)
         run: |
           output="$RUNNER_TEMP/actero-12-visual-synthetic"
