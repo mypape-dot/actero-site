@@ -64,8 +64,9 @@ export function assessRenderedGuide(key,text){
    if(seen.IRP&&!seen.EU_CITIZEN_DISTINCTION)signals.push('REVIEW_IE_IRP_EU_CITIZEN_EXCEPTION');
    if(seen.EUTR2&&!seen.PERMANENT_CONDITION)signals.push('REVIEW_IE_EUTR2_APPLICABILITY');
  }
- // Notice a technical source link or date without treating it as a verification.
- if(/\b(?:Procedură verificată|Surse reverificate)\b/i.test(text))
+ // JavaScript ASCII \b misses Romanian words ending in ă/ț/î.
+ // Use Unicode letter/number boundaries; only flag whole visible phrases.
+ if(/(?:^|[^\p{L}\p{N}_])(?:Procedură\s+verificată|Surse\s+reverificate)(?=$|[^\p{L}\p{N}_])/iu.test(text))
    signals.push('REVIEW_UNAPPROVED_PUBLIC_VERIFICATION_CLAIM');
  const scenario=key.startsWith('B1_')?'FIRST_CRDS':key.startsWith('B5_LOST_')?'LOST':'RENEWAL';
  const evidence={
