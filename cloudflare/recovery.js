@@ -68,8 +68,13 @@ export async function recoverRequest(request,env){
     if(Number(recent?.n||0)>=3)return reply(request,GENERIC,202);
     const token=secretToken(),hashToken=await tokenHash(token);
     const expires=Math.floor(Date.now()/1000)+1800;
-    await env.DB.prepare(`INSERT INTO recovery_links(token_hash,case_id,expires_at) VALUES(?,?,?)`)
-      .bind(hashToken,row.case_id,expires).run();
+    // Enforce the order limit in the same write as the reservation. The earlier
+    // read is only an optimization: concurrent requests can all pass that read.
+    const reserved=await env.DB.prepare(`INSERT INTO recovery_links(token_hash,case_id,expires_at)
+      SELECT ?,?,? WHERE (SELECT COUNT(*) FROM recovery_links
+        WHERE case_id=? AND created_at>unixepoch()-3600)<3`)
+      .bind(hashToken,row.case_id,expires,row.case_id).run();
+    if(reserved?.meta?.changes!==1)return reply(request,GENERIC,202);
     const url=new URL(env.RECOVERY_PAGE_URL);
     url.hash='token='+token; // fragment is never sent to Pages or by the HTTP Referer
     const urlText=url.toString();

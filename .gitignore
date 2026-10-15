@@ -1,0 +1,7 @@
+node_modules/
+browser-qa-screenshots/
+.wrangler/
+.dev.vars*
+.env*
+work/
+cloudflare/staging/wrangler.staging.local.json

@@ -7,6 +7,22 @@ const ORIGIN = 'https://mypape-dot.github.io';
 const SHOP = 'gyfu4v-5q.myshopify.com';
 const VARIANT = '67640764400007';
 const PRICE_RON = 49;
+// Fail closed by default. This validates incoming orders; it cannot turn on
+// Shopify Test Mode. The merchant must verify that separately before checkout.
+const paymentMode=env=>env.SHOPIFY_PAYMENT_MODE??'test';
+function moneyCents(value){
+  if(!['string','number'].includes(typeof value)||!/^\d{1,10}(?:\.\d{1,2})?$/.test(String(value)))return null;
+  const [whole,fraction='']=String(value).split('.');
+  const cents=Number(whole)*100+Number(fraction.padEnd(2,'0'));
+  return Number.isSafeInteger(cents)?cents:null;
+}
+function validPaidAmount(order,line){
+  const total=moneyCents(order.total_price);
+  const allocations=line.discount_allocations??[];
+  return moneyCents(line.price)===PRICE_RON*100&&total!==null&&total>=PRICE_RON*100&&
+    moneyCents(line.total_discount??'0')===0&&Array.isArray(allocations)&&
+    allocations.every(discount=>moneyCents(discount?.amount)===0);
+}
 const NOCACHE = { 'Cache-Control': 'private, no-store, max-age=0', 'Pragma': 'no-cache' };
 const enc = new TextEncoder();
 
@@ -153,6 +169,7 @@ export default {
     if(request.method==='POST'&&path==='/checkout'){
       if(forbiddenOrigin(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
       if(env.SHOPIFY_CHECKOUT_ENABLED!=='true')return reply(request,{ok:false,error:'checkout_disabled'},503);
+      if(!['test','live'].includes(paymentMode(env)))return reply(request,{ok:false,error:'payment_mode_not_configured'},503);
       const checkoutQuota=await quota(request,env,'checkout',{limit:8,windowSeconds:3600});
       if(!checkoutQuota.allowed)return reply(request,{ok:false,error:checkoutQuota.error||'too_many_requests'},checkoutQuota.error?503:429);
       let data;try{data=await request.json()}catch{return reply(request,{ok:false,error:'invalid_json'},400)}
@@ -236,10 +253,12 @@ export default {
       const cid=line?valueOfProperty(line,'_actero_checkout_id'):null;
       event.checkoutId=safeId(cid)?cid:null;
       const review=reason=>paymentOutcome(request,env,event,'needs_review',reason);
+      if(!['test','live'].includes(paymentMode(env))||order.test!==(paymentMode(env)==='test'))
+        return review('payment_mode_mismatch');
       if(order?.cancelled_at)return review('paid_but_cancelled');
       if(order?.currency!=='RON')return review('unexpected_currency');
       if(!line||Number(line.quantity)!==1)return review('unexpected_line_quantity');
-      if(Number(line.price)<PRICE_RON||Number(line.total_discount||0)!==0||Number(order.total_price)<PRICE_RON)
+      if(!validPaidAmount(order,line))
         return review('amount_or_discount_mismatch');
       if(!event.checkoutId)return review('missing_checkout_id');
       if(!/^\d+$/.test(event.orderId))return review('invalid_order_id');
@@ -249,6 +268,8 @@ export default {
         const intent=await env.DB.prepare('SELECT checkout_id,case_id,route,guide_key FROM checkout_intents WHERE checkout_id=? LIMIT 1').bind(event.checkoutId).first();
         if(!intent)return review('unknown_checkout');
         event.caseId=intent.case_id;
+        const orderOwner=await env.DB.prepare('SELECT case_id FROM access_grants WHERE shopify_order_id=? LIMIT 1').bind(event.orderId).first();
+        if(orderOwner&&orderOwner.case_id!==intent.case_id)return review('order_already_bound');
         const prev=await env.DB.prepare('SELECT status,route,guide_key,shopify_order_id,revoked_at FROM access_grants WHERE case_id=? LIMIT 1').bind(intent.case_id).first();
         if(prev?.status==='paid'){
           if(String(prev.shopify_order_id)===event.orderId)
@@ -263,9 +284,12 @@ export default {
         const changes=await env.DB.batch([
           env.DB.prepare(`UPDATE access_grants SET status='paid',shopify_order_id=?,shopify_order_name=?,recovery_email_hash=?,paid_at=datetime('now'),updated_at=datetime('now')
             WHERE case_id=? AND route=? AND guide_key=? AND status='pending' AND revoked_at IS NULL
-            AND NOT EXISTS(SELECT 1 FROM order_revocations WHERE order_id=?)`)
-            .bind(event.orderId,name,buyerHash,intent.case_id,intent.route,intent.guide_key,event.orderId),
-          env.DB.prepare(`UPDATE checkout_intents SET status='paid' WHERE checkout_id=? AND status='pending'`).bind(event.checkoutId)
+            AND NOT EXISTS(SELECT 1 FROM order_revocations WHERE order_id=?)
+            AND NOT EXISTS(SELECT 1 FROM access_grants WHERE shopify_order_id=?)`)
+            .bind(event.orderId,name,buyerHash,intent.case_id,intent.route,intent.guide_key,event.orderId,event.orderId),
+          env.DB.prepare(`UPDATE checkout_intents SET status='paid' WHERE checkout_id=? AND status='pending'
+            AND EXISTS(SELECT 1 FROM access_grants WHERE case_id=? AND shopify_order_id=? AND status='paid' AND revoked_at IS NULL)`)
+            .bind(event.checkoutId,intent.case_id,event.orderId)
         ]);
         if(changes[0]?.meta?.changes!==1){
           // The database state may have changed concurrently; log instead of silently acking.

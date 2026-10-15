@@ -9,7 +9,7 @@
 - `recuperare.html` — cross-device email recovery of a paid guide.
 - `actero-config.js` — **nonsecret**, centralized public API URL; left empty to disable checkout in this draft.
 - `cloudflare/worker.js` — **the sole supported Worker implementation** (D1, not the obsolete KV Worker).
-- `cloudflare/001…007-*.sql` — proposed staging migrations. They have **not** been applied to the live database.
+- `cloudflare/001…010-*.sql` — proposed staging migrations. They have **not** been applied to the live database by this work.
 - `cloudflare/guide-catalog.json` — metadata for the 43 expected guide keys; it contains no paid instructions and does not confirm which scripts exist in D1.
 - `cloudflare/guide-review-tracker.csv` and `cloudflare/GUIDE_CONTENT_QA.md` — individual official-source/content/mobile QA gate.
 - `scripts/check-public-surface.mjs` — regression check for accidental exposure of paid guides.
@@ -17,7 +17,7 @@
 
 ## Important release constraints
 
-1. This work is deliberately on **Draft PR #3, based on PR #2**, not on `main`. No production Cloudflare, Shopify, or Pages service is changed by commits to this branch.
+1. This work extends `audit/private-12-procedural-qa-20261014` on a separate Draft branch, not on `main`. No production Cloudflare, Shopify, or Pages service is changed by this work.
 2. `main` and historical Git commits still expose old paid guide texts. **Merging a clean branch into `main` does not erase the old history.** Plan a fresh public repository with a new history as explained in `cloudflare/F01_RELEASE_SECURITY.md`.
 3. Keep private guide scripts, Cloudflare D1 exports, Shopify secrets, email API credentials and customer details out of GitHub.
 4. This draft disables checkout via `actero-config.js`. Staging configuration requires a deliberately selected HTTPS Worker URL and matching Worker CORS, email-recovery link and return URL settings. Never insert secrets in the public configuration file.
@@ -34,3 +34,11 @@ node --no-warnings cloudflare/tests/audit-payment.test.mjs
 ```
 
 CI passing does not replace a staging D1 migration, real Shopify Test Mode payment, official procedure verification or mobile Safari testing.
+
+## Reproducible local payment staging
+
+See [the technical audit](cloudflare/TECHNICAL_AUDIT_2026-10-15.md) and
+[local staging instructions](cloudflare/LOCAL_PAYMENT_STAGING.md). `npm ci`,
+`npm test`, and `npm run test:staging` exercise the existing application with
+synthetic data, local workerd/D1, and simulated Shopify/email. No deployment,
+Shopify activation, real purchase, or remote D1 access is part of these commands.

@@ -46,8 +46,11 @@ button{width:100%;margin-top:24px;border:0;border-radius:13px;background:linear-
 (function(){
  const API=String(window.ACTERO_PAYMENT_API||'').trim().replace(/\/+$/,'');
  const $=id=>document.getElementById(id);
- const token=new URLSearchParams(location.hash.slice(1)).get('token');
- if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+ function consumeFromLocation(){
+   const token=new URLSearchParams(location.hash.slice(1)).get('token');
+   if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+   if(token)consume(token);
+ }
  async function consume(t){
    if(!/^https:\/\//i.test(API)){$('message').textContent='Recuperarea accesului nu este activă în această versiune de test. Linkul nu a fost consumat.';return}
    $('requestSection').hidden=true;$('consumeSection').hidden=false;
@@ -88,7 +91,9 @@ button{width:100%;margin-top:24px;border:0;border-radius:13px;background:linear-
    }catch(e){$('message').textContent='Serviciul de recuperare este temporar indisponibil. Încearcă din nou mai târziu și nu efectua o a doua plată.'}
    finally{btn.disabled=false}
  });
- if(token)consume(token);
+ // Email links may target this already-open page without reloading the document.
+ window.addEventListener('hashchange',consumeFromLocation);
+ consumeFromLocation();
 })();
 </script>
 </body>
