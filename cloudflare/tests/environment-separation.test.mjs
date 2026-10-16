@@ -9,12 +9,13 @@ import {LEGACY,appOrigin,shopifyConfig} from '../environment.js';
 import {recoveryConfigured} from '../recovery.js';
 import {harness,order,state,checkoutId,bindings} from './helpers/payment-harness.mjs';
 import {STAGING} from './fixtures/staging-environment.mjs';
+import {syntheticGuide} from './fixtures/synthetic-guide.mjs';
 import {frontendFiles} from '../../scripts/build-staging-frontend.mjs';
 import {syntheticSeed} from '../staging/prepare-synthetic-seed.mjs';
 import {validateConfig} from '../staging/check-config.mjs';
 
 function setup(t){
-  const h=harness();Object.assign(h.env,STAGING);t.after(()=>h.close());
+  const h=harness({stagingSchema:true,script:syntheticGuide});Object.assign(h.env,STAGING);t.after(()=>h.close());
   const mail=[];t.mock.method(globalThis,'fetch',async(url,options)=>{mail.push({url:String(url),body:JSON.parse(options.body)});return new Response('{}')});
   const api=(path,options={})=>h.api(path,{...options,headers:{Origin:STAGING.APP_ORIGIN,...options.headers}});
   const webhook=(payload,options={})=>h.webhook(payload,{shop:STAGING.SHOPIFY_SHOP_DOMAIN,secret:STAGING.SHOPIFY_WEBHOOK_SECRET,...options});
@@ -68,11 +69,29 @@ test('pending test payment and refund are processed with checkout DISABLED',asyn
   assert.equal((await h.webhook(h.paid(co.checkoutId))).data.granted,true);
   const guide='/guide-script?case_id='+co.caseId+'&guide_key=B1_ES';
   const get=()=>worker.fetch(new Request('https://api.test'+guide,{headers:{Origin:STAGING.APP_ORIGIN,'X-Actero-Access-Token':co.accessToken}}),h.env);
-  assert.equal((await get()).status,200);
+  const delivered=await get();assert.equal(delivered.status,200);assert.equal(await delivered.text(),syntheticGuide);
   const refund={order_id:'100001',refund_line_items:[{quantity:1,line_item:{variant_id:STAGING.SHOPIFY_VARIANT_ID}}]};
   assert.equal((await h.webhook(refund,{topic:'refunds/create'})).data.outcome,'revoked');
   assert.equal((await get()).status,402);
   assert.equal((await h.webhook(h.paid(co.checkoutId))).data.ignored,'revoked_prior_to_payment');
+});
+
+test('staging guide requires a paid case and its header token, even without browser CORS',async t=>{
+  const h=setup(t),co=await h.checkout(),other=await h.checkout();
+  const guide=(caseId=co.caseId,key='B1_ES')=>'https://api.test/guide-script?case_id='+caseId+'&guide_key='+key;
+  const get=(url,token)=>worker.fetch(new Request(url,{headers:token?{'X-Actero-Access-Token':token}:{}}),h.env);
+  assert.equal((await get(guide(),co.accessToken)).status,402);
+  await h.webhook(h.paid(co.checkoutId));h.env.SHOPIFY_CHECKOUT_ENABLED='false';
+  for(const token of [undefined,'forged-token',other.accessToken])assert.equal((await get(guide(),token)).status,402);
+  assert.equal((await get(guide()+'&access_token='+co.accessToken)).status,402);
+  assert.equal((await get(guide(other.caseId),co.accessToken)).status,402);
+  assert.equal((await get(guide(co.caseId,'B1_FR'),co.accessToken)).status,403);
+  const status=await get('https://api.test/access?case_id='+co.caseId,other.accessToken);
+  assert.deepEqual(await status.json(),{ok:true,paid:false,status:'not_found'});
+  assert.equal((await get(guide(),co.accessToken)).status,200);
+  const isolated=harness({stagingSchema:true,script:syntheticGuide});t.after(()=>isolated.close());
+  Object.assign(isolated.env,STAGING,{SHOPIFY_CHECKOUT_ENABLED:'false'});
+  assert.equal((await worker.fetch(new Request(guide(),{headers:{'X-Actero-Access-Token':co.accessToken}}),isolated.env)).status,402);
 });
 
 for(const topic of ['orders/cancelled','disputes/create'])test(topic+' remains authenticated and effective with checkout disabled',async t=>{
@@ -108,9 +127,16 @@ test('recovery uses staging origin, rotates access with checkout off and is revo
   const link=new URL(message.text.match(/https:\/\/\S+/)[0]);assert.equal(link.origin,STAGING.APP_ORIGIN);assert.equal(link.pathname,'/recuperare.html');
   const token=new URLSearchParams(link.hash.slice(1)).get('token');
   const consumed=await h.api('/recover/consume',{body:{token}});assert.equal(consumed.status,200);assert.notEqual(consumed.data.access_token,co.accessToken);
+  const guide=accessToken=>worker.fetch(new Request('https://api.test/guide-script?case_id='+co.caseId+'&guide_key=B1_ES',{headers:{Origin:STAGING.APP_ORIGIN,'X-Actero-Access-Token':accessToken}}),h.env);
+  assert.equal((await guide(co.accessToken)).status,402);
+  const restored=await guide(consumed.data.access_token);assert.equal(restored.status,200);
+  const country={},screen={};
+  vm.runInNewContext((await restored.text())+';showB1ESValidatedGuide();',{screen,S:consumed.data.case_state,document:{getElementById:id=>{assert.equal(id,'syntheticCountry');return country}}});
+  assert.match(screen.innerHTML,/Ghid sintetic de test/);assert.equal(country.textContent,'ES');
   assert.equal((await h.api('/recover/consume',{body:{token}})).status,400);
   await h.webhook({order_id:'100001',refund_line_items:[{quantity:1,line_item:{variant_id:STAGING.SHOPIFY_VARIANT_ID}}]},{topic:'refunds/create'});
   const before=h.mail.length;await h.api('/recover/request',{body:request});assert.equal(h.mail.length,before);
+  assert.equal((await guide(consumed.data.access_token)).status,402);
 });
 
 test('strict preflight distinguishes an unbound closed plan from configured test commerce',()=>{
