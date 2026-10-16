@@ -912,13 +912,18 @@ function routeCommon(){const g=S.answers.goal,dom=domicileState();S.answers.deri
    S.answers.domicile_intent='MOVE';S.route='D2_PERMANENT_RETURN';push('Q420');return
  }
 }
-// First screen of the first-CRDS (B1) journey.
-function firstCrdsStart(){if(S.answers.citizenship==='REACQUIRED'&&!hasRomanianIdentityHistory())return'Q106';return'Q101'}
+// First screen of the first-CRDS (B1) journey. R07: after acquiring or re-acquiring citizenship the
+// certificate question is asked once, on every way into B1, unless a valid Romanian identity document
+// already shows that a Romanian document was issued after citizenship. An expired one may predate it.
+function firstCrdsStart(){const a=S.answers;
+ if(a.citizenship==='REACQUIRED'&&a.post_citizenship_romanian_id===undefined
+   &&!['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'].some(d=>docValid((S.docs||{})[d])))return'Q106';
+ return'Q101'}
 function q010(){choose({kicker:'Clarificare',title:'Pașaportul indică deja un domiciliu în străinătate',lead:'Asta sugerează că nu este vorba despre primul CRDS.',opts:[{value:'RENEW',label:'Vreau să reînnoiesc / înlocuiesc pașaportul cu domiciliul în străinătate'},{value:'WRONG',label:'Am răspuns greșit despre domiciliul din pașaport'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'goal_conflict',next:v=>{if(v==='RENEW'){S.route='B5_EXISTING_CRDS';return nextB5Screen()}if(v==='WRONG'){
    // M-14: without a declared passport the wrong answer was "domiciliu în străinătate" (Q008), not the passport country.
    if((S.answers.documents||[]).some(x=>['PASSPORT','CRDS_PASSPORT'].includes(x))){delete S.answers.passport_domicile;return'Q007'}
    delete S.answers.ever_crds;return'Q008'}return'STOP_CRDS_STATUS_UNCLEAR'}})} // M-08: no loop back through Q008
-function q011(){choose({kicker:'Clarificare',title:'Când spui „domiciliu în străinătate”, la ce te referi?',lead:'Rezidența locală și domiciliul CRDS nu sunt același lucru.',opts:[{value:'CRDS',label:'La un pașaport românesc cu domiciliul în străinătate'},{value:'LOCAL_RESIDENCE',label:'La documentul meu de rezidență din țara unde locuiesc'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'crds_clarify',next:v=>{if(v==='CRDS')return'Q013';if(v==='LOCAL_RESIDENCE'){S.route='B1_FIRST_CRDS';return'Q101'}return'STOP_DOMICILE_UNKNOWN'}})}
+function q011(){choose({kicker:'Clarificare',title:'Când spui „domiciliu în străinătate”, la ce te referi?',lead:'Rezidența locală și domiciliul CRDS nu sunt același lucru.',opts:[{value:'CRDS',label:'La un pașaport românesc cu domiciliul în străinătate'},{value:'LOCAL_RESIDENCE',label:'La documentul meu de rezidență din țara unde locuiesc'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'crds_clarify',next:v=>{if(v==='CRDS')return'Q013';if(v==='LOCAL_RESIDENCE'){S.route='B1_FIRST_CRDS';return firstCrdsStart()}return'STOP_DOMICILE_UNKNOWN'}})} // M-06
 // M-03 / decision 2: the latest passport shows Romania. Find out what happened to the foreign domicile.
 function q012(){const hasCrds=(S.answers.documents||[]).includes('CRDS_PASSPORT');
  const opts=[{value:'RETURNED',label:'Am avut domiciliul în străinătate, apoi l-am mutat înapoi în România'},{value:'WRONG',label:'Am greșit: cel mai recent pașaport are domiciliul în străinătate'},{value:'NEVER',label:'Nu am avut niciodată domiciliul oficial în străinătate'},{value:'UNKNOWN',label:'Nu sunt sigur'}]
@@ -1022,12 +1027,11 @@ function computeResult(){S.blockers=[];S.unknowns=[];let status='GREEN';const a=
  if(!r){unknown('Nu am putut stabili încă procedura potrivită.');S.status=status;return}
  if(dom==='UNKNOWN' && !['TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(r))unknown('Domiciliul oficial trebuie clarificat înainte de a confirma procedura.');
  if(r==='B1_FIRST_CRDS'){
-   if(!a.foreign_basis||a.foreign_basis==='UNKNOWN')unknown('Trebuie clarificată baza pentru domiciliul în străinătate.');
-   if(a.foreign_basis==='UNCLASSIFIED_DOCUMENT')unknown('Ai un document relevant, dar trebuie identificat tipul exact înainte de confirmarea procedurii.');
-   else {
-     if(a.foreign_proof==='NO')block('Nu ai confirmat încă o dovadă pentru situația ta de ședere în străinătate.');
-     if(a.foreign_proof==='UNKNOWN'||!a.foreign_proof)unknown('Trebuie clarificat documentul care dovedește situația ta în țara de rezidență.');
-   }
+   // M-10: without a foreign document there is nothing to classify; say what is missing instead of asking for its type.
+   if(a.foreign_proof==='NO')block('Nu ai confirmat încă o dovadă pentru situația ta de ședere în străinătate.');
+   else if(a.foreign_proof==='UNKNOWN'||!a.foreign_proof)unknown('Trebuie clarificat documentul care dovedește situația ta în țara de rezidență.');
+   else if(!a.foreign_basis||a.foreign_basis==='UNKNOWN')unknown('Trebuie clarificată baza pentru domiciliul în străinătate.');
+   else if(a.foreign_basis==='UNCLASSIFIED_DOCUMENT')unknown('Ai un document relevant, dar trebuie identificat tipul exact înainte de confirmarea procedurii.');
    if(a.birth_cert==='PLASTIFIED')block('Certificatul de naștere este plastifiat și trebuie rezolvat înainte de procedură.');
    if(a.birth_cert==='MISSING')block('Certificatul de naștere lipsește și trebuie rezolvat înainte de procedură.');
    if(a.birth_cert==='UNKNOWN'||!a.birth_cert)unknown('Trebuie clarificată situația certificatului de naștere.');
@@ -1124,7 +1128,7 @@ function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerC
  if(u.includes('aceeași țară')&&unknownish(a.same_country))return'Q121';
  if((u.includes('documentului actual din elveția')||u.includes('permisul g'))&&a.residence_country==='CH')return'Q125';
  if(u.includes('dovada actuală')&&unknownish(a.current_foreign_proof))return'Q124';
- if(u.includes('documentul care dovedește situația ta')&&unknownish(a.foreign_proof))return'Q102';
+ if(u.includes('documentul care dovedește situația ta')&&unknownish(a.foreign_proof))return a.foreign_basis===undefined?'Q101':(unknownish(a.foreign_basis)||a.foreign_basis==='UNCLASSIFIED_DOCUMENT')?'Q105':'Q102';
  if(u.includes('noua țară')&&unknownish(a.foreign_proof))return'Q123';
  if(u.includes('adresa din românia')&&unknownish(a.ro_address))return S.route==='D2_PERMANENT_RETURN'?'Q420':'Q202';
  if(u.includes('consimțământul')&&unknownish(a.host_consent))return'Q203';

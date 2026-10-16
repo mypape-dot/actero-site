@@ -133,3 +133,64 @@ test('safety net: a declared CRDS passport with "never abroad" ends on a contrad
   assert.equal(o.kind,'CONTRADICTION',o.kind+' '+o.seen.join('>'));
   assert.ok(o.html.includes('id="fixAnswer"'));
 });
+
+// ---------- (d) every way into the first-CRDS journey asks the same questions ----------
+test('M-06/R07: re-acquired citizenship reaching B1 through Q011 is asked about documents after citizenship',()=>{
+  const o=run({country:'ES',documents:['BIRTH_CERT'],
+    answers:{citizenship:'REACQUIRED',goal:'EXISTING_CRDS_PROBLEM',ever_crds:'NO',crds_clarify:'LOCAL_RESIDENCE',identity_detail:'HAS_PHOTO_DOC'}});
+  assert.ok(o.seen.includes('Q011')&&o.seen.includes('Q106'),o.seen.join('>'));
+  assert.equal(o.route,'B1_FIRST_CRDS');
+  const born=run({country:'ES',documents:['BIRTH_CERT'],
+    answers:{goal:'EXISTING_CRDS_PROBLEM',ever_crds:'NO',crds_clarify:'LOCAL_RESIDENCE',identity_detail:'HAS_PHOTO_DOC'}});
+  assert.ok(!born.seen.includes('Q106')&&born.seen.includes('Q101'),born.seen.join('>'));
+});
+
+test('R07: an expired Romanian document does not prove a document issued after re-acquiring citizenship',()=>{
+  const expired=run({country:'IT',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'EXPIRED'},
+    answers:{citizenship:'REACQUIRED',goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO'}});
+  assert.equal(expired.visits.Q106,1,expired.seen.join('>'));
+  const valid=run({country:'IT',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},
+    answers:{citizenship:'REACQUIRED',goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO'}});
+  assert.ok(!valid.seen.includes('Q106'),valid.seen.join('>'));
+  assert.equal(valid.key,'B1_IT');
+});
+
+test('R07: the certificate answer is not asked twice when the journey re-enters B1',()=>{
+  const o=run({country:'FR',documents:['BIRTH_CERT'],
+    answers:{citizenship:'REACQUIRED',goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:['YES','NO'],goal_conflict:'WRONG',identity_detail:'HAS_PHOTO_DOC'}});
+  assert.ok((o.visits.Q106||0)<=1,o.seen.join('>'));
+  assert.equal(o.route,'B1_FIRST_CRDS');
+});
+
+test('M-10: "Altă situație" without any foreign document is explained as missing proof, not as an unknown type',()=>{
+  const o=run({country:'FR',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO',foreign_basis:'OTHER',foreign_document_generic:'NO'}});
+  assert.ok(!o.seen.includes('Q108'),o.seen.join('>'));
+  assert.ok(!o.allUnknowns.some(u=>/tipul exact|baza pentru domiciliul/.test(u)),JSON.stringify(o.allUnknowns));
+  assert.ok(o.blockers.some(b=>/dovadă pentru situația ta de ședere/.test(b)),JSON.stringify(o.blockers));
+});
+
+test('M-10: "Nu știu" about the basis and "Nu" about any document does not ask the basis again',()=>{
+  const o=run({country:'DE',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO',foreign_basis:'UNKNOWN',foreign_document_generic:'NO'}});
+  assert.equal(o.visits.Q101,1,o.seen.join('>'));
+  assert.ok(o.blockers.some(b=>/dovadă pentru situația ta de ședere/.test(b)),JSON.stringify(o.blockers));
+  assert.deepEqual(o.unknowns,[]);
+});
+
+test('M-10: an uncertain answer about any foreign document is clarified at Q105 once and never sold',()=>{
+  const o=run({country:'DE',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO',foreign_basis:'UNKNOWN',foreign_document_generic:'UNKNOWN'}});
+  assert.equal(o.visits.Q105,1,o.seen.join('>'));
+  assert.equal(o.visits.Q101,1,o.seen.join('>'));
+  assert.ok(o.unknowns.some(u=>/documentul care dovedește/.test(u)),JSON.stringify(o.unknowns));
+  assert.notEqual(o.kind,'PAYWALL');
+});
+
+test('M-10: a declared basis with an uncertain document keeps Q102 as the place to fix it, without payment',()=>{
+  const o=run({country:'DE',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:'NO',foreign_proof:'UNKNOWN'}});
+  assert.equal(o.visits.Q102,1,o.seen.join('>'));
+  assert.equal(o.kind,'CLARIFY');
+  const {ctx}=o;assert.equal(vm.runInContext("clarificationTargetFor(['Trebuie clarificat documentul care dovedește situația ta în țara de rezidență.'])",ctx),'Q102');
+});
