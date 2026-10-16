@@ -362,3 +362,76 @@ test('an unknown that cannot be asked again does not hide a missing document',()
   assert.equal(o.kind,'NOPAY',o.kind);
   assert.ok(o.html.includes('Mai rămâne de lămurit'));
 });
+
+// ---------- (f) urgent travel and the CEI status (M-04, M-05, M-13, decision 3) ----------
+const TO_RO={goal:'URGENT_TRAVEL',physical:'NO',travel_dest:'ROMANIA'};
+const TO_OTHER={goal:'URGENT_TRAVEL',physical:'NO',travel_dest:'OTHER',travel_urgent_basis:'OBJECTIVE_URGENT',ever_crds:'NO'};
+
+test('M-04: a valid CEI or old-model identity card is a travel document to Romania from the EU, EEA or Switzerland',()=>{
+  for(const id_card_type of ['OLD_MODEL','CEI']){
+    const o=run({country:'FR',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},answers:{...TO_RO,id_card_type,id_card_area:'YES'}});
+    assert.equal(o.visits.Q033,1);assert.equal(o.visits.Q034,1);
+    assert.equal(o.kind,'NOPAY',id_card_type);assert.deepEqual(o.codes,['ID_CARD_IS_TRAVEL_DOC']);
+  }
+  const cei=run({country:'IT',documents:['CEI'],statuses:{CEI:'EXPIRING'},answers:{...TO_RO,id_card_area:'YES'}});
+  assert.ok(!cei.seen.includes('Q033'),'a declared CEI needs no type question');
+  assert.equal(cei.kind,'NOPAY');assert.deepEqual(cei.codes,['ID_CARD_IS_TRAVEL_DOC']);
+});
+
+test('M-04: the simple and the provisional identity card are not travel documents, so the travel title is offered',()=>{
+  for(const id_card_type of ['CIS','CIP']){
+    const o=run({country:'FR',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},answers:{...TO_RO,id_card_type}});
+    assert.ok(!o.seen.includes('Q034'),id_card_type);
+    assert.equal(o.kind,'PAYWALL',id_card_type+' '+o.kind);assert.equal(o.key,'TRAVEL_TITLE_RETURN_RO');
+  }
+});
+
+test('M-04: where the client is decides whether the identity card is enough',()=>{
+  const card={country:'GB',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'}};
+  const outside=run({...card,answers:{...TO_RO,id_card_area:'NO'}});
+  assert.equal(outside.kind,'PAYWALL');
+  const uk=run({...card,answers:{...TO_RO,id_card_area:'UK'}});
+  assert.equal(uk.kind,'NOPAY');assert.deepEqual(uk.codes,['ID_CARD_UK_CHECK']);
+  const unsure=run({...card,answers:{...TO_RO,id_card_area:'UNKNOWN'}});
+  assert.notEqual(unsure.kind,'PAYWALL');assert.equal(unsure.visits.Q034,1);
+  const type=run({...card,answers:{...TO_RO,id_card_type:'UNKNOWN'}});
+  assert.notEqual(type.kind,'PAYWALL');assert.equal(type.visits.Q033,1);
+  assert.ok(type.unknowns.some(u=>u.includes('ce tip de carte de identitate')));
+});
+
+test('M-04: an expiring passport is still valid, so no travel title to Romania',()=>{
+  const o=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'EXPIRING'},answers:{...TO_RO}});
+  assert.equal(o.kind,'NOPAY');assert.deepEqual(o.codes,['PASSPORT_STILL_VALID']);
+  assert.ok(!o.seen.includes('Q033'));
+});
+
+test('decision 3: an expiring passport for another country is explained for free',()=>{
+  const o=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'EXPIRING'},answers:{...TO_OTHER}});
+  assert.equal(o.route,'URGENT_OTHER_COUNTRY');
+  assert.equal(o.kind,'NOPAY');assert.deepEqual(o.codes,['PASSPORT_EXPIRING_OTHER_DEST']);
+});
+
+test('M-04: inside the EU, EEA and Switzerland the identity card replaces the temporary passport',()=>{
+  const card={country:'DE',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'}};
+  const inside=run({...card,answers:{...TO_OTHER,id_card_type:'OLD_MODEL',id_card_area:'YES'}});
+  assert.equal(inside.kind,'NOPAY');assert.deepEqual(inside.codes,['ID_CARD_IS_TRAVEL_DOC_OTHER']);
+  const outside=run({...card,answers:{...TO_OTHER,id_card_type:'OLD_MODEL',id_card_area:'NO'}});
+  assert.equal(outside.kind,'PAYWALL');assert.equal(outside.key,'URGENT_OTHER_COUNTRY');
+});
+
+test('M-05: a temporary passport requested from Romania is explained, not sold, and asks nothing about the card',()=>{
+  const o=run({country:'IT',documents:['PASSPORT','ROMANIAN_ID'],statuses:{PASSPORT:'LOST',ROMANIAN_ID:'VALID'},
+    answers:{...TO_OTHER,physical:'YES'}});
+  assert.equal(o.kind,'NOPAY');assert.deepEqual(o.codes,['TEMP_PASSPORT_FROM_ROMANIA']);
+  assert.ok(!o.seen.includes('Q033')&&!o.seen.includes('Q034'),o.seen.join('>'));
+});
+
+test('M-13: the CEI status abroad is shown before any clarification question',()=>{
+  const c3=run({country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'VALID'},
+    answers:{goal:'CEI',passport_domicile:'CURRENT',physical:'NO',civil_change:'UNKNOWN'}});
+  assert.equal(c3.route,'C3_CEI_NO_RO_DOMICILE');assert.equal(c3.kind,'STATUS',c3.kind);
+  assert.ok(c3.html.includes('16 octombrie 2026')&&c3.html.includes('carteadeidentitate.gov.ro'));
+  const c2=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},
+    answers:{goal:'CEI',passport_domicile:'ROMANIA',physical:'NO',can_come:'NO',civil_change:'UNKNOWN'}});
+  assert.equal(c2.route,'C2_CEI_CONSULAR');assert.equal(c2.kind,'STATUS',c2.kind);
+});

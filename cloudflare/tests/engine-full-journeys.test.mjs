@@ -22,7 +22,7 @@ const selected=[
   'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions',
   // Payment policy (16.10): one pure evaluation, a remedy registry and the decision the paywall uses.
   'evaluateCase','paymentDecisionFor','paymentDecision','remedyInGuide','localProofRule','needsLocalProof',
-  'guideKeyFor','validatedGuideFor'
+  'guideKeyFor','validatedGuideFor','travelCardOf','urgentCardStep'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
@@ -293,5 +293,8 @@ test('urgent journey from Romania to another country is never mistaken for alrea
   });
   assert.equal(result.S.route,'URGENT_OTHER_COUNTRY');
   assert.equal(result.key,'URGENT_OTHER_COUNTRY');
-  assert.equal(result.offer,true);
+  // M-05 (16.10): the URGENT_OTHER_COUNTRY guide covers an application made abroad; from Romania the
+  // temporary passport is requested at a Romanian passport office, so the case is explained, not sold.
+  assert.equal(result.offer,false);
+  assert.ok(result.S.blockerCodes.includes('TEMP_PASSPORT_FROM_ROMANIA'));
 });
