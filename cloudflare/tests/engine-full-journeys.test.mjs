@@ -22,7 +22,9 @@ const selected=[
   'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions',
   // Payment policy (16.10): one pure evaluation, a remedy registry and the decision the paywall uses.
   'evaluateCase','paymentDecisionFor','paymentDecision','remedyInGuide','localProofRule','needsLocalProof',
-  'guideKeyFor','validatedGuideFor','travelCardOf','urgentCardStep'
+  'guideKeyFor','validatedGuideFor','travelCardOf','urgentCardStep',
+  // T-01 / T-02 (16.10 evening)
+  'urgentUnknownDocOf','missingRequiredOf'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);

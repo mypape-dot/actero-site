@@ -12,7 +12,7 @@ function extract(name,next){
   return html.slice(start,end);
 }
 // Urgent-travel answers now continue through urgentCardStep() (M-04, 16.10), which uses the one validity model.
-const URGENT_HELPERS=['docState','docValid','travelCardOf','urgentCardStep'].map(n=>{
+const URGENT_HELPERS=['docState','docValid','travelCardOf','urgentUnknownDocOf','urgentCardStep'].map(n=>{
   const start=html.indexOf('\nfunction '+n+'(')+1,end=html.indexOf('\nfunction ',start);
   assert.ok(start>0&&end>start,'Cannot extract '+n);return html.slice(start,end)}).join('\n');
 function choice(name,next,answers={}){
