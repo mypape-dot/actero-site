@@ -16,7 +16,9 @@ const selected=[
   'afterDocs','routeCommon','domicileState','hasRomanianIdentityHistory',
   'existingCEIProblem','existingCRDSStatus','nextB5Screen','nextD1Screen',
   'identityKnown','computeResult','guideKeyForCurrent','hasValidatedPaidGuide',
-  'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish'
+  'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish',
+  // Pure engine helpers behind the wrappers above (one validity model, explicit inputs).
+  'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
