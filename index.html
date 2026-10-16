@@ -947,6 +947,9 @@ function q032(){choose({kicker:'Domiciliul oficial',title:'Ai domiciliul oficial
 // M-04 / decision 3: a document that is still valid ("aproape de expirare" included) means no travel title or
 // temporary passport is sold. Only the CEI and the old-model identity card are travel documents in the EU, EEA and
 // Switzerland (PRADO ROU-BO-03001; Legea 248/2005, art. 6^1); the simple identity card is not (carteadeidentitate.gov.ro/utile).
+// LEGAL-UNVERIFIED (needs human confirmation against the current statute and carrier/border practice): the
+// citations above live only in this comment; the CIS=not-a-travel-document rule actively drives a travel-title
+// offer, and the UK entry premise (ID_CARD_UK_CHECK) is uncited. Confirm before relying on the conclusion.
 function travelCardOf(a,docs){a=a||{};docs=docs||{};
  if(docValid(docs.CEI))return'TRAVEL';
  if(!docValid(docs.ROMANIAN_ID))return'NONE';
@@ -1031,6 +1034,12 @@ function q125(){choose({
 // attesting residence; official local sources do not say which local document Romania accepts. Only documents
 // that match that wording are "accepted"; anything else blocks payment until a Romanian authority confirms it.
 // Evidence: cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json.
+// LEGAL-UNVERIFIED (needs Romanian consular confirmation): the accepted[] lists below encode which local
+// BE/NL/IE documents are treated as sufficient. Official Belgian/Dutch/Irish sources describe local evidence
+// categories, NOT which exact documents the Romanian consulate accepts for a CRDS passport. Do NOT treat a
+// document as accepted by Romanian authorities merely because it exists in that country's law. These
+// classifications are not confirmed (cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json: overall_sale_approval=NO,
+// romanian_consular_acceptance_confirmed=false); paymentDecisionFor flags BE/NL/IE as legalBasisConfirmed=false.
 function localProofRule(c){return ({
  BE:{name:'Belgia',accepted:['EU_CARD','PERMANENT','CITIZEN'],opts:[
    {value:'EU_CARD',label:'Cardul EU sau vechiul card E',sub:'Documentul de ședere pentru cetățenii UE, primit după decizia privind dreptul de ședere.'},
@@ -1211,10 +1220,18 @@ function contradictions(){return contradictionsOf({answers:S.answers,docs:S.docs
 // concrete, sourced way to solve it. Conservative by design; everything else stops payment with a free explanation.
 function remedyInGuide(code,key,a){a=a||{};
  if(code==='THEFT_PROOF_MISSING')return key==='B5_STOLEN';
+ // LEGAL-UNVERIFIED (needs Romanian consular confirmation): the French "alternative documents" route is
+ // asserted without a cited official source; paymentDecisionFor marks such cases legalBasisConfirmed=false.
  if(code==='CURRENT_PROOF_MISSING')return a.residence_country==='FR'&&['B5_RENEWAL_FR','B5_LOST_FR','B5_STOLEN'].includes(key);
  return false}
 // M-01 / decision of 15.10: payment only for a resolved route, a verified guide, no contradiction, nothing unknown,
 // and no blocker that the guide cannot solve.
+// legalBasisConfirmed (16.10 PM): false when a payment-eligible decision rests on a document-acceptance
+// judgment that NO official Romanian source confirms — the BE/NL/IE local-document accept-lists and the
+// France current-proof "remedy". The existence of a document in the foreign country's own law is NOT proof
+// that Romanian authorities accept it for the procedure (see cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json,
+// overall_sale_approval=NO). The flag does NOT change `allowed`; it is surfaced so the server-side eligibility
+// gate (cloudflare/ELIGIBILITY_SERVER_CONTRACT.md) and human review can withhold a sale until each is validated.
 function paymentDecisionFor(input){
  const a=(input&&input.answers)||{},r=(input&&input.route)||null,dom=domicileOf(a);
  const ev=evaluateCase(input),contra=contradictionsOf(input);
@@ -1222,7 +1239,11 @@ function paymentDecisionFor(input){
  const key=guideKeyFor(r,a),validated=!!key&&validatedGuideFor(r,a,dom);
  const remedied=ev.blockers.filter(b=>remedyInGuide(b.code,key,a)),unremedied=ev.blockers.filter(b=>!remedyInGuide(b.code,key,a));
  const allowed=routeResolved&&validated&&!contra.length&&!ev.unknowns.length&&!unremedied.length;
- return {allowed,key,validated,routeResolved,unknowns:ev.unknowns,contradictions:contra,unremedied,remedied,notes:ev.notes,status:ev.status}}
+ const legalBasisConfirmed=!(
+   (['BE','NL','IE'].includes(a.residence_country)&&['B1_FIRST_CRDS','B5_EXISTING_CRDS'].includes(r))||
+   (a.residence_country==='FR'&&remedied.some(b=>b.code==='CURRENT_PROOF_MISSING'))
+ );
+ return {allowed,key,validated,legalBasisConfirmed,routeResolved,unknowns:ev.unknowns,contradictions:contra,unremedied,remedied,notes:ev.notes,status:ev.status}}
 function paymentDecision(){return paymentDecisionFor({answers:S.answers,docs:S.docs,route:S.route})}
 function humanSummary(){const items=[];if(S.answers.residence_country_name)items.push(`Locuiești în ${S.answers.residence_country_name}.`);if(S.answers.goal)items.push(`Ai nevoie de ajutor pentru ${goalNames[S.answers.goal]||'situația descrisă'}.`);if(S.answers.cei_case){const fs={EXPIRED:'expirată',EXPIRING:'aproape de expirare',LOST:'pierdută',STOLEN:'furată',DAMAGED:'deteriorată'};items.push(`CEI existentă: ${fs[S.answers.cei_case]||S.answers.cei_case}.`);}const dom=domicileState();if(dom==='ROMANIA')items.push('Din răspunsurile tale, domiciliul oficial este în România.');if(dom==='ABROAD')items.push('Din răspunsurile tale, ai domiciliul oficial în străinătate.');for(const [k,v] of Object.entries(S.docs)){if(v&&v!=='UNKNOWN'){let st=statusLabels[v]||v;if(k==='CEI')st=({VALID:'valabilă',EXPIRED:'expirată',EXPIRING:'aproape de expirare',LOST:'pierdută',STOLEN:'furată',DAMAGED:'deteriorată',MISSING:'nu o mai ai'}[v]||st);items.push(`${docLabels[k]||k}: ${st}.`)}}return items.slice(0,5)}
 function unknownish(v){return v===undefined||v===null||v===''||v==='UNKNOWN'}

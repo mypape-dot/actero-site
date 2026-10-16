@@ -336,6 +336,28 @@ test('10 countries: clean first-CRDS and renewal journeys still reach the paywal
   }
 });
 
+// Item 4 (16.10 PM): payment-eligible decisions whose Romanian-authority acceptance is not officially
+// confirmed are flagged (legalBasisConfirmed=false) without changing `allowed`. Needs human validation.
+test('legalBasisConfirmed: BE/NL/IE accept-lists and the France remedy are flagged; a clean case is not',()=>{
+  const be=run({country:'BE',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},answers:{...B1,local_proof_type:'EU_CARD'}});
+  assert.equal(be.kind,'PAYWALL');assert.equal(be.decision.allowed,true);assert.equal(be.decision.legalBasisConfirmed,false);
+  for(const country of ['NL','IE']){
+    const o=run({country,documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},answers:{...B1,local_proof_type:'PERMANENT'}});
+    assert.equal(o.kind,'PAYWALL',country);assert.equal(o.decision.legalBasisConfirmed,false,country);
+  }
+  const fr=run({country:'FR',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED'},
+    answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'CURRENT',same_country:'YES',current_foreign_proof:'NO'}});
+  assert.equal(fr.kind,'PAYWALL');assert.ok(fr.decision.remedied.some(b=>b.code==='CURRENT_PROOF_MISSING'),'FR remedy applied');
+  assert.equal(fr.decision.legalBasisConfirmed,false);
+  const es=run({country:'ES',documents:['ROMANIAN_ID'],statuses:{ROMANIAN_ID:'VALID'},answers:{...B1}});
+  assert.equal(es.kind,'PAYWALL');assert.equal(es.decision.allowed,true);assert.equal(es.decision.legalBasisConfirmed,true);
+});
+
+test('item 4: the legally-unverified decision points carry explicit LEGAL-UNVERIFIED markers',()=>{
+  const {html}=loadEngine();
+  assert.ok((html.match(/LEGAL-UNVERIFIED/g)||[]).length>=3,'markers at localProofRule, remedyInGuide and travelCardOf');
+});
+
 test('M-09: a move to Switzerland needs the same permit check as a renewal there',()=>{
   const unsure=run({country:'CH',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED'},
     answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'OTHER',swiss_current_permit:'UNKNOWN'}});
