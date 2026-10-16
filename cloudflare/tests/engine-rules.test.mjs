@@ -34,3 +34,52 @@ test('R14: keeping the foreign domicile does not ask again for a passport status
   assert.ok(!o.seen.includes('Q410'),o.seen.join('>'));
   assert.equal(o.route,'D1_TEMPORARY');
 });
+
+// ---------- (b) derivations instead of questions ----------
+test('M-02: a passport showing another country is a move, whatever the same-country answer would be',()=>{
+  const o=run({country:'FR',documents:['PASSPORT'],statuses:{PASSPORT:'EXPIRED'},
+    answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'OTHER',same_country:'YES'}});
+  assert.ok(!o.seen.includes('Q121'),o.seen.join('>'));
+  assert.equal(o.S.answers.same_country,'NO');
+  assert.equal(o.key,'B5_MOVED');
+});
+
+test('M-02: a passport showing the current country keeps the same-country guide and skips Q121',()=>{
+  const o=run({country:'FR',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED'},
+    answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'CURRENT',same_country:'NO'}});
+  assert.ok(!o.seen.includes('Q121'),o.seen.join('>'));
+  assert.equal(o.key,'B5_RENEWAL_FR');
+});
+
+test('M-11: a passport declared valid cannot be reported lost or stolen at Q120',()=>{
+  for(const b5case of ['LOST','STOLEN']){
+    const o=run({country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'VALID'},
+      answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'CURRENT',b5case}});
+    assert.equal(o.kind,'OPTION_MISSING',b5case+' must not be offered: '+o.kind);
+    assert.equal(o.at,'Q120');
+    assert.ok(o.options.includes('DATA_CHANGE')&&o.options.includes('DAMAGED'));
+  }
+});
+
+test('M-11: "Locuiesc acum în altă țară" is not offered when the passport shows the current country',()=>{
+  const o=run({country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'VALID'},
+    answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'CURRENT',b5case:'COUNTRY_CHANGE'}});
+  assert.equal(o.kind,'OPTION_MISSING');
+  assert.ok(!o.options.includes('COUNTRY_CHANGE'));
+});
+
+test('M-14: "Am răspuns greșit" without a declared passport goes back to Q008, not to the passport question',()=>{
+  const o=run({country:'ES',documents:['BIRTH_CERT'],
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',ever_crds:['YES','NO'],goal_conflict:'WRONG',identity_detail:'HAS_PHOTO_DOC'}});
+  assert.ok(o.seen.includes('Q010'),o.seen.join('>'));
+  assert.ok(!o.seen.includes('Q007'),o.seen.join('>'));
+  assert.equal(o.seen.filter(x=>x==='Q008').length,2);
+  assert.equal(o.route,'B1_FIRST_CRDS');
+});
+
+test('R15: without a Swiss document the permit type is not asked',()=>{
+  const o=run({country:'CH',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',passport_domicile:'ROMANIA',foreign_proof:'NO'}});
+  assert.ok(!o.seen.includes('Q109'),o.seen.join('>'));
+  assert.ok(!o.allUnknowns.some(u=>/documentului elvețian/.test(u)),JSON.stringify(o.allUnknowns));
+});

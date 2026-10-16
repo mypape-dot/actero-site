@@ -18,7 +18,8 @@ const selected=[
   'identityKnown','computeResult','guideKeyForCurrent','hasValidatedPaidGuide',
   'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish',
   // Pure engine helpers behind the wrappers above (one validity model, explicit inputs).
-  'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf'
+  'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf',
+  'sameCountryStep'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
@@ -143,6 +144,9 @@ function fixtureFor(entry){
       common.choices.b5case='DATA_CHANGE';
     }else if(which==='new_country'){
       common.choices.b5case='COUNTRY_CHANGE';
+      // M-02/M-11 (16.10): a move is declared by a passport that shows ANOTHER country;
+      // "CURRENT" plus "I now live elsewhere" is a contradiction the engine no longer offers.
+      common.choices.passport_domicile='OTHER';
     }
     if(which==='new_country')common.choices.same_country='NO';
     return common;
@@ -232,11 +236,14 @@ test('critical unknowns never allow checkout across 10 countries',()=>{
       choices:{passport_domicile:'ROMANIA',birth_cert:'UNKNOWN'}
     });
     assert.equal(b1.offer,false,country+' B1 unknown birth certificate');
+    // M-02 (16.10): a passport that shows the current country already answers "aceeași țară",
+    // so the same-country question is only asked when the passport country is unknown.
     const lost=walk({
       country,goal:'EXISTING_CRDS_PROBLEM',
       documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'LOST'},
-      choices:{passport_domicile:'CURRENT',same_country:'UNKNOWN'}
+      choices:{passport_domicile:'UNKNOWN',ever_crds:'YES',same_country:'UNKNOWN'}
     });
+    assert.ok(lost.history.includes('Q121'),country+' same-country question must be asked: '+lost.history.join(' > '));
     assert.equal(lost.offer,false,country+' B5 ambiguous domicile');
     const proof=walk({
       country,goal:'EXISTING_CRDS_PROBLEM',
