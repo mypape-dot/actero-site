@@ -4,6 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
 import {run,loadEngine,evaluate} from './helpers/engine-harness.mjs';
 
 // ---------- (a) one validity model ----------
@@ -444,4 +445,33 @@ test('PC-01: the nine general guides are labelled informative, without a verific
   const html=$el('screen').innerHTML;
   assert.ok(html.includes('Ghid informativ'));
   assert.ok(!/Procedură verificată|Verificat ·|5 octombrie 2026|Surse oficiale verificate/.test(html),html.slice(0,400));
+});
+
+// PC-01 (extended 16.10 PM): no PUBLIC surface — landing, footer, paywall, status screens included —
+// may promise an official verification/approval it cannot back. The cloudflare/ QA tooling legitimately
+// keeps the forbidden strings as detection targets and is NOT part of the public surface, so it is excluded.
+const PUBLIC_FILES=['index.html','confirmare.html','recuperare.html'].map(f=>new URL('../../'+f,import.meta.url));
+const BANNED_VERIFICATION_CLAIMS=[
+  /Procedur[ăa]\s+verificat[ăa]/i,
+  /surse\s+oficiale\s+verificate/i,
+  /status\s+oficial\s+verificat/i,
+  /verificat\s+deja\s+pe\s+surse\s+oficiale/i
+];
+for(const url of PUBLIC_FILES){
+  const name=url.pathname.split('/').pop();
+  test('PC-01: '+name+' makes no unjustified official-verification claim',()=>{
+    const src=readFileSync(url,'utf8');
+    for(const rx of BANNED_VERIFICATION_CLAIMS){
+      const m=src.match(rx);
+      assert.equal(m,null,name+' still contains an unjustified verification claim: '+(m&&m[0]));
+    }
+  });
+}
+
+test('PC-01: the neutralised public wording is in place',()=>{
+  const src=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
+  assert.ok(src.includes('cu trimitere la surse oficiale'),'hero/footer reworded to a sourcing claim, not a verification claim');
+  assert.ok(src.includes('Ghid informativ'),'the guide badge stays informative');
+  // The free CEI status screen keeps a stable, copy-independent classifier hook.
+  assert.ok(src.includes('data-result="status"'),'status screen carries data-result="status"');
 });

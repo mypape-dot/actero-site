@@ -56,7 +56,7 @@ function classify(html){
   if(html.includes('data-result="contradiction"'))return 'CONTRADICTION';
   if(html.includes('Mai desfacem un singur nod'))return 'CLARIFY';
   if(html.includes('paywall-pending'))return 'PENDING';
-  if(html.includes('Status oficial verificat'))return 'STATUS';
+  if(html.includes('data-result="status"'))return 'STATUS';
   if(html.includes('Nu se încadrează la pașaport temporar'))return 'TOURISM';
   return 'OTHER';
 }
