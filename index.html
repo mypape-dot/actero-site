@@ -1130,9 +1130,13 @@ function evaluateCase(input){
    if(a.ro_address==='HOST'&&a.host_consent==='NO')block('HOST_REFUSES','Persoana care te primește în spațiu nu și-a confirmat consimțământul.');
    if(a.ro_address==='HOST'&&(a.host_consent==='UNKNOWN'||!a.host_consent))unknown('Trebuie clarificat consimțământul persoanei care te primește în spațiu.');
  }
- // GN-03 (decision 4, 16.10): the first identity card after acquiring citizenship has its own DGEP list, not yet reviewed.
- if(['A1_PERSONAL_ROMANIA','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA'].includes(r)&&a.citizenship==='REACQUIRED'&&!(a.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x)))
-   block('FIRST_ID_AFTER_CITIZENSHIP','Este primul tău act de identitate după dobândirea sau redobândirea cetățeniei; lista de documente pentru acest caz trebuie verificată separat.');
+ // GN-03 (decision 4, 16.10; made symmetric 16.10 PM): the document list for a FIRST Romanian identity
+ // document (no prior carte de identitate / CEI) is not verified individually for our guide, whether
+ // citizenship is held from birth or was acquired/reacquired. Conservative and symmetric: explain for
+ // free, never sell, until the list is verified. A Romanian passport does not establish the ID-card list,
+ // so it does not lift the block; a prior ID card / CEI does, because that is a renewal, not a first ID.
+ if(['A1_PERSONAL_ROMANIA','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA'].includes(r)&&!(a.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x)))
+   block('FIRST_ID_LIST_UNVERIFIED','Este primul tău act de identitate românesc; lista de documente pentru acest caz nu este verificată separat în ghidul nostru.');
  if(r==='A2_PROXY'){
    if(a.representative==='NO')block('NO_REPRESENTATIVE','Nu ai încă o persoană în România pe care să o împuternicești.');
    if(a.representative==='UNKNOWN'||!a.representative)unknown('Trebuie clarificat dacă ai un reprezentant în România.');
@@ -1345,7 +1349,7 @@ function noPaymentText(code,a){a=a||{};
   CRDS_NOT_VALID:['Pașaportul cu domiciliul în străinătate nu este valabil','Cartea de identitate provizorie se cere pe baza pașaportului valabil cu domiciliul în străinătate.',`Reînnoiește sau înlocuiește mai întâi pașaportul, ${redo}.`],
   RO_RESIDENCE_NOT_READY:['Nu ai încă o adresă în România','Pentru această procedură trebuie să ai o adresă în România unde locuiești.',`Pregătește adresa și dovada ei, ${redo}.`],
   RO_RESIDENCE_PROOF_MISSING:['Îți lipsește dovada adresei din România','Adresa trebuie dovedită cu un document, nu doar declarată.',`Pregătește dovada adresei, ${redo}.`],
-  FIRST_ID_AFTER_CITIZENSHIP:['Primul act de identitate după dobândirea cetățeniei','Pentru primul act de identitate după dobândirea sau redobândirea cetățeniei se aplică o listă separată de documente, pe care nu am verificat-o încă pentru ghidul nostru.','Verifică lista pe pagina oficială a serviciului de evidență a persoanelor sau întreabă consulatul.'],
+  FIRST_ID_LIST_UNVERIFIED:['Primul act de identitate românesc — listă de documente neconfirmată','Pentru primul tău act de identitate românesc (nu o reînnoire) se aplică o listă de documente pe care nu am verificat-o încă pentru ghidul nostru. Acest lucru este valabil fie că ai cetățenia de la naștere, fie că ai dobândit-o sau redobândit-o.','Verifică lista pe pagina oficială a serviciului de evidență a persoanelor sau întreabă consulatul.'],
   TEMP_PASSPORT_FROM_ROMANIA:['Ești în România: pașaportul temporar se cere aici','Pentru o plecare urgentă din România, pașaportul temporar se cere la serviciul de pașapoarte din România, nu la consulat. Ghidul nostru acoperă doar cererea făcută din străinătate.','Programează-te la serviciul de pașapoarte; lista documentelor este pe pasapoarte.mai.gov.ro.'],
   PASSPORT_STILL_VALID:['Pașaportul tău este încă valabil','Un pașaport „aproape de expirare” rămâne valabil până la data scrisă în el. Cu el poți călători în România fără titlu de călătorie.',`Verifică data expirării înainte de plecare. Dacă expiră înainte să ajungi, ${redo}.`],
   PASSPORT_EXPIRING_OTHER_DEST:['Pașaportul tău este încă valabil','Un pașaport „aproape de expirare” rămâne valabil, dar unele țări cer ca pașaportul să mai fie valabil o perioadă după intrare. Nu avem un ghid care să verifice regula țării în care mergi.','Verifică cerința țării de destinație la ambasada ei sau la compania de transport. Dacă nu poți călători cu pașaportul, întreabă consulatul României despre pașaportul temporar.'],

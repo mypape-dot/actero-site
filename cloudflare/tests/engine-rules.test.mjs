@@ -216,7 +216,7 @@ const NOPAY_CASES=[
   ['CRDS_NOT_VALID',{country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED'},answers:{goal:'KEEP_FOREIGN_DOMICILE',passport_domicile:'CURRENT'}}],
   ['RO_RESIDENCE_NOT_READY',{country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'VALID'},answers:{goal:'KEEP_FOREIGN_DOMICILE',passport_domicile:'CURRENT',ro_residence:'NONE'}}],
   ['RO_RESIDENCE_PROOF_MISSING',{country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'VALID'},answers:{goal:'KEEP_FOREIGN_DOMICILE',passport_domicile:'CURRENT',ro_residence_proof:'NO'}}],
-  ['FIRST_ID_AFTER_CITIZENSHIP',{country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{goal:'ID_PROBLEM',citizenship:'REACQUIRED',passport_domicile:'ROMANIA',can_come:'YES'}}]
+  ['FIRST_ID_LIST_UNVERIFIED',{country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{goal:'ID_PROBLEM',citizenship:'REACQUIRED',passport_domicile:'ROMANIA',can_come:'YES'}}]
 ];
 for(const [code,c] of NOPAY_CASES){
   test('M-01: '+code+' closes checkout and explains the missing step for free',()=>{
@@ -280,16 +280,20 @@ test('M-12: the identity check on the travel title is a note; the case stays gre
   assert.deepEqual(o.notes.map(n=>n.code),['TRAVEL_TITLE_IDENTITY']);
 });
 
-test('GN-03: the first identity card after acquiring citizenship is explained for free (A1, A3, C1)',()=>{
+test('GN-03: a first Romanian identity document is explained for free on A1/A3/C1, whether citizenship is from birth or acquired',()=>{
   const re={citizenship:'REACQUIRED',passport_domicile:'ROMANIA'};
   const a3=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{...re,goal:'ID_PROBLEM',can_come:'NO'}});
-  assert.equal(a3.route,'A3_FIRST_ID_CONSULAR');assert.equal(a3.kind,'NOPAY');assert.ok(a3.codes.includes('FIRST_ID_AFTER_CITIZENSHIP'));
+  assert.equal(a3.route,'A3_FIRST_ID_CONSULAR');assert.equal(a3.kind,'NOPAY');assert.ok(a3.codes.includes('FIRST_ID_LIST_UNVERIFIED'));
   const c1=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{...re,goal:'CEI',physical:'YES'}});
   assert.equal(c1.route,'C1_CEI_ROMANIA');assert.equal(c1.kind,'NOPAY');
+  // A prior Romanian identity card means a renewal, not a first document: it stays payable.
   const exchange=run({country:'IT',documents:['ROMANIAN_ID','PASSPORT'],statuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},answers:{...re,goal:'ID_PROBLEM',can_come:'YES'}});
   assert.equal(exchange.route,'A1_PERSONAL_ROMANIA');assert.equal(exchange.kind,'PAYWALL','an earlier Romanian identity card is not a first card');
+  // The asymmetry is closed: a born citizen with no prior Romanian ID card is treated like any other
+  // first-identity-document case — explained for free, not sold.
   const born=run({country:'IT',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{passport_domicile:'ROMANIA',goal:'ID_PROBLEM',can_come:'NO'}});
-  assert.equal(born.kind,'PAYWALL','born citizens keep A3 (open product question, see the report)');
+  assert.equal(born.route,'A3_FIRST_ID_CONSULAR');assert.equal(born.kind,'NOPAY','a born citizen first identity document is not sold either');
+  assert.ok(born.codes.includes('FIRST_ID_LIST_UNVERIFIED'));
 });
 
 test('Q126: Belgium, the Netherlands and Ireland pay only with a local document tied to the DGP wording',()=>{

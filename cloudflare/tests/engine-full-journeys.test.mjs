@@ -156,10 +156,12 @@ function fixtureFor(entry){
     return common;
   }
   const rest={
-    A1_PERSONAL_ROMANIA:{goal:'ID_PROBLEM',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA'}},
+    // A1 is a renewal and C1 a CEI replacement: both carry a prior Romanian ID card, so they are not
+    // first-identity-document cases (GN-03) and stay payable.
+    A1_PERSONAL_ROMANIA:{goal:'ID_PROBLEM',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA'}},
     A2_PROXY:{goal:'ID_PROBLEM',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',can_come:'NO'}},
     A3_FIRST_ID_CONSULAR:{goal:'ID_PROBLEM',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',can_come:'NO'}},
-    C1_CEI_ROMANIA:{goal:'CEI',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
+    C1_CEI_ROMANIA:{goal:'CEI',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
     C5_CEI_REPLACEMENT:{goal:'CEI',documents:['CEI','PASSPORT'],docStatuses:{CEI:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
     D1_TEMPORARY:{goal:'KEEP_FOREIGN_DOMICILE',documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'VALID'},choices:{passport_domicile:'CURRENT'}},
     D2_PERMANENT_RETURN:{goal:'MOVE_DOMICILE_TO_RO',documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'VALID'},choices:{passport_domicile:'CURRENT'}},
@@ -170,6 +172,10 @@ function fixtureFor(entry){
   return {country:c,...rest[entry.key]};
 }
 
+// A3_FIRST_ID_CONSULAR is always a first Romanian identity document from abroad (q201 routes to it only
+// when there is no prior ID card), so GN-03 makes it a free explanation, never an eligible paywall, until
+// its document list is verified. The route and key are still produced; only the sale is withheld.
+const CONSERVATIVE_FREE=new Set(['A3_FIRST_ID_CONSULAR']);
 test('all 43 catalog keys are produced by complete questionnaire journeys',()=>{
   const found=new Set();
   for(const entry of catalog.guides){
@@ -177,8 +183,13 @@ test('all 43 catalog keys are produced by complete questionnaire journeys',()=>{
     assert.equal(result.current,'RESULT',entry.key+' ended '+result.current+' via '+result.history.join(' > '));
     assert.equal(result.S.route,entry.route,entry.key+' wrong route');
     assert.equal(result.key,entry.key,entry.key+' wrong guide after complete journey');
-    assert.equal(result.offer,true,entry.key+' never reaches eligible paywall');
     assert.ok(!result.unknowns?.length,entry.key+' has unresolved information');
+    if(CONSERVATIVE_FREE.has(entry.key)){
+      assert.equal(result.offer,false,entry.key+' first-ID document list is unverified: must be explained, not sold');
+      assert.ok(result.S.blockerCodes.includes('FIRST_ID_LIST_UNVERIFIED'),entry.key+' missing first-ID blocker');
+    }else{
+      assert.equal(result.offer,true,entry.key+' never reaches eligible paywall');
+    }
     found.add(result.key);
   }
   assert.equal(found.size,43);
