@@ -100,3 +100,7 @@ test('session secret and access token are never written into URL or checkout bod
  assert.equal(h.redirects[0].includes('new-access-token'),false);
  assert.equal(h.requests[1].options.body.includes(secret),false);
 });
+
+test('staging frontend checkout switch blocks new purchases even with API configured',async()=>{
+ const h=harness();h.context.window.ACTERO_CHECKOUT_ENABLED=false;await h.run();assert.equal(h.requests.length,0);assert.equal(h.redirects.length,0);
+});

@@ -31,7 +31,7 @@ Inspect the actual D1 schema and take a backup BEFORE applying any migration. Th
 010-order-uniqueness.sql
 ```
 
-Do not execute these on live D1 merely because GitHub tests passed. The local workerd harness now uses the exact prepared `staging/migrations/0001-empty-staging.sql`, generated from `tests/fixtures/local-baseline.sql` and migrations 001–010. This is only a fresh, empty staging bootstrap, NOT a claim about the live schema. Do not apply 001–010 again after that bootstrap. See [separate staging setup](staging/README.md) for `actero-staging` / `actero-staging-db`, Dashboard instructions and offline target validation. No Cloudflare resources have been created. The private guide import and actual database upgrade/backup procedure remain unverified (audit issue F-14). Migration 010 must stop for operator review if duplicate order IDs already exist; it never deletes grants.
+Do not execute these on live D1 merely because GitHub tests passed. The local workerd harness now uses the exact prepared `staging/migrations/0001-empty-staging.sql`, generated from `tests/fixtures/local-baseline.sql` and migrations 001–010. This is only a fresh, empty staging bootstrap, NOT a claim about the live schema. Do not apply 001–010 again after that bootstrap. See [separate staging setup](staging/README.md) for `actero-staging` / `actero-staging-db`, Dashboard instructions and offline target validation. The owner has since created the separate staging resources and applied bootstrap 0001; the agent has not performed remote mutations. The private guide import and actual database upgrade/backup procedure remain unverified (audit issue F-14). Migration 010 must stop for operator review if duplicate order IDs already exist; it never deletes grants.
 
 ## Staging secrets and configuration
 
@@ -48,7 +48,7 @@ For current reproducible test commands and limits, see
 
 The Cloudflare Worker needs correctly bound D1 plus HMAC/email/alert/abuse-prevention secrets. Never commit or paste actual values. In particular, `ABUSE_HASH_PEPPER`, `SHOPIFY_WEBHOOK_SECRET`, `PAYMENT_ALERT_WEBHOOK_URL`, `RECOVERY_EMAIL_API_KEY`, `RECOVERY_EMAIL_PEPPER`, and `RECOVERY_EMAIL_FROM` require staging review.
 
-Public `../actero-config.js` is deliberately **empty**, which disables checkout in the draft. Only configure a production/staging HTTPS Worker endpoint with a reviewed, domain-specific deployment. The Worker currently uses the old `mypape-dot.github.io` origin; migrating to a dedicated domain requires updating CORS and URLs in both backend and frontend.
+Public `../actero-config.js` is deliberately **empty**, which disables checkout in the draft. Only configure a production/staging HTTPS Worker endpoint with a reviewed, domain-specific deployment. `environment.js` now resolves CORS, shop and variant per environment. Legacy defaults remain unchanged; `ACTERO_ENVIRONMENT=staging` requires explicit, separate targets. See [Shopify test setup](staging/SHOPIFY_TEST_SETUP.md) for the generated frontend and approval-gated activation.
 
 The previous audit noted a Cloudflare Worker labeled `0.5.0` and 43 historical guide scripts, but **current live deployment code, DB schema, 43 D1 scripts and Shopify merchant settings were not independently checked by this branch**. Do not report them as verified or ready for sale.
 
@@ -81,4 +81,4 @@ returns 409. Missing migration fails closed (500). Missing/revoked/mismatched
 approval blocks delivery to existing buyers as well; this is staging-only code
 requiring support/refund planning before a production deployment.
 
-**No migration, Shopify action, D1 change, merge or deployment has been performed.**
+**No remote mutation, Shopify action, merge or deployment has been performed by this agent. The owner has confirmed applying the staging bootstrap manually.**

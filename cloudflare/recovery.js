@@ -1,11 +1,11 @@
+import {appOrigin,originAllowed,corsHeaders} from './environment.js';
 import {quota} from './quota.js';
 // F-03: order-email based guide recovery. Every route fails closed when prerequisites are absent.
 // The raw purchaser email and recovery secret are never persisted in D1 or logged.
 const enc=new TextEncoder();
 const GENERIC={ok:true,message:'Dacă datele corespund unei comenzi eligibile, vei primi un email cu instrucțiuni.'};
 const noCache={'Cache-Control':'private, no-store, max-age=0','Pragma':'no-cache'};
-function reply(req,body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','Access-Control-Allow-Origin':'https://mypape-dot.github.io','Vary':'Origin',...noCache}})}
-function originAllowed(req){return !req.headers.has('Origin')||req.headers.get('Origin')==='https://mypape-dot.github.io'}
+function reply(req,env,body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8',...corsHeaders(req,env),...noCache}})}
 function safeObj(x){return x!==null&&typeof x==='object'&&!Array.isArray(x)&&Object.getPrototypeOf(x)===Object.prototype}
 export function buyerEmail(email){
   if(typeof email!=='string')return '';
@@ -23,8 +23,8 @@ export function recoveryConfigured(env){
     return !!env.DB && typeof env.RECOVERY_EMAIL_PEPPER==='string'&&env.RECOVERY_EMAIL_PEPPER.length>=32
       &&typeof env.RECOVERY_EMAIL_API_KEY==='string'&&env.RECOVERY_EMAIL_API_KEY.length>=8
       &&typeof env.RECOVERY_EMAIL_FROM==='string'&&!!buyerEmail(env.RECOVERY_EMAIL_FROM)
-      &&u.protocol==='https:'&&u.origin==='https://mypape-dot.github.io'&&u.pathname.endsWith('/recuperare.html')
-      &&!u.search&&!u.hash;
+      &&u.protocol==='https:'&&u.origin===appOrigin(env)&&u.pathname.endsWith('/recuperare.html')
+      &&!u.username&&!u.password&&!u.search&&!u.hash;
   }catch{return false}
 }
 export async function buyerEmailHash(env,email){
@@ -49,23 +49,23 @@ export function serializeCaseState(raw,route){
 }
 const secretToken=()=>{const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);return [...bytes].map(x=>x.toString(16).padStart(2,'0')).join('')};
 export async function recoverRequest(request,env){
-  if(!originAllowed(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
-  if(!recoveryConfigured(env))return reply(request,{ok:false,error:'recovery_not_configured'},503);
+  if(!originAllowed(request,env))return reply(request,env,{ok:false,error:'origin_not_allowed'},403);
+  if(!recoveryConfigured(env))return reply(request,env,{ok:false,error:'recovery_not_configured'},503);
   const requestQuota=await quota(request,env,'recovery-request',{limit:5,windowSeconds:3600});
-  if(!requestQuota.allowed)return requestQuota.error?reply(request,{ok:false,error:'recovery_temporarily_unavailable'},503):reply(request,GENERIC,202);
-  let data;try{data=await request.json()}catch{return reply(request,GENERIC,202)}
+  if(!requestQuota.allowed)return requestQuota.error?reply(request,env,{ok:false,error:'recovery_temporarily_unavailable'},503):reply(request,env,GENERIC,202);
+  let data;try{data=await request.json()}catch{return reply(request,env,GENERIC,202)}
   const email=buyerEmail(data?.email),name=orderReference(data?.order_name);
-  if(!email||!name)return reply(request,GENERIC,202);
+  if(!email||!name)return reply(request,env,GENERIC,202);
   try{
     const hash=await buyerEmailHash(env,email);
     // Only orders that Shopify has certified as paid, not revoked, with a saved evaluation qualify.
     const row=await env.DB.prepare(`SELECT case_id FROM access_grants
       WHERE shopify_order_name=? AND recovery_email_hash=?
         AND status='paid' AND revoked_at IS NULL AND evaluation_json IS NOT NULL LIMIT 1`).bind(name,hash).first();
-    if(!row)return reply(request,GENERIC,202);
+    if(!row)return reply(request,env,GENERIC,202);
     const recent=await env.DB.prepare(`SELECT COUNT(*) AS n FROM recovery_links
       WHERE case_id=? AND created_at>unixepoch()-3600`).bind(row.case_id).first();
-    if(Number(recent?.n||0)>=3)return reply(request,GENERIC,202);
+    if(Number(recent?.n||0)>=3)return reply(request,env,GENERIC,202);
     const token=secretToken(),hashToken=await tokenHash(token);
     const expires=Math.floor(Date.now()/1000)+1800;
     // Enforce the order limit in the same write as the reservation. The earlier
@@ -74,7 +74,7 @@ export async function recoverRequest(request,env){
       SELECT ?,?,? WHERE (SELECT COUNT(*) FROM recovery_links
         WHERE case_id=? AND created_at>unixepoch()-3600)<3`)
       .bind(hashToken,row.case_id,expires,row.case_id).run();
-    if(reserved?.meta?.changes!==1)return reply(request,GENERIC,202);
+    if(reserved?.meta?.changes!==1)return reply(request,env,GENERIC,202);
     const url=new URL(env.RECOVERY_PAGE_URL);
     url.hash='token='+token; // fragment is never sent to Pages or by the HTTP Referer
     const urlText=url.toString();
@@ -99,27 +99,27 @@ export async function recoverRequest(request,env){
         catch(e){console.error('ActeRO recovery operator alert also failed')}
       }
     }
-    return reply(request,GENERIC,202);
-  }catch(e){console.error('ActeRO recovery request failed',e?.message||'error');return reply(request,GENERIC,202)}
+    return reply(request,env,GENERIC,202);
+  }catch(e){console.error('ActeRO recovery request failed',e?.message||'error');return reply(request,env,GENERIC,202)}
 }
 export async function recoverConsume(request,env){
-  if(!originAllowed(request))return reply(request,{ok:false,error:'origin_not_allowed'},403);
-  if(!env.DB)return reply(request,{ok:false,error:'recovery_not_configured'},503);
+  if(!originAllowed(request,env))return reply(request,env,{ok:false,error:'origin_not_allowed'},403);
+  if(!env.DB)return reply(request,env,{ok:false,error:'recovery_not_configured'},503);
   const consumeQuota=await quota(request,env,'recovery-consume',{limit:15,windowSeconds:3600});
-  if(!consumeQuota.allowed)return reply(request,{ok:false,error:consumeQuota.error||'too_many_requests'},consumeQuota.error?503:429);
-  let data;try{data=await request.json()}catch{return reply(request,{ok:false,error:'invalid_or_expired_link'},400)}
+  if(!consumeQuota.allowed)return reply(request,env,{ok:false,error:consumeQuota.error||'too_many_requests'},consumeQuota.error?503:429);
+  let data;try{data=await request.json()}catch{return reply(request,env,{ok:false,error:'invalid_or_expired_link'},400)}
   const token=data?.token;
-  if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))return reply(request,{ok:false,error:'invalid_or_expired_link'},400);
+  if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))return reply(request,env,{ok:false,error:'invalid_or_expired_link'},400);
   try{
     const hash=await tokenHash(token);
     const row=await env.DB.prepare(`SELECT r.case_id,a.status,a.revoked_at,a.route,a.guide_key,a.evaluation_json
       FROM recovery_links r JOIN access_grants a ON a.case_id=r.case_id
       WHERE r.token_hash=? AND r.consumed_at IS NULL AND r.delivered_at IS NOT NULL
         AND r.expires_at>unixepoch() AND a.status='paid' AND a.revoked_at IS NULL LIMIT 1`).bind(hash).first();
-    if(!row||!row.evaluation_json)return reply(request,{ok:false,error:'invalid_or_expired_link'},400);
-    let caseState;try{caseState=JSON.parse(row.evaluation_json)}catch{return reply(request,{ok:false,error:'recovery_support_required'},409)}
+    if(!row||!row.evaluation_json)return reply(request,env,{ok:false,error:'invalid_or_expired_link'},400);
+    let caseState;try{caseState=JSON.parse(row.evaluation_json)}catch{return reply(request,env,{ok:false,error:'recovery_support_required'},409)}
     if(!safeObj(caseState)||!safeObj(caseState.answers)||!safeObj(caseState.docs)||caseState.route!==row.route)
-      return reply(request,{ok:false,error:'recovery_support_required'},409);
+      return reply(request,env,{ok:false,error:'recovery_support_required'},409);
     const accessToken=crypto.randomUUID()+'.'+crypto.randomUUID();
     const newHash=await tokenHash(accessToken),nonce=crypto.randomUUID();
     const result=await env.DB.batch([
@@ -133,7 +133,7 @@ export async function recoverConsume(request,env){
         .bind(newHash,row.case_id,hash,nonce)
     ]);
     if(result[0]?.meta?.changes!==1||result[1]?.meta?.changes!==1)
-      return reply(request,{ok:false,error:'invalid_or_expired_link'},400);
-    return reply(request,{ok:true,case_id:row.case_id,guide_key:row.guide_key,access_token:accessToken,case_state:caseState});
-  }catch(e){console.error('ActeRO recovery consume failed',e?.message||'error');return reply(request,{ok:false,error:'recovery_unavailable'},503)}
+      return reply(request,env,{ok:false,error:'invalid_or_expired_link'},400);
+    return reply(request,env,{ok:true,case_id:row.case_id,guide_key:row.guide_key,access_token:accessToken,case_state:caseState});
+  }catch(e){console.error('ActeRO recovery consume failed',e?.message||'error');return reply(request,env,{ok:false,error:'recovery_unavailable'},503)}
 }

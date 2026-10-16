@@ -1209,7 +1209,7 @@ function showResult(forcePreview=false){
  // Before payment we confirm that the evaluation is complete, but we do NOT reveal
  // the exact route, procedural result, document list or steps.
  const validated=hasValidatedPaidGuide();
- const live=paymentApiConfigured();
+ const live=paymentApiConfigured() && window.ACTERO_CHECKOUT_ENABLED!==false;
  const pwIcon={
    fresh:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4v4.5h-4.5"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg>',
    steps:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="6.5" r="1.6"/><circle cx="5.5" cy="12" r="1.6"/><circle cx="5.5" cy="17.5" r="1.6"/><path d="M10.5 6.5H20M10.5 12H20M10.5 17.5H17"/></svg>',
@@ -1722,7 +1722,7 @@ async function maybeAutoUnlockPaidGuide(){
   return false;
 }
 async function startShopifyCheckout(button){
-  if(!paymentApiConfigured()||!S.caseId)return;
+  if(window.ACTERO_CHECKOUT_ENABLED===false||!paymentApiConfigured()||!S.caseId)return;
   const original=button?button.textContent:'';
   if(button){button.disabled=true;button.textContent='Pregătim plata…'}
   try{
@@ -1800,7 +1800,7 @@ async function startShopifyCheckout(button){
 // One click on the paywall: Shopify checkout when payments are live, otherwise the free preview.
 function unlockGuide(button){
   if(!hasValidatedPaidGuide())return showResult(true);
-  if(paymentApiConfigured()){startShopifyCheckout(button);return}
+  if(paymentApiConfigured() && window.ACTERO_CHECKOUT_ENABLED!==false){startShopifyCheckout(button);return}
   const box=$('checkoutError');if(box){box.classList.remove('hidden');box.textContent='Plata online nu este încă disponibilă.'}
 }
 async function verifyPaymentNow(button){

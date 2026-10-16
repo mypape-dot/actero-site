@@ -27,12 +27,13 @@ export function signedRequest(body,{topic='orders/paid',secret=bindings.SHOPIFY_
     'X-Shopify-Hmac-Sha256':createHmac('sha256',secret).update(raw).digest('base64'),
     'X-Shopify-Shop-Domain':shop,'X-Shopify-Topic':topic,'X-Shopify-Webhook-Id':id}});
 }
-export function harness(){
-  const sql=new DatabaseSync(':memory:');sql.exec(baseline());
-  for(const name of migrations())sql.exec(migrationSQL(name));
-  sql.prepare('INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES(?,?,?,?)').run('B1_ES',state.route,'SYNTHETIC ONLY',syntheticScript);
+export function harness({stagingSchema=false,script=syntheticScript}={}){
+  const sql=new DatabaseSync(':memory:');
+  if(stagingSchema)sql.exec(readFileSync(new URL('../../staging/migrations/0001-empty-staging.sql',import.meta.url),'utf8'));
+  else{sql.exec(baseline());for(const name of migrations())sql.exec(migrationSQL(name));}
+  sql.prepare('INSERT INTO guide_scripts(guide_key,route,title,script_js) VALUES(?,?,?,?)').run('B1_ES',state.route,'SYNTHETIC ONLY',script);
   sql.prepare("INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES(?,?,?,'approved','synthetic-only',datetime('now'))")
-    .run('B1_ES',state.route,createHash('sha256').update(syntheticScript).digest('hex'));
+    .run('B1_ES',state.route,createHash('sha256').update(script).digest('hex'));
   const statement=(query,args=[])=>({bind:(...values)=>statement(query,values),first:async()=>sql.prepare(query).get(...args)??null,
     run:async()=>({meta:{changes:Number(sql.prepare(query).run(...args).changes)}}),
     exec:()=>({meta:{changes:Number(sql.prepare(query).run(...args).changes)}})});

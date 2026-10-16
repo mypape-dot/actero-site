@@ -236,3 +236,52 @@ Binding-ul efectiv trebuie comparat cu UUID-ul bazei de producție. Două resurs
 în același cont, accesibile aceluiași operator administrativ, nu reprezintă o
 barieră IAM absolută. Configurația nu conține legături către resursele protejate;
 acestea nu au fost modificate sau interogate de agent.
+
+## Implementare ulterioară: configurare per mediu și Shopify dev store
+
+Proprietarul a confirmat instalarea manuală a bootstrap-ului în D1 staging și
+un dry-run reușit. Această continuare implementează integrarea; nu repetă schema
+și nu modifică migrarea 0001 instalată.
+
+- `cloudflare/environment.js`: origine și shop/variant configurabile, cu valorile
+  existente păstrate implicit pentru deployment-urile vechi. Staging cere valori
+  explicite separate și payment mode test; datele invalide nu cad pe producție.
+- `worker.js`, `recovery.js`, `evaluation-session.js`: CORS coerent per request,
+  fără origine globală mutabilă; recuperarea folosește originea selectată.
+  Webhook-urile rămân funcționale cu checkout oprit, păstrând autentificarea și
+  validarea shop/variant/price. Recuperarea respinge URL-uri cu userinfo/query/hash.
+- `index.html`: doar trei condiții din integrarea plății primesc flag-ul opțional
+  `ACTERO_CHECKOUT_ENABLED`. Motorul de decizie și routing-ul rămân nemodificate.
+  Oprirea cumpărărilor noi nu dezactivează accesul și recuperarea existente.
+- `scripts/build-staging-frontend.mjs`: artifact public separat, 7 fișiere
+  allowlisted, HTTPS, banner sintetic/noindex/no-store și checkout dezactivat.
+  Generatorul nu publică și nu copiază repository-ul, secrete sau conținut D1.
+- `staging/prepare-synthetic-seed.mjs` și fixture-ul comun: un singur renderer
+  B1_ES necomercial și aprobarea hash-ului exact, numai generare SQL locală.
+  Nu citește D1 și nu suprascrie ghiduri existente.
+- Șablonul și validatorul staging includ cele 4 variabile noi. `--require-ready`
+  cere shop/variant completate, dar păstrează checkout și expunerea oprite.
+  Nu certifică Test Mode în Shopify sau faptul că secretele sunt independente.
+- Fluxul E2E existent utilizează frontend-ul generat, origine/shop/variant/secret
+  sintetice distincte de implicit. Checkout se activează numai în fixture-ul de
+  test interceptat în memorie. CI rulează și suita completă de teste independente.
+
+Validare locală: cele **14** teste noi de separare medii și regresia nouă de
+checkout frontend au trecut; cele **17** regresii de securitate plăți au trecut.
+Bundle-ul Worker (5 module) se compilează. Validatorul configurației locale,
+`check:staging`, public-surface guard și `git diff --check` trec. Artifactul
+frontend a fost generat numai local, cu API staging și checkout false.
+
+Suita completă locală nu este raportată drept PASS: sandbox-ul blochează workerd
+cu `listen EPERM`, iar testele CLI metadata raportează stdout gol în subprocess.
+Noua versiune nu a ajuns încă în CI: push-ul terminal nu poate accesa proxy-ul,
+iar scrierea prin conectorul GitHub cere aprobare indisponibilă în această sesiune.
+PR #16 rămâne la versiunea precedentă până la transferul commiturilor locale.
+E2E găzduit cu Shopify rămâne neexecutat. Nu au fost făcute tranzacții reale, deploy, setări de secrete,
+importuri D1, activări Shopify sau aprobări comerciale ale ghidurilor.
+
+Planul operațional actual este [SHOPIFY_TEST_SETUP.md](staging/SHOPIFY_TEST_SETUP.md).
+Necesită aprobare: proiect Pages/publicare și expunere API, dev store/produs/provider
+de test/subscriptions, secrete/sender/alerte, deploy Worker, seed D1 staging și
+activarea temporară ulterioară a checkout-ului. Revenirea Shopify Thank-you/Order-status
+este încă de configurat și verificat; simplul `return_url` nu o implementează.

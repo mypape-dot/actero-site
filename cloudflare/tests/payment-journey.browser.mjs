@@ -5,15 +5,21 @@ import {readFileSync,existsSync,mkdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {chromium,webkit} from 'playwright';
 import {localWorker} from './helpers/local-worker.mjs';
-import {ORIGIN,SHOP,VARIANT,checkoutId,order,signedRequest} from './helpers/payment-harness.mjs';
+import {checkoutId,order as legacyOrder,signedRequest as legacySignedRequest} from './helpers/payment-harness.mjs';
 
-const SITE=ORIGIN+'/actero-site/',API='https://api.actero.test';
+import {STAGING} from './fixtures/staging-environment.mjs';
+import {frontendFiles} from '../../scripts/build-staging-frontend.mjs';
+const ORIGIN=STAGING.APP_ORIGIN,SHOP=STAGING.SHOPIFY_SHOP_DOMAIN,VARIANT=STAGING.SHOPIFY_VARIANT_ID;
+const SITE=ORIGIN+'/',API='https://api-staging.actero.test';
+const frontend=frontendFiles({origin:ORIGIN,apiOrigin:API});
+const order=cid=>{const body=legacyOrder(cid);body.line_items[0].variant_id=VARIANT;return body};
+const signedRequest=(body,options={})=>legacySignedRequest(body,{shop:SHOP,secret:STAGING.SHOPIFY_WEBHOOK_SECRET,...options});
 let passed=0;
 const pass=label=>{passed++;console.log('PASS '+label)};
 const engines=process.env.ACTERO_TEST_BROWSERS?process.env.ACTERO_TEST_BROWSERS.split(','):['chromium','webkit'];
 assert.ok(engines.length&&engines.every(e=>['chromium','webkit'].includes(e)),'Unknown browser selection');
 for(const kind of engines){
-  const backend=await localWorker();
+  const backend=await localWorker({environment:STAGING});
   let browser;
   try{
     const executablePath=kind==='chromium'?process.env.ACTERO_CHROMIUM_EXECUTABLE:undefined;
@@ -48,10 +54,10 @@ for(const kind of engines){
           await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:Buffer.from(await response.arrayBuffer())});return;
         }
         if(url.origin===ORIGIN){
-          const name=url.pathname.slice('/actero-site/'.length)||'index.html';
+          const name=url.pathname.slice(1)||'index.html';
           if(['index.html','confirmare.html','recuperare.html','actero-config.js'].includes(name)){
-            // Override only the intercepted test response; the public file stays disabled.
-            const body=name==='actero-config.js'?`window.ACTERO_PAYMENT_API=${JSON.stringify(API)};`:readFileSync(new URL('../../'+name,import.meta.url));
+            // Enable checkout ONLY in the intercepted synthetic browser fixture. Generated artifacts stay closed.
+            const body=name==='actero-config.js'?frontend[name].replace('ACTERO_CHECKOUT_ENABLED=false','ACTERO_CHECKOUT_ENABLED=true'):frontend[name];
             await route.fulfill({status:200,contentType:name.endsWith('.js')?'text/javascript':'text/html',body});return;
           }
         }

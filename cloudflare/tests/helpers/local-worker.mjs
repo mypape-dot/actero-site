@@ -6,18 +6,13 @@ import {readFileSync} from 'node:fs';
 import {schemaURL} from '../../staging/build-schema.mjs';
 import {bindings} from './payment-harness.mjs';
 
-// Entirely synthetic renderer; no private guide source is read or exported.
-const script=`const ACTERO_SYNTHETIC_ONCE=true;
-function showB1ESValidatedGuide(){
-  screen.innerHTML='<h1 id="syntheticGuide">Ghid sintetic de test</h1><p id="syntheticCountry"></p>';
-  document.getElementById('syntheticCountry').textContent=S.answers.residence_country;
-}`;
-export async function localWorker({checkoutEnabled=true,seed=true}={}){
+import {syntheticGuide as script} from '../fixtures/synthetic-guide.mjs';
+export async function localWorker({checkoutEnabled=true,seed=true,environment={}}={}){
   const bundle=await build({entryPoints:[fileURLToPath(new URL('../../worker.js',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser'});
   const mail=[],alerts=[],unexpected=[];
   let emailUnavailable=false,alertUnavailable=false;
   const mf=new Miniflare({modules:true,script:bundle.outputFiles[0].text,compatibilityDate:'2025-09-27',
-    host:'127.0.0.1',port:0,d1Databases:['DB'],bindings:{...bindings,SHOPIFY_CHECKOUT_ENABLED:String(checkoutEnabled)},cf:false,
+    host:'127.0.0.1',port:0,d1Databases:['DB'],bindings:{...bindings,...environment,SHOPIFY_CHECKOUT_ENABLED:String(checkoutEnabled)},cf:false,
     // Deny all real egress. Only local in-process mail and alert sinks exist.
     outboundService:async request=>{
       const url=new URL(request.url);
