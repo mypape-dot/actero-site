@@ -12,7 +12,8 @@ const here=path.dirname(fileURLToPath(import.meta.url));
 export const INDEX=process.env.INDEX||path.resolve(here,'../../../index.html');
 export const COUNTRIES=['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'];
 
-export function loadEngine(){
+// opts.realPersistence keeps the page's own persistCase() (refresh / restore tests).
+export function loadEngine(opts={}){
   const html=readFileSync(INDEX,'utf8');
   const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(m=>!/src=/.test(m[1]));
   const src=scripts.sort((a,b)=>b[2].length-a[2].length)[0][2];
@@ -35,11 +36,11 @@ export function loadEngine(){
     navigator:{clipboard:{writeText:async()=>{}}},fetch:async()=>{throw new Error('offline')},Blob:class{}
   });
   vm.runInContext(src,ctx);
-  vm.runInContext(`var __H={};setChrome=function(){};persistCase=function(){};updateDebug=function(){};updateCaseSide=function(){};
+  vm.runInContext(`var __H={};setChrome=function(){};${opts.realPersistence?'':'persistCase=function(){};'}updateDebug=function(){};updateCaseSide=function(){};
     bindOptions=function(fn){__H.opt=fn};var __rc=choose;choose=function(s){__H.spec=s;return __rc(s)};
     var __rr=render;render=function(id){__H={renderId:id};return __rr(id)};
     var __rs=showStop;showStop=function(k,t,b,m){__H.stop={kind:k,title:t,body:b};return __rs(k,t,b,m)};`,ctx);
-  return {ctx,$el,html,source:src};
+  return {ctx,$el,html,source:src,store};
 }
 
 // Clean-case answers by question key. Every key a journey may ask must be present, so a new

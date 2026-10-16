@@ -634,9 +634,12 @@ function createCaseId(){
   return 'AR-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,10).toUpperCase();
 }
 function caseStorageKey(id){return 'actero_case_'+String(id||'')}
+// T-02: version of the questionnaire that produced a saved session. Raise it whenever a new question
+// becomes mandatory for an existing route, and list that answer in missingRequiredOf().
+const QUESTIONNAIRE_VERSION='2026-10-16';
 // ---- Refresh persistence -------------------------------------------------
 // Only screens listed here may be resumed from localStorage; anything else is ignored (never rendered blindly).
-const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q031','Q032','Q033','Q034','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q126','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
+const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q031','Q032','Q033','Q034','Q035','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q126','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
 const INTERNAL_SCREENS=new Set(['AFTER_DOCS','ROUTE_COMMON']);
 const STOP_SCREENS=new Set(['STOP_RED','STOP_YELLOW']);
 const PAYWALL_SCREENS=new Set(['RESULT','CHECKOUT','PAID_GUIDE']);
@@ -656,6 +659,18 @@ function sanitizeHistory(h){
   return h.map(x=>({answers:x.answers,docs:x.docs,route:x.route==null?null:x.route,status:x.status==null?null:x.status,blockers:x.blockers,unknowns:x.unknowns,docQueue:x.docQueue,docIndex:x.docIndex,current:x.current,clarified:isPlainObj(x.clarified)?x.clarified:{}}));
 }
 let _lastPersisted='';
+// T-02: a session saved by an older questionnaire, or one that would resume at the result, is first
+// completed with the answers newer questions made mandatory. Its other answers are kept; the
+// already-answered questions after the missing one are skipped as in a clarification detour.
+function resumeRestoredCase(saved,target){
+  const stale=!saved||saved.questionnaireVersion!==QUESTIONNAIRE_VERSION;
+  const miss=S.route&&(stale||PAYWALL_SCREENS.has(target))?missingRequiredOf(S.answers,S.docs,S.route):[];
+  if(!miss.length){S.current=target;render(target);return}
+  S.autoSkip=true;S.skipTarget=miss[0].screen;S.current=miss[0].screen;render(miss[0].screen);
+  const box=document.getElementById('screen');
+  if(box&&typeof box.insertAdjacentHTML==='function')
+    box.insertAdjacentHTML('afterbegin','<div class="final-issue" role="note" data-resume-notice="1" style="margin:0 0 14px">Am adăugat o întrebare nouă de când ai început evaluarea. Răspunsurile tale sunt păstrate; completează doar ce lipsește.</div>');
+}
 function persistCase(){
   if(!S.caseId)return;
   try{
@@ -674,7 +689,8 @@ function persistCase(){
       docIndex:Number.isInteger(S.docIndex)?S.docIndex:0,
       autoSkip:!!S.autoSkip,
       skipTarget:typeof S.skipTarget==='string'?S.skipTarget:null,
-      current:S.current||'WELCOME'
+      current:S.current||'WELCOME',
+      questionnaireVersion:QUESTIONNAIRE_VERSION
     };
     const body=JSON.stringify(payload);
     if(body===_lastPersisted&&localStorage.getItem('actero_active_case')===S.caseId)return; // nothing changed
@@ -705,8 +721,8 @@ function restoreCaseFromUrl(){
     S.docQueue=[];
     S.docIndex=0;
     S.paymentUnlocked=false;
-    S.current=S.route?'RESULT':'WELCOME';
-    render(S.current);
+    S.autoSkip=false;S.skipTarget=null;
+    resumeRestoredCase(saved,S.route?'RESULT':'WELCOME');
     return true;
   }catch(e){return false}
 }
@@ -754,8 +770,7 @@ function restoreActiveCase(){
     S.paymentUnlocked=false; // never trusted from localStorage
     if(STOP_SCREENS.has(cur)){S.current=cur;back();return true}
     const target=PAYWALL_SCREENS.has(cur)?'RESULT':cur; // PAID_GUIDE/CHECKOUT -> paywall first
-    S.current=target;
-    render(target);
+    resumeRestoredCase(saved,target);
     return true;
   }catch(e){return false}
 }
@@ -816,7 +831,7 @@ function updateDebug(){try{syncOfficialDocumentsForCurrentGuide()}catch(e){conso
 function stageFor(id){
  if(id==='WELCOME')return 0;
  if(['Q001','Q002','Q003','Q004'].includes(id))return 1;
- if(['Q005','Q006','AFTER_DOCS','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q033','Q034','Q050','Q051','Q052'].includes(id))return 2;
+ if(['Q005','Q006','AFTER_DOCS','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q033','Q034','Q035','Q050','Q051','Q052'].includes(id))return 2;
  if(id==='RESULT'||id==='CHECKOUT'||id==='PAID_GUIDE'||id.startsWith('STOP_'))return 4;
  return 3;
 }
@@ -950,28 +965,59 @@ function q032(){choose({kicker:'Domiciliul oficial',title:'Ai domiciliul oficial
 // LEGAL-UNVERIFIED (needs human confirmation against the current statute and carrier/border practice): the
 // citations above live only in this comment; the CIS=not-a-travel-document rule actively drives a travel-title
 // offer, and the UK entry premise (ID_CARD_UK_CHECK) is uncited. Confirm before relying on the conclusion.
+// TRAVEL = a valid card usable as a travel document; MAYBE = it would be one, but its status was answered
+// "Nu știu" (T-01); UNKNOWN = its type is not known yet; NONE = no usable card.
 function travelCardOf(a,docs){a=a||{};docs=docs||{};
+ const t=a.id_card_type,travelType=t==='OLD_MODEL'||t==='CEI',typeUnknown=t===undefined||t==='UNKNOWN';
  if(docValid(docs.CEI))return'TRAVEL';
- if(!docValid(docs.ROMANIAN_ID))return'NONE';
- const t=a.id_card_type;return t==='OLD_MODEL'||t==='CEI'?'TRAVEL':(t===undefined||t==='UNKNOWN')?'UNKNOWN':'NONE'}
-function urgentCardStep(){const a=S.answers,docs=S.docs||{};
+ if(docValid(docs.ROMANIAN_ID)){if(travelType)return'TRAVEL';if(typeUnknown)return'UNKNOWN'}
+ if(docs.CEI==='UNKNOWN')return'MAYBE';
+ if(docs.ROMANIAN_ID==='UNKNOWN'){if(travelType)return'MAYBE';if(typeUnknown)return'UNKNOWN'}
+ return'NONE'}
+// T-01: a document whose status was answered "Nu știu" and whose validity would still change the outcome.
+// Not asked when the outcome is already decided (from Romania, a valid passport, a travel card usable on this trip),
+// nor for a card the client could not travel with anyway (outside the EU, EEA and Switzerland).
+function urgentUnknownDocOf(a,docs,toRo,card){a=a||{};docs=docs||{};
+ for(const d of ['PASSPORT','CRDS_PASSPORT'])if(docs[d]==='UNKNOWN')return d;
+ if(card==='MAYBE'&&(a.id_card_area==='YES'||(toRo&&a.id_card_area==='UK'))){
+   if(docs.CEI==='UNKNOWN')return'CEI';
+   if(docs.ROMANIAN_ID==='UNKNOWN')return'ROMANIAN_ID';
+ }
+ return null}
+const URGENT_DOC_NAMES={PASSPORT:['pașaportul',false],CRDS_PASSPORT:['pașaportul cu domiciliul în străinătate',false],ROMANIAN_ID:['cartea de identitate',true],CEI:['cartea electronică de identitate',true]};
+function urgentCardStep(){const a=S.answers,docs=S.docs||{},toRo=S.route==='TRAVEL_TITLE_RETURN_RO';
  if(a.physical==='YES')return'RESULT'; // M-05: decided at the result, nothing else to ask
  if(docValid(docs.PASSPORT)||docValid(docs.CRDS_PASSPORT))return'RESULT';
- if(!docValid(docs.CEI)&&docValid(docs.ROMANIAN_ID)&&a.id_card_type===undefined)return'Q033';
- if(travelCardOf(a,docs)==='TRAVEL'&&a.id_card_area===undefined)return'Q034';
+ const idMaybe=docValid(docs.ROMANIAN_ID)||docs.ROMANIAN_ID==='UNKNOWN';
+ if(idMaybe&&!docValid(docs.CEI)&&a.id_card_type===undefined)return'Q033';
+ const card=travelCardOf(a,docs);
+ if((card==='TRAVEL'||card==='MAYBE')&&a.id_card_area===undefined)return'Q034';
+ if(card==='TRAVEL'&&(a.id_card_area==='YES'||(toRo&&a.id_card_area==='UK')))return'RESULT';
+ const doc=urgentUnknownDocOf(a,docs,toRo,card);
+ if(doc&&a['doc_recheck_'+doc]===undefined)return'Q035';
  return'RESULT'}
 function q033(){choose({kicker:'Cartea de identitate',title:'Ce fel de carte de identitate românească ai?',lead:'Unele cărți de identitate românești sunt și document de călătorie în UE, SEE și Elveția. Altele nu sunt.',opts:[
  {value:'OLD_MODEL',label:'Cartea de identitate de model vechi',sub:'Cardul fără cip, emis înainte de cartea electronică.'},
  {value:'CEI',label:'Cartea electronică de identitate (CEI)',sub:'Cardul cu cip.'},
  {value:'CIS',label:'Cartea de identitate simplă',sub:'Varianta nouă fără cip, care nu este document de călătorie.'},
  {value:'CIP',label:'Cartea de identitate provizorie'},
- {value:'UNKNOWN',label:'Nu știu ce tip este'}],key:'id_card_type',next:v=>v==='OLD_MODEL'||v==='CEI'?'Q034':'RESULT'})}
+ {value:'UNKNOWN',label:'Nu știu ce tip este'}],key:'id_card_type',next:()=>urgentCardStep()})}
 function q034(){const toRo=S.answers.travel_dest==='ROMANIA';
  choose({kicker:'Cartea de identitate',title:toRo?'Te afli acum într-un stat din UE, din SEE sau în Elveția?':'Și țara în care te afli, și țara în care trebuie să ajungi sunt în UE, SEE sau Elveția?',
   lead:'Cu o carte de identitate valabilă poți călători între aceste state. Regatul Unit are reguli separate.',
   opts:toRo?[{value:'YES',label:'Da'},{value:'UK',label:'Sunt în Regatul Unit'},{value:'NO',label:'Nu, sunt în alt stat'},{value:'UNKNOWN',label:'Nu sunt sigur'}]
    :[{value:'YES',label:'Da, amândouă'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],
-  key:'id_card_area',next:'RESULT'})}
+  key:'id_card_area',next:()=>urgentCardStep()})}
+// T-01: the status answered "Nu știu" is checked once, on the document itself.
+function q035(){const a=S.answers,docs=S.docs||{},toRo=S.route==='TRAVEL_TITLE_RETURN_RO';
+ const doc=urgentUnknownDocOf(a,docs,toRo,travelCardOf(a,docs));
+ if(!doc)return replace('RESULT');
+ const [name,fem]=URGENT_DOC_NAMES[doc],valid=fem?'valabilă':'valabil';
+ choose({kicker:'Verificăm documentul',title:`Uită-te pe ${name}: mai este ${valid}?`,
+  lead:'Data expirării este tipărită pe document. Dacă documentul este încă valabil, s-ar putea să nu ai nevoie de un document de urgență.',
+  opts:[{value:'VALID',label:`Da, este ${valid}`},{value:'EXPIRING',label:'Da, dar expiră curând'},{value:'EXPIRED',label:fem?'Nu, a expirat':'Nu, a expirat'},
+   {value:'LOST',label:fem?'Nu o mai am (pierdută sau furată)':'Nu îl mai am (pierdut sau furat)'},{value:'UNKNOWN',label:'Tot nu știu'}],
+  key:'doc_recheck_'+doc,next:v=>{if(v!=='UNKNOWN')S.docs={...S.docs,[doc]:v};return urgentCardStep()}})}
 function q101(){choose({kicker:'Domiciliu în străinătate',title:`Ce situație îți permite să locuiești legal în ${S.answers.residence_country_name||'țara respectivă'}?`,lead:'Este suficient să identificăm o bază relevantă; nu te întrebăm despre toate variantele posibile.',opts:[{value:'RESIDENCE',label:'Am permis / drept de ședere'},{value:'PERMANENT',label:'Am rezidență permanentă / pe termen lung'},{value:'EU',label:'Am document oficial de rezidență ca cetățean UE'},{value:'WORK',label:'Am drept de muncă'},{value:'STUDY',label:'Studiez / urmez pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Am și cetățenia țării'},{value:'OTHER',label:'Altă situație'},{value:'UNKNOWN',label:'Nu știu'}],key:'foreign_basis',next:v=>{if(v==='OTHER'){S.answers.foreign_basis='UNCLASSIFIED_DOCUMENT';return'Q105'}return v==='UNKNOWN'?'Q105':'Q102'}})}
 function q102(){choose({kicker:'Dovadă',title:'Ai un document oficial care dovedește această situație?',lead:'Nu trebuie să îl încarci aici. Verificăm doar dacă îl ai.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>{if(v==='YES'&&S.answers.residence_country==='CH'&&S.answers.foreign_basis!=='CITIZEN')return'Q109';if(v==='YES'&&needsLocalProof(S.answers,S.route))return'Q126';return'Q103'}})}
 function q103(){choose({kicker:'Documente',title:'Ai certificatul românesc de naștere în original și neplastifiat?',lead:'Întrebarea apare doar pentru această procedură.',opts:[{value:'READY',label:'Da'},{value:'PLASTIFIED',label:'Este plastifiat'},{value:'MISSING',label:'Nu îl mai am'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'birth_cert',next:'Q040'})}
@@ -1182,17 +1228,20 @@ function evaluateCase(input){
    if(['CONTINUE_JOURNEY','OBJECTIVE_URGENT','PASSPORT_AT_VISA'].includes(ub)&&dom==='UNKNOWN')unknown('Domiciliul oficial trebuie clarificat pentru a alege lista corectă de documente a pașaportului temporar.');
  }
  if(r==='TRAVEL_TITLE_RETURN_RO'||r==='URGENT_OTHER_COUNTRY'){
-   const toRo=r==='TRAVEL_TITLE_RETURN_RO',card=travelCardOf(a,docs);
+   const toRo=r==='TRAVEL_TITLE_RETURN_RO',card=travelCardOf(a,docs),area=a.id_card_area;
    if(!toRo&&a.physical==='YES')block('TEMP_PASSPORT_FROM_ROMANIA','Pașaportul temporar cerut din România se depune la serviciul de pașapoarte, iar ghidul nostru acoperă cererea din străinătate.'); // M-05
    else if(docValid(docs.PASSPORT)||docValid(docs.CRDS_PASSPORT))block(toRo?'PASSPORT_STILL_VALID':'PASSPORT_EXPIRING_OTHER_DEST','Pașaportul tău este încă valabil.'); // M-04, decision 3
-   else if(card==='UNKNOWN')unknown('Trebuie clarificat ce tip de carte de identitate ai.');
-   else if(card==='TRAVEL'){
-     const area=a.id_card_area;
-     if(!area||area==='UNKNOWN')unknown('Trebuie clarificat dacă poți călători cu cartea de identitate.');
-     else if(area==='YES')block(toRo?'ID_CARD_IS_TRAVEL_DOC':'ID_CARD_IS_TRAVEL_DOC_OTHER','Cartea ta de identitate este document de călătorie pentru acest drum.');
-     else if(area==='UK'&&toRo)block('ID_CARD_UK_CHECK','Din Regatul Unit trebuie verificat dacă poți călători doar cu cartea de identitate.');
+   else if(card==='TRAVEL'&&area==='YES')block(toRo?'ID_CARD_IS_TRAVEL_DOC':'ID_CARD_IS_TRAVEL_DOC_OTHER','Cartea ta de identitate este document de călătorie pentru acest drum.');
+   else if(card==='TRAVEL'&&area==='UK'&&toRo)block('ID_CARD_UK_CHECK','Din Regatul Unit trebuie verificat dacă poți călători doar cu cartea de identitate.');
+   else if(!(!toRo&&a.travel_urgent_basis==='TOURISM')){
+     // T-01: only what could still change the outcome stays open; a tourism-only trip is refused whatever the documents say.
+     if(card==='UNKNOWN')unknown('Trebuie clarificat ce tip de carte de identitate ai.');
+     else if((card==='TRAVEL'||card==='MAYBE')&&(!area||area==='UNKNOWN'))unknown('Trebuie clarificat dacă poți călători cu cartea de identitate.');
+     const doc=urgentUnknownDocOf(a,docs,toRo,card);
+     if(doc){const [name,fem]=URGENT_DOC_NAMES[doc];unknown(`Trebuie verificat dacă ${name} mai este ${fem?'valabilă':'valabil'}.`)}
    }
  }
+ for(const m of missingRequiredOf(a,docs,r))unknown(m.text); // T-02
  const idState=identityOf(a,docs,r);
  if(['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r)){
    if(idState==='UNKNOWN')unknown('Trebuie clarificat cu ce documente poate fi stabilită identitatea.');
@@ -1203,6 +1252,17 @@ function evaluateCase(input){
  }
  return {blockers,unknowns,notes,status}
 }
+// T-02: answers that newer questions made mandatory for a route. The questionnaire always asks them;
+// a session saved before they existed (or edited) lacks them, and must not reach payment without them.
+function missingRequiredOf(a,docs,route){a=a||{};docs=docs||{};const out=[],declared=a.documents||[];
+ if(route==='B1_FIRST_CRDS'&&declared.includes('CRDS_PASSPORT')&&a.passport_domicile==='ROMANIA'&&a.crds_history===undefined)
+   out.push({key:'crds_history',screen:'Q012',text:'Trebuie completat ce s-a întâmplat cu domiciliul tău din străinătate.'});
+ if(route==='B5_EXISTING_CRDS'&&a.ever_crds==='NO'&&!['CURRENT','OTHER'].includes(a.passport_domicile)&&a.crds_confirm===undefined)
+   out.push({key:'crds_confirm',screen:'Q013',text:'Trebuie completat dacă ai avut un pașaport cu domiciliul în străinătate.'});
+ if(route==='B1_FIRST_CRDS'&&a.citizenship==='REACQUIRED'&&a.post_citizenship_romanian_id===undefined
+    &&!['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'].some(d=>docValid(docs[d])))
+   out.push({key:'post_citizenship_romanian_id',screen:'Q106',text:'Trebuie clarificat dacă ai avut un pașaport sau act de identitate românesc după dobândirea/redobândirea cetățeniei.'});
+ return out}
 // Safety net: answers that cannot all be true never reach payment (M-03, M-11). The questions above
 // normally prevent them (Q012, Q013, filtered Q120); this also covers restored or edited answers.
 function contradictionsOf(input){
@@ -1257,6 +1317,7 @@ function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerC
  if(u.includes('lista corectă de documente a pașaportului temporar')&&domicileState()==='UNKNOWN')return'Q032';
  if(u.includes('ce tip de carte de identitate')&&unknownish(a.id_card_type))return'Q033';
  if(u.includes('cu cartea de identitate')&&unknownish(a.id_card_area))return'Q034';
+ if(u.includes('mai este valabil'))return'Q035';
  if(u.includes('furtul pașaportului')&&unknownish(a.theft_proof))return'Q122';
  if(u.includes('aceeași țară')&&unknownish(a.same_country))return'Q121';
  if((u.includes('documentului actual din elveția')||u.includes('permisul g'))&&a.residence_country==='CH')return'Q125';
@@ -1271,6 +1332,8 @@ function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerC
  if(u.includes('valabilitatea pașaportului')&&unknownish(a.d1_crds))return'Q410';
  if(u.includes('adresa unde vei locui')&&unknownish(a.ro_residence))return'Q411';
  if(u.includes('documentul cu care vei dovedi adresa')&&unknownish(a.ro_residence_proof))return'Q412';
+ if(u.includes('ce s-a întâmplat cu domiciliul tău din străinătate')&&unknownish(a.crds_history))return'Q012';
+ if(u.includes('dacă ai avut un pașaport cu domiciliul în străinătate')&&unknownish(a.crds_confirm))return'Q013';
  if(u.includes('după dobândirea/redobândirea cetățeniei'))return'Q106';
  if(u.includes('certificatului sau cardului de cetățenie')&&unknownish(a.citizenship_cert_available))return'Q107';
  if(u.includes('schimbări de nume sau stare civilă')&&unknownish(a.civil_change))return'Q040';
@@ -2207,7 +2270,7 @@ const officialDocObserver=new MutationObserver(()=>hydrateOfficialDocPreviews(sc
 officialDocObserver.observe(screen,{childList:true,subtree:true});
 function render(id){S.current=id;const appEl=document.querySelector('.app');if(appEl)appEl.classList.toggle('guide-mode',id==='PAID_GUIDE');switch(id){
  case'WELCOME':return welcome();
- case'Q001':return q001();case'Q002':return q002();case'Q003':return q003();case'Q004':return q004();case'Q005':return q005();case'Q006':return q006();case'AFTER_DOCS':return afterDocs();case'Q007':return q007();case'Q008':return q008();case'ROUTE_COMMON':return routeCommon();case'Q010':return q010();case'Q011':return q011();case'Q012':return q012();case'Q013':return q013();case'Q050':return q050();case'Q051':return q051();case'Q052':return q052();case'Q020':return q020();case'Q030':return q030();case'Q031':return q031();case'Q032':return q032();case'Q033':return q033();case'Q034':return q034();case'Q060':return q060();case'Q101':return q101();case'Q102':return q102();case'Q103':return q103();case'Q105':return q105();case'Q106':return q106();case'Q108':return q108();case'Q109':return q109();case'Q107':return q107();case'Q120':return q120();case'Q121':return q121();case'Q122':return q122();case'Q123':return q123();case'Q124':return q124();case'Q125':return q125();
+ case'Q001':return q001();case'Q002':return q002();case'Q003':return q003();case'Q004':return q004();case'Q005':return q005();case'Q006':return q006();case'AFTER_DOCS':return afterDocs();case'Q007':return q007();case'Q008':return q008();case'ROUTE_COMMON':return routeCommon();case'Q010':return q010();case'Q011':return q011();case'Q012':return q012();case'Q013':return q013();case'Q050':return q050();case'Q051':return q051();case'Q052':return q052();case'Q020':return q020();case'Q030':return q030();case'Q031':return q031();case'Q032':return q032();case'Q033':return q033();case'Q034':return q034();case'Q035':return q035();case'Q060':return q060();case'Q101':return q101();case'Q102':return q102();case'Q103':return q103();case'Q105':return q105();case'Q106':return q106();case'Q108':return q108();case'Q109':return q109();case'Q107':return q107();case'Q120':return q120();case'Q121':return q121();case'Q122':return q122();case'Q123':return q123();case'Q124':return q124();case'Q125':return q125();
  case'Q126':return q126();case'Q201':return q201();case'Q202':return q202();case'Q203':return q203();case'Q204':return q204();case'Q205':return q205();case'Q301':return q301();case'Q401':return q401();case'Q410':return q410();case'Q411':return q411();case'Q412':return q412();case'Q420':return q420();case'Q421':return q421();case'Q040':return q040();case'Q041':return q041();case'RESULT':return showResult();case'CHECKOUT':return showResult(true);case'PAID_GUIDE':return showPaidGuide();
  case'STOP_MINOR':return showStop('red','ActeRO este momentan disponibil pentru persoane de 18 ani sau peste','Procedurile pentru minori nu sunt încă incluse. Oprim evaluarea aici pentru a nu indica o procedură care s-ar putea să nu se aplice.');
  case'STOP_NONCITIZEN':return showStop('red','Momentan, ActeRO te poate ajuta doar dacă ești cetățean român.','Extindem treptat situațiile acoperite.');

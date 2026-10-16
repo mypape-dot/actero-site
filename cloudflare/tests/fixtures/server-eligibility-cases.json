@@ -1,0 +1,2065 @@
+{
+ "schema_version": 1,
+ "generated": "2026-10-16",
+ "questionnaire_version": "2026-10-16",
+ "note": "Synthetic case states only. expected = what the SERVER must decide after recomputing route, guide key and eligibility from case_state.answers and case_state.docs. client_decision_today records the browser decision on this branch, for comparison.",
+ "cases": [
+  {
+   "id": "clean:B1_ES",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "ES",
+     "residence_country_name": "Spania",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_ES",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_ES",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "ES",
+     "residence_country_name": "Spania",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_ES",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_ES",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "ES",
+     "residence_country_name": "Spania",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_ES",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_IT",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_IT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_IT",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_IT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_IT",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_IT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_DE",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "DE",
+     "residence_country_name": "Germania",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_DE",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_DE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "DE",
+     "residence_country_name": "Germania",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_DE",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_DE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "DE",
+     "residence_country_name": "Germania",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_DE",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_AT",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "AT",
+     "residence_country_name": "Austria",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_AT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_AT",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "AT",
+     "residence_country_name": "Austria",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_AT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_AT",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "AT",
+     "residence_country_name": "Austria",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_AT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_FR",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_FR",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_FR",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_FR",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_FR",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_FR",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_GB",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "GB",
+     "residence_country_name": "Regatul Unit",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_GB",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_GB",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "GB",
+     "residence_country_name": "Regatul Unit",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_GB",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_GB",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "GB",
+     "residence_country_name": "Regatul Unit",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_GB",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B1_BE",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "BE",
+     "residence_country_name": "Belgia",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_BE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_BE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "BE",
+     "residence_country_name": "Belgia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_BE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_LOST_BE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "BE",
+     "residence_country_name": "Belgia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_BE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B1_NL",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "NL",
+     "residence_country_name": "Țările de Jos",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_NL",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_NL",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "NL",
+     "residence_country_name": "Țările de Jos",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_NL",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_LOST_NL",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "NL",
+     "residence_country_name": "Țările de Jos",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_NL",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B1_IE",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IE",
+     "residence_country_name": "Irlanda",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_IE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_IE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IE",
+     "residence_country_name": "Irlanda",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_IE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B5_LOST_IE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IE",
+     "residence_country_name": "Irlanda",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "local_proof_type": "PERMANENT",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_IE",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "clean:B1_CH",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "CH",
+     "residence_country_name": "Elveția",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "swiss_permit": "B",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_CH",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_CH",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "CH",
+     "residence_country_name": "Elveția",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "swiss_current_permit": "B",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_CH",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_LOST_CH",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "CH",
+     "residence_country_name": "Elveția",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "LOST",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "swiss_current_permit": "B",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_LOST_CH",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_STOLEN",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "STOLEN",
+     "theft_proof": "YES",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "STOLEN"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_STOLEN",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_DAMAGED",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "DAMAGED",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "DAMAGED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_DAMAGED",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_DATA_CHANGE",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "DATA_CHANGE",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_DATA_CHANGE",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_MOVED",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "OTHER",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "NO",
+     "foreign_proof": "YES",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_MOVED",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:A1_PERSONAL_ROMANIA",
+   "source": "journey",
+   "case_state": {
+    "route": "A1_PERSONAL_ROMANIA",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "derived_domicile": "ROMANIA",
+     "can_come": "YES",
+     "ro_address": "OWN",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "A1_PERSONAL_ROMANIA",
+    "guide_key": "A1_PERSONAL_ROMANIA",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:A2_PROXY",
+   "source": "journey",
+   "case_state": {
+    "route": "A2_PROXY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "derived_domicile": "ROMANIA",
+     "can_come": "NO",
+     "representative": "YES",
+     "poa": "YES",
+     "ro_address": "OWN",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "A2_PROXY",
+    "guide_key": "A2_PROXY",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "blocked:A3_FIRST_ID_CONSULAR",
+   "source": "journey",
+   "case_state": {
+    "route": "A3_FIRST_ID_CONSULAR",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "derived_domicile": "ROMANIA",
+     "can_come": "NO",
+     "ro_address": "OWN",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "route": "A3_FIRST_ID_CONSULAR",
+    "guide_key": "A3_FIRST_ID_CONSULAR",
+    "legalBasisConfirmed": true,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "clean:C1_CEI_ROMANIA",
+   "source": "journey",
+   "case_state": {
+    "route": "C1_CEI_ROMANIA",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "CEI",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "derived_domicile": "ROMANIA",
+     "physical": "YES",
+     "cei_case": null,
+     "ro_address": "OWN",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "C1_CEI_ROMANIA",
+    "guide_key": "C1_CEI_ROMANIA",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:C5_CEI_REPLACEMENT",
+   "source": "journey",
+   "case_state": {
+    "route": "C5_CEI_REPLACEMENT",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "CEI",
+     "documents": [
+      "CEI",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "derived_domicile": "ROMANIA",
+     "physical": "YES",
+     "cei_case": "EXPIRED",
+     "ro_address": "OWN",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "CEI": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "C5_CEI_REPLACEMENT",
+    "guide_key": "C5_CEI_REPLACEMENT",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:D1_TEMPORARY",
+   "source": "journey",
+   "case_state": {
+    "route": "D1_TEMPORARY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "KEEP_FOREIGN_DOMICILE",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "domicile_intent": "KEEP",
+     "d1_crds": "VALID",
+     "ro_residence": "OWN",
+     "ro_residence_proof": "YES",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "D1_TEMPORARY",
+    "guide_key": "D1_TEMPORARY",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:D2_PERMANENT_RETURN",
+   "source": "journey",
+   "case_state": {
+    "route": "D2_PERMANENT_RETURN",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "MOVE_DOMICILE_TO_RO",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "domicile_intent": "MOVE",
+     "ro_address": "OWN",
+     "dependents": "NO",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "D2_PERMANENT_RETURN",
+    "guide_key": "D2_PERMANENT_RETURN",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:TRAVEL_TITLE_RETURN_RO",
+   "source": "journey",
+   "case_state": {
+    "route": "TRAVEL_TITLE_RETURN_RO",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "URGENT_TRAVEL",
+     "documents": [
+      "PASSPORT"
+     ],
+     "physical": "NO",
+     "travel_dest": "ROMANIA"
+    },
+    "docs": {
+     "PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "TRAVEL_TITLE_RETURN_RO",
+    "guide_key": "TRAVEL_TITLE_RETURN_RO",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:URGENT_OTHER_COUNTRY",
+   "source": "journey",
+   "case_state": {
+    "route": "URGENT_OTHER_COUNTRY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "URGENT_TRAVEL",
+     "documents": [
+      "PASSPORT"
+     ],
+     "physical": "NO",
+     "travel_dest": "OTHER",
+     "travel_urgent_basis": "OBJECTIVE_URGENT",
+     "ever_crds": "NO"
+    },
+    "docs": {
+     "PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "URGENT_OTHER_COUNTRY",
+    "guide_key": "URGENT_OTHER_COUNTRY",
+    "legalBasisConfirmed": true,
+    "refuse_reason": null
+   }
+  },
+  {
+   "id": "clean:B5_RENEWAL_FR_alternative_proof",
+   "source": "journey",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "NO",
+     "civil_change": "NO",
+     "identity_detail": "HAS_PHOTO_DOC"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": true,
+    "route": "B5_EXISTING_CRDS",
+    "guide_key": "B5_RENEWAL_FR",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "legal_basis_unconfirmed"
+   }
+  },
+  {
+   "id": "blocked:no_foreign_proof",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "NO",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_FR",
+    "legalBasisConfirmed": true,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "blocked:local_proof_NL_BRP",
+   "source": "journey",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "NL",
+     "residence_country_name": "Țările de Jos",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "local_proof_type": "BRP",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_NL",
+    "legalBasisConfirmed": false,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "blocked:urgent_from_romania",
+   "source": "journey",
+   "case_state": {
+    "route": "URGENT_OTHER_COUNTRY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "URGENT_TRAVEL",
+     "documents": [
+      "PASSPORT"
+     ],
+     "physical": "YES",
+     "travel_dest": "OTHER",
+     "travel_urgent_basis": "OBJECTIVE_URGENT",
+     "ever_crds": "NO"
+    },
+    "docs": {
+     "PASSPORT": "LOST"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "route": "URGENT_OTHER_COUNTRY",
+    "guide_key": "URGENT_OTHER_COUNTRY",
+    "legalBasisConfirmed": true,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "blocked:d1_expired_crds",
+   "source": "journey",
+   "case_state": {
+    "route": "D1_TEMPORARY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "KEEP_FOREIGN_DOMICILE",
+     "documents": [
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "derived_domicile": "ABROAD",
+     "domicile_intent": "KEEP",
+     "d1_crds": "EXPIRED",
+     "ro_residence": "OWN",
+     "ro_residence_proof": "YES",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "route": "D1_TEMPORARY",
+    "guide_key": "D1_TEMPORARY",
+    "legalBasisConfirmed": true,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "forged:A2_with_passport_only",
+   "source": "forged",
+   "case_state": {
+    "route": "A2_PROXY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "can_come": "NO",
+     "representative": "YES",
+     "poa": "YES",
+     "ro_address": "OWN"
+    },
+    "docs": {
+     "PASSPORT": "VALID"
+    }
+   },
+   "why": "A3_FIRST_ID_CONSULAR is the derived route; a first identity card is never sold",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "A2_PROXY"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:travel_title_while_in_romania",
+   "source": "forged",
+   "case_state": {
+    "route": "TRAVEL_TITLE_RETURN_RO",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "URGENT_TRAVEL",
+     "documents": [
+      "PASSPORT"
+     ],
+     "physical": "YES",
+     "travel_dest": "ROMANIA"
+    },
+    "docs": {
+     "PASSPORT": "LOST"
+    }
+   },
+   "why": "the questionnaire stops at STOP_TRAVEL_ALREADY_RO",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "TRAVEL_TITLE_RETURN_RO"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:D1_without_foreign_domicile",
+   "source": "forged",
+   "case_state": {
+    "route": "D1_TEMPORARY",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "KEEP_FOREIGN_DOMICILE",
+     "documents": [
+      "BIRTH_CERT"
+     ],
+     "ever_crds": "NO",
+     "d1_crds": "VALID",
+     "ro_residence": "OWN",
+     "ro_residence_proof": "YES"
+    },
+    "docs": {}
+   },
+   "why": "domicile is Romania; KEEP_FOREIGN_DOMICILE stops",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "D1_TEMPORARY"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:C1_with_domicile_abroad",
+   "source": "forged",
+   "case_state": {
+    "route": "C1_CEI_ROMANIA",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "CEI",
+     "documents": [
+      "ROMANIAN_ID",
+      "CRDS_PASSPORT"
+     ],
+     "passport_domicile": "CURRENT",
+     "physical": "YES",
+     "ro_address": "OWN"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "CRDS_PASSPORT": "VALID"
+    }
+   },
+   "why": "C3_CEI_NO_RO_DOMICILE is the derived route (not operational)",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "C1_CEI_ROMANIA"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:minor_on_A1",
+   "source": "forged",
+   "case_state": {
+    "route": "A1_PERSONAL_ROMANIA",
+    "answers": {
+     "age": "NO",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "can_come": "YES",
+     "ro_address": "OWN"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "why": "STOP_MINOR",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "A1_PERSONAL_ROMANIA"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:noncitizen_on_A1",
+   "source": "forged",
+   "case_state": {
+    "route": "A1_PERSONAL_ROMANIA",
+    "answers": {
+     "age": "YES",
+     "citizenship": "NO",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "can_come": "YES",
+     "ro_address": "OWN"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "why": "STOP_NONCITIZEN",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "A1_PERSONAL_ROMANIA"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:unsupported_country_on_A1",
+   "source": "forged",
+   "case_state": {
+    "route": "A1_PERSONAL_ROMANIA",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "OTHER",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ID_PROBLEM",
+     "documents": [
+      "ROMANIAN_ID",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "can_come": "YES",
+     "ro_address": "OWN"
+    },
+    "docs": {
+     "ROMANIAN_ID": "EXPIRED",
+     "PASSPORT": "VALID"
+    }
+   },
+   "why": "unsupported country stops",
+   "client_decision_today": {
+    "allowed": true,
+    "guide_key": "A1_PERSONAL_ROMANIA"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "route_not_derivable"
+   }
+  },
+  {
+   "id": "forged:guide_key_other_country",
+   "source": "forged_request",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    }
+   },
+   "request": {
+    "route": "B1_FIRST_CRDS",
+    "guide_key": "B1_FR"
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "case_route_changed",
+    "derived_guide_key": "B1_IT"
+   }
+  },
+  {
+   "id": "forged:status_and_blockers_cleared",
+   "source": "forged_request",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "FR",
+     "residence_country_name": "Franța",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "ROMANIAN_ID"
+     ],
+     "ever_crds": "NO",
+     "derived_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "NO",
+     "birth_cert": "READY",
+     "civil_change": "NO"
+    },
+    "docs": {
+     "ROMANIAN_ID": "VALID"
+    },
+    "status": "GREEN",
+    "blockers": [],
+    "unknowns": []
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "not_eligible"
+   }
+  },
+  {
+   "id": "stale:B1_crds_history_missing",
+   "source": "stale_or_unknown",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "docs": {
+     "CRDS_PASSPORT": "EXPIRED",
+     "PASSPORT": "VALID"
+    },
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "CRDS_PASSPORT",
+      "PASSPORT"
+     ],
+     "passport_domicile": "ROMANIA",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "not_eligible"
+   },
+   "client_decision_today": {
+    "allowed": false
+   }
+  },
+  {
+   "id": "stale:B1_reacquired_without_Q106",
+   "source": "stale_or_unknown",
+   "case_state": {
+    "route": "B1_FIRST_CRDS",
+    "docs": {},
+    "answers": {
+     "age": "YES",
+     "citizenship": "REACQUIRED",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "ESTABLISH_FOREIGN_DOMICILE",
+     "documents": [
+      "BIRTH_CERT"
+     ],
+     "ever_crds": "NO",
+     "foreign_basis": "RESIDENCE",
+     "foreign_proof": "YES",
+     "birth_cert": "READY",
+     "identity_detail": "HAS_PHOTO_DOC"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "not_eligible"
+   },
+   "client_decision_today": {
+    "allowed": false
+   }
+  },
+  {
+   "id": "stale:B5_never_crds_without_Q013",
+   "source": "stale_or_unknown",
+   "case_state": {
+    "route": "B5_EXISTING_CRDS",
+    "docs": {},
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "EXISTING_CRDS_PROBLEM",
+     "documents": [
+      "BIRTH_CERT"
+     ],
+     "ever_crds": "NO",
+     "crds_clarify": "CRDS",
+     "b5case": "RENEWAL",
+     "same_country": "YES",
+     "current_foreign_proof": "YES",
+     "identity_detail": "HAS_PHOTO_DOC"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "not_eligible"
+   },
+   "client_decision_today": {
+    "allowed": false
+   }
+  },
+  {
+   "id": "unknown:urgent_passport_status_unchecked",
+   "source": "stale_or_unknown",
+   "case_state": {
+    "route": "TRAVEL_TITLE_RETURN_RO",
+    "docs": {
+     "PASSPORT": "UNKNOWN"
+    },
+    "answers": {
+     "age": "YES",
+     "citizenship": "YES",
+     "residence_country": "IT",
+     "residence_country_name": "Italia",
+     "civil_change": "NO",
+     "goal": "URGENT_TRAVEL",
+     "documents": [
+      "PASSPORT"
+     ],
+     "physical": "NO",
+     "travel_dest": "ROMANIA"
+    }
+   },
+   "expected": {
+    "allowed": false,
+    "refuse_reason": "not_eligible"
+   },
+   "client_decision_today": {
+    "allowed": false
+   }
+  }
+ ]
+}
