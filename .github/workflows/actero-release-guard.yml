@@ -36,6 +36,8 @@ jobs:
         run: node --test cloudflare/tests/engine-logic-regression.test.mjs
       - name: Verify complete questionnaire journeys across 43 guide keys
         run: node --test cloudflare/tests/engine-full-journeys.test.mjs
+      - name: Verify payment policy, contradictions and the 29 audit cases of 15 Oct 2026
+        run: node --test cloudflare/tests/engine-rules.test.mjs cloudflare/tests/engine-audit-2026-10-15.test.mjs
       - name: Verify guide review register and block incomplete approvals
         run: node --test cloudflare/tests/guide-review-register.test.mjs
       - name: Verify FR/BE/NL/IE official-evidence checklist across 12 guide variants
