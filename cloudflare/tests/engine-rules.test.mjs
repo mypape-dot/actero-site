@@ -83,3 +83,53 @@ test('R15: without a Swiss document the permit type is not asked',()=>{
   assert.ok(!o.seen.includes('Q109'),o.seen.join('>'));
   assert.ok(!o.allUnknowns.some(u=>/documentului elvețian/.test(u)),JSON.stringify(o.allUnknowns));
 });
+
+// ---------- (c) contradictions stop without payment and without loops ----------
+test('M-03: the latest passport shows Romania, so no existing-CRDS guide is offered',()=>{
+  const base={country:'FR',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'ROMANIA'}};
+  const returned=run({...base,answers:{...base.answers,crds_history:'RETURNED'}});
+  assert.equal(returned.kind,'STOP');assert.equal(returned.stopId,'STOP_CRDS_RETURNED');
+  assert.ok(returned.seen.includes('Q012')&&!returned.seen.includes('Q011'),returned.seen.join('>'));
+  const never=run({...base,answers:{...base.answers,crds_history:'NEVER'}});
+  assert.equal(never.route,'B1_FIRST_CRDS');assert.equal(never.key,'B1_FR');
+  const wrong=run({...base,answers:{...base.answers,crds_history:'WRONG',passport_domicile:['ROMANIA','CURRENT'],b5case:'DATA_CHANGE'}});
+  assert.equal(wrong.seen.filter(x=>x==='Q007').length,2,wrong.seen.join('>'));
+  assert.equal(wrong.route,'B5_EXISTING_CRDS');
+});
+
+test('M-03: with a CRDS passport declared, Q012 does not offer "never had a foreign domicile"',()=>{
+  const o=run({country:'FR',documents:['CRDS_PASSPORT','PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED',PASSPORT:'VALID'},
+    answers:{goal:'EXISTING_CRDS_PROBLEM',passport_domicile:'ROMANIA',crds_history:'NEVER'}});
+  assert.equal(o.kind,'OPTION_MISSING');assert.equal(o.at,'Q012');
+  assert.deepEqual([...o.options],['RETURNED','WRONG','UNKNOWN']);
+});
+
+test('decision 2: a CRDS passport plus a latest passport with domicile in Romania stops before B1 payment',()=>{
+  const o=run({country:'DE',documents:['CRDS_PASSPORT','PASSPORT'],statuses:{CRDS_PASSPORT:'EXPIRED',PASSPORT:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',passport_domicile:'ROMANIA',crds_history:'RETURNED'}});
+  assert.equal(o.kind,'STOP');assert.equal(o.stopId,'STOP_CRDS_RETURNED');
+  assert.equal(o.route,null);
+});
+
+test('M-11: "never had a foreign domicile" followed by "I have a CRDS passport" is clarified at Q013',()=>{
+  const base={country:'ES',documents:['BIRTH_CERT'],answers:{goal:'EXISTING_CRDS_PROBLEM',ever_crds:'NO',crds_clarify:'CRDS',identity_detail:'HAS_PHOTO_DOC'}};
+  const had=run({...base,answers:{...base.answers,crds_confirm:'HAD_CRDS',b5case:'RENEWAL',same_country:'YES'}});
+  assert.ok(had.seen.includes('Q013'),had.seen.join('>'));
+  assert.equal(had.route,'B5_EXISTING_CRDS');assert.equal(had.S.answers.ever_crds,'YES');
+  const never=run({...base,answers:{...base.answers,crds_confirm:'NEVER'}});
+  assert.equal(never.route,'B1_FIRST_CRDS');
+});
+
+test('M-08: "Nu sunt sigur" at Q010 stops once instead of looping through Q008',()=>{
+  const o=run({country:'FR',documents:['PASSPORT'],statuses:{PASSPORT:'VALID'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',passport_domicile:'CURRENT',goal_conflict:'UNKNOWN',ever_crds:'NO'}});
+  assert.equal(o.kind,'STOP');assert.equal(o.stopId,'STOP_CRDS_STATUS_UNCLEAR');
+  assert.equal(o.visits.Q010,1);assert.ok(!o.seen.includes('Q008'));
+});
+
+test('safety net: a declared CRDS passport with "never abroad" ends on a contradiction screen, not on payment',()=>{
+  const o=run({country:'IT',documents:['CRDS_PASSPORT'],statuses:{CRDS_PASSPORT:'LOST'},
+    answers:{goal:'ESTABLISH_FOREIGN_DOMICILE',passport_domicile:'UNKNOWN',ever_crds:'NO'}});
+  assert.equal(o.kind,'CONTRADICTION',o.kind+' '+o.seen.join('>'));
+  assert.ok(o.html.includes('id="fixAnswer"'));
+});

@@ -76,7 +76,9 @@ export function run(c,{maxClarifications=3}={}){
   const key=()=>vm.runInContext("typeof guideKeyForCurrent==='function'?guideKeyForCurrent():null",ctx);
   for(let step=0;step<100;step++){
     const cur=S.current;
-    if(cur.startsWith('STOP_'))return {kind:'STOP',stopId:cur,stop:(H().stop||{}).title||cur,stopBody:(H().stop||{}).body||'',
+    // showStop() renames S.current to STOP_RED/STOP_YELLOW; the rendered screen id names the stop.
+    if(cur.startsWith('STOP_'))return {kind:'STOP',stopId:String(H().renderId||'').startsWith('STOP_')?H().renderId:cur,
+      stop:(H().stop||{}).title||cur,stopBody:(H().stop||{}).body||'',
       route:S.route,seen,visits,allUnknowns,S,ctx,$el};
     if(cur==='RESULT'){
       const html=$el('screen').innerHTML;

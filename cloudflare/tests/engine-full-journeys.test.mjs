@@ -19,7 +19,7 @@ const selected=[
   'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish',
   // Pure engine helpers behind the wrappers above (one validity model, explicit inputs).
   'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf',
-  'sameCountryStep'
+  'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
