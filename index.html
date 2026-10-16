@@ -603,15 +603,15 @@ body:has(.paywall-screen):before{opacity:.10;background-image:radial-gradient(rg
       <div class="journey"><span class="journey-step" data-stage="1">Despre tine</span><span class="journey-step" data-stage="2">Situația</span><span class="journey-step" data-stage="3">Actele</span><span class="journey-step" data-stage="4">Soluția</span></div>
       <div class="progress-meta"><span id="sectionLabel">Evaluare</span><span id="progressText">Început</span></div><div class="track"><div id="fill" class="fill"></div></div>
     </div>
-    <div id="screen"><div class="welcome" id="staticWelcomeFallback"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică procedura relevantă și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="staticStartEval" type="button">Începe evaluarea &nbsp;→</button><span class="hero-note">Pregătim evaluarea…</span></div><div id="iosCompatError" style="display:none;margin-top:18px;padding:14px;border:1px solid #e4b9b3;border-radius:14px;background:#fff0ed;color:#8c332d;font-size:12px;line-height:1.5"></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> surse oficiale verificate</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div></div>
+    <div id="screen"><div class="welcome" id="staticWelcomeFallback"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică procedura relevantă și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="staticStartEval" type="button">Începe evaluarea &nbsp;→</button><span class="hero-note">Pregătim evaluarea…</span></div><div id="iosCompatError" style="display:none;margin-top:18px;padding:14px;border:1px solid #e4b9b3;border-radius:14px;background:#fff0ed;color:#8c332d;font-size:12px;line-height:1.5"></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> cu trimitere la surse oficiale</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div></div>
     <div id="actions" class="actions hidden"><button id="back" class="btn ghost">← Înapoi</button><button id="continue" class="btn primary hidden">Continuă</button></div>
   </section>
   <aside class="side">
-    <div class="sidebox accent"><h3>Evaluare ghidată, pe baza situației tale</h3><p>Răspunsurile tale sunt corelate cu procedurile și sursele oficiale relevante, pentru a identifica procedura potrivită.</p><div class="trust"><div class="trustline"><span class="checkmark">✓</span><span>Întrebări adaptate cazului tău</span></div><div class="trustline"><span class="checkmark">✓</span><span>Verificare pe baza surselor oficiale</span></div><div class="trustline"><span class="checkmark">✓</span><span>Neclaritățile sunt semnalate înainte de pașii următori</span></div></div></div>
+    <div class="sidebox accent"><h3>Evaluare ghidată, pe baza situației tale</h3><p>Răspunsurile tale sunt corelate cu procedurile și sursele oficiale relevante, pentru a identifica procedura potrivită.</p><div class="trust"><div class="trustline"><span class="checkmark">✓</span><span>Întrebări adaptate cazului tău</span></div><div class="trustline"><span class="checkmark">✓</span><span>Orientare pe baza surselor oficiale</span></div><div class="trustline"><span class="checkmark">✓</span><span>Neclaritățile sunt semnalate înainte de pașii următori</span></div></div></div>
     <div class="sidebox"><h3>Rezumatul evaluării</h3><p id="caseSideText">Rezumatul se completează pe măsură ce avansezi în evaluare.</p><div id="caseSummary" class="case-mini"></div></div>
   </aside>
 </main>
-<div class="footer">ActeRO · Informații administrative bazate pe surse oficiale verificate.</div>
+<div class="footer">ActeRO · Informații administrative cu trimitere la surse oficiale.</div>
 <pre id="debug" class="debug hidden"></pre>
 </div>
 <script src="./actero-config.js"></script>
@@ -636,7 +636,7 @@ function createCaseId(){
 function caseStorageKey(id){return 'actero_case_'+String(id||'')}
 // ---- Refresh persistence -------------------------------------------------
 // Only screens listed here may be resumed from localStorage; anything else is ignored (never rendered blindly).
-const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q020','Q030','Q031','Q032','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
+const QUESTION_SCREENS=new Set(['Q001','Q002','Q003','Q004','Q005','Q006','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q031','Q032','Q033','Q034','Q040','Q041','Q050','Q051','Q052','Q060','Q101','Q102','Q103','Q105','Q106','Q107','Q108','Q109','Q120','Q121','Q122','Q123','Q124','Q125','Q126','Q201','Q202','Q203','Q204','Q205','Q301','Q401','Q410','Q411','Q412','Q420','Q421']);
 const INTERNAL_SCREENS=new Set(['AFTER_DOCS','ROUTE_COMMON']);
 const STOP_SCREENS=new Set(['STOP_RED','STOP_YELLOW']);
 const PAYWALL_SCREENS=new Set(['RESULT','CHECKOUT','PAID_GUIDE']);
@@ -799,6 +799,9 @@ const docLabels={ROMANIAN_ID:'cartea de identitate / buletinul',PASSPORT:'pașap
 const statusLabels={VALID:'valabil',EXPIRED:'expirat',EXPIRING:'aproape de expirare',LOST:'pierdut',STOLEN:'furat',DAMAGED:'deteriorat',MISSING:'nu îl mai ai',UNKNOWN:'situație neclară'};
 
 function clone(obj){return JSON.parse(JSON.stringify(obj))}
+// One validity model for every engine decision: a document "aproape de expirare" is still valid (M-04, M-07).
+function docState(v){return v==='VALID'||v==='EXPIRING'?'VALID':['EXPIRED','LOST','STOLEN','DAMAGED','MISSING'].includes(v)?'INVALID':'UNKNOWN'}
+function docValid(v){return docState(v)==='VALID'}
 function snapshot(){return {answers:clone(S.answers),docs:clone(S.docs),route:S.route,status:S.status,blockers:clone(S.blockers),unknowns:clone(S.unknowns),docQueue:clone(S.docQueue),docIndex:S.docIndex,current:S.current,clarified:clone(S.clarified||{})}}
 function restore(s){S.answers=s.answers;S.docs=s.docs;S.route=s.route;S.status=s.status;S.blockers=s.blockers;S.unknowns=s.unknowns;S.docQueue=s.docQueue;S.docIndex=s.docIndex;S.current=s.current;S.clarified=clone(s.clarified||{})}
 function push(next){S.history.push(snapshot());S.current=next;render(next);persistCase()}
@@ -813,7 +816,7 @@ function updateDebug(){try{syncOfficialDocumentsForCurrentGuide()}catch(e){conso
 function stageFor(id){
  if(id==='WELCOME')return 0;
  if(['Q001','Q002','Q003','Q004'].includes(id))return 1;
- if(['Q005','Q006','AFTER_DOCS','Q007','Q008','Q010','Q011','Q020','Q030','Q050','Q051','Q052'].includes(id))return 2;
+ if(['Q005','Q006','AFTER_DOCS','Q007','Q008','Q010','Q011','Q012','Q013','Q020','Q030','Q033','Q034','Q050','Q051','Q052'].includes(id))return 2;
  if(id==='RESULT'||id==='CHECKOUT'||id==='PAID_GUIDE'||id.startsWith('STOP_'))return 4;
  return 3;
 }
@@ -829,7 +832,7 @@ function updateCaseSide(){
 }
 function welcome(){
  S.current='WELCOME';setChrome();
- screen.innerHTML=`<div class="welcome"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică procedura relevantă și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="startEval">Începe evaluarea &nbsp;→</button><span class="hero-note">Nu trebuie să știi ce înseamnă CRDS, CEI sau alte denumiri administrative.</span></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> surse oficiale verificate</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div>`;
+ screen.innerHTML=`<div class="welcome"><div class="welcome-badge"><span></span> Proceduri administrative, explicate clar</div><h1>Află ce procedură se aplică și <em>ce ai de făcut.</em></h1><p>Răspunde la câteva întrebări despre situația ta. ActeRO identifică procedura relevantă și organizează pașii, documentele și sursele oficiale aferente.</p><div class="welcome-cta"><button class="hero-btn" id="startEval">Începe evaluarea &nbsp;→</button><span class="hero-note">Nu trebuie să știi ce înseamnă CRDS, CEI sau alte denumiri administrative.</span></div><div class="hero-trust"><span class="hero-chip"><b>✓</b> evaluare adaptată situației</span><span class="hero-chip"><b>✓</b> cu trimitere la surse oficiale</span><span class="hero-chip"><b>✓</b> neclarități semnalate înainte de depunere</span></div></div>`;
  $('startEval').onclick=()=>push('Q001');updateCaseSide();
 }
 function setChrome(label='Evaluare'){
@@ -866,8 +869,12 @@ function q006(){setChrome('Starea actelor');if(S.docIndex>=S.docQueue.length){re
 function afterDocs(){const goal=S.answers.goal;if(goal==='URGENT_TRAVEL'){const validTravel=S.docs.PASSPORT==='VALID'||S.docs.CRDS_PASSPORT==='VALID';if(validTravel){showStop('yellow','Răspunsurile se contrazic','Ai indicat că nu ai un document de călătorie valabil, dar ai marcat un pașaport românesc ca fiind valabil. Modifică răspunsul care nu este corect înainte să continuăm.');return}push('Q020');return}const docs=S.answers.documents||[];if(docs.includes('PASSPORT')||docs.includes('CRDS_PASSPORT'))push('Q007');else push('Q008')}
 function q007(){const opts=[{value:'ROMANIA',label:'România'},{value:'CURRENT',label:S.answers.residence_country_name||'Țara în care locuiesc acum'},{value:'OTHER',label:'Altă țară'},{value:'UNKNOWN',label:'Nu știu / nu mai pot verifica'}];choose({kicker:'Domiciliu',title:'Pe cel mai recent pașaport românesc, ce țară apărea la domiciliu?',lead:'Folosim informația doar ca să alegem procedura potrivită.',opts,key:'passport_domicile',next:'ROUTE_COMMON'})}
 function q008(){choose({kicker:'Domiciliu',title:'Ți-ai stabilit vreodată domiciliul oficial în străinătate?',lead:'De exemplu, printr-un pașaport românesc cu domiciliul în străinătate. Nu ne referim la rezidența fiscală sau la permisul local de ședere.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ever_crds',next:'ROUTE_COMMON'})}
-function domicileState(){if(S.answers.passport_domicile==='ROMANIA')return'ROMANIA';if(['CURRENT','OTHER'].includes(S.answers.passport_domicile))return'ABROAD';if(S.answers.ever_crds==='YES')return'ABROAD';if(S.answers.ever_crds==='NO')return'ROMANIA';return'UNKNOWN'}
-function hasRomanianIdentityHistory(){const d=S.answers.documents||[];return d.some(x=>['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'].includes(x))}
+// Engine rules read their inputs explicitly (pure *Of helpers); the S-based wrappers keep the names
+// the private guide scripts call (domicileState, existingCRDSStatus, identityKnown).
+function domicileState(){return domicileOf(S.answers)}
+function domicileOf(a){a=a||{};if(a.passport_domicile==='ROMANIA')return'ROMANIA';if(['CURRENT','OTHER'].includes(a.passport_domicile))return'ABROAD';if(a.ever_crds==='YES')return'ABROAD';if(a.ever_crds==='NO')return'ROMANIA';return'UNKNOWN'}
+function hasRomanianIdentityHistory(){return hasRomanianIdentityHistoryOf(S.answers)}
+function hasRomanianIdentityHistoryOf(a){const d=(a&&a.documents)||[];return d.some(x=>['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'].includes(x))}
 function q050(){choose({kicker:'Te orientăm',title:'Ce ai vrea să rezolvi în primul rând?',lead:'Nu trebuie să știi denumirea procedurii. Alege rezultatul pe care îl urmărești.',opts:[
 {value:'IDENTITY',label:'Să am un act românesc de identitate valabil'},
 {value:'FOREIGN_DOMICILE',label:'Să am domiciliul oficial în țara în care locuiesc'},
@@ -883,10 +890,15 @@ function routeCommon(){const g=S.answers.goal,dom=domicileState();S.answers.deri
  if(dom==='UNKNOWN'){if(S.answers.passport_domicile==='UNKNOWN' && S.answers.ever_crds===undefined){push('Q008');return}showStop('yellow','Trebuie să clarificăm domiciliul oficial','Am încercat să îl stabilim din răspunsurile tale, dar informația rămâne neclară. Ca să nu alegem procedura greșită, avem nevoie să verifici această informație.','Poți reveni la evaluare după ce verifici dacă ai avut un pașaport românesc cu domiciliul trecut în străinătate.');return}
  if(g==='ESTABLISH_FOREIGN_DOMICILE'){
    if(dom==='ABROAD'){push('Q010');return}
-   S.route='B1_FIRST_CRDS';if(S.answers.citizenship==='REACQUIRED'&&!hasRomanianIdentityHistory()){push('Q106');return}push('Q101');return
+   // A CRDS passport plus a latest passport with domicile in Romania: domicile was moved back (decision 2, Q012).
+   if(S.answers.passport_domicile==='ROMANIA'&&(S.answers.documents||[]).includes('CRDS_PASSPORT')){push('Q012');return}
+   S.route='B1_FIRST_CRDS';push(firstCrdsStart());return
  }
  if(g==='EXISTING_CRDS_PROBLEM'){
-   if(dom==='ROMANIA' && !(S.answers.documents||[]).includes('CRDS_PASSPORT')){push('Q011');return}
+   // M-03: the latest passport shows Romania, so an existing CRDS cannot be assumed.
+   if(S.answers.passport_domicile==='ROMANIA'){push('Q012');return}
+   // M-11: "never had a foreign domicile" cannot coexist with a declared CRDS passport.
+   if(dom==='ROMANIA'){push((S.answers.documents||[]).includes('CRDS_PASSPORT')?'Q013':'Q011');return}
    S.route='B5_EXISTING_CRDS';push(nextB5Screen());return
  }
  if(g==='ID_PROBLEM'){
@@ -900,23 +912,71 @@ function routeCommon(){const g=S.answers.goal,dom=domicileState();S.answers.deri
    S.answers.domicile_intent='MOVE';S.route='D2_PERMANENT_RETURN';push('Q420');return
  }
 }
-function q010(){choose({kicker:'Clarificare',title:'Pașaportul indică deja un domiciliu în străinătate',lead:'Asta sugerează că nu este vorba despre primul CRDS.',opts:[{value:'RENEW',label:'Vreau să reînnoiesc / înlocuiesc pașaportul cu domiciliul în străinătate'},{value:'WRONG',label:'Am răspuns greșit despre domiciliul din pașaport'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'goal_conflict',next:v=>{if(v==='RENEW'){S.route='B5_EXISTING_CRDS';return nextB5Screen()}if(v==='WRONG'){delete S.answers.passport_domicile;return'Q007'}return'Q008'}})}
-function q011(){choose({kicker:'Clarificare',title:'Când spui „domiciliu în străinătate”, la ce te referi?',lead:'Rezidența locală și domiciliul CRDS nu sunt același lucru.',opts:[{value:'CRDS',label:'La un pașaport românesc cu domiciliul în străinătate'},{value:'LOCAL_RESIDENCE',label:'La documentul meu de rezidență din țara unde locuiesc'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'crds_clarify',next:v=>{if(v==='CRDS'){S.route='B5_EXISTING_CRDS';return nextB5Screen()}if(v==='LOCAL_RESIDENCE'){S.route='B1_FIRST_CRDS';return'Q101'}return'STOP_DOMICILE_UNKNOWN'}})}
+// First screen of the first-CRDS (B1) journey. R07: after acquiring or re-acquiring citizenship the
+// certificate question is asked once, on every way into B1, unless a valid Romanian identity document
+// already shows that a Romanian document was issued after citizenship. An expired one may predate it.
+function firstCrdsStart(){const a=S.answers;
+ if(a.citizenship==='REACQUIRED'&&a.post_citizenship_romanian_id===undefined
+   &&!['ROMANIAN_ID','PASSPORT','CRDS_PASSPORT','CEI'].some(d=>docValid((S.docs||{})[d])))return'Q106';
+ return'Q101'}
+function q010(){choose({kicker:'Clarificare',title:'Pașaportul indică deja un domiciliu în străinătate',lead:'Asta sugerează că nu este vorba despre primul CRDS.',opts:[{value:'RENEW',label:'Vreau să reînnoiesc / înlocuiesc pașaportul cu domiciliul în străinătate'},{value:'WRONG',label:'Am răspuns greșit despre domiciliul din pașaport'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'goal_conflict',next:v=>{if(v==='RENEW'){S.route='B5_EXISTING_CRDS';return nextB5Screen()}if(v==='WRONG'){
+   // M-14: without a declared passport the wrong answer was "domiciliu în străinătate" (Q008), not the passport country.
+   if((S.answers.documents||[]).some(x=>['PASSPORT','CRDS_PASSPORT'].includes(x))){delete S.answers.passport_domicile;return'Q007'}
+   delete S.answers.ever_crds;return'Q008'}return'STOP_CRDS_STATUS_UNCLEAR'}})} // M-08: no loop back through Q008
+function q011(){choose({kicker:'Clarificare',title:'Când spui „domiciliu în străinătate”, la ce te referi?',lead:'Rezidența locală și domiciliul CRDS nu sunt același lucru.',opts:[{value:'CRDS',label:'La un pașaport românesc cu domiciliul în străinătate'},{value:'LOCAL_RESIDENCE',label:'La documentul meu de rezidență din țara unde locuiesc'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'crds_clarify',next:v=>{if(v==='CRDS')return'Q013';if(v==='LOCAL_RESIDENCE'){S.route='B1_FIRST_CRDS';return firstCrdsStart()}return'STOP_DOMICILE_UNKNOWN'}})} // M-06
+// M-03 / decision 2: the latest passport shows Romania. Find out what happened to the foreign domicile.
+function q012(){const hasCrds=(S.answers.documents||[]).includes('CRDS_PASSPORT');
+ const opts=[{value:'RETURNED',label:'Am avut domiciliul în străinătate, apoi l-am mutat înapoi în România'},{value:'WRONG',label:'Am greșit: cel mai recent pașaport are domiciliul în străinătate'},{value:'NEVER',label:'Nu am avut niciodată domiciliul oficial în străinătate'},{value:'UNKNOWN',label:'Nu sunt sigur'}]
+  .filter(o=>!(hasCrds&&o.value==='NEVER'));
+ choose({kicker:'Clarificare',title:'Pe cel mai recent pașaport, domiciliul era în România. Ce s-a întâmplat cu domiciliul din străinătate?',lead:'Cel mai recent pașaport arată, de regulă, domiciliul pe care îl ai acum. Răspunsul schimbă procedura.',opts,key:'crds_history',next:v=>{if(v==='RETURNED')return'STOP_CRDS_RETURNED';if(v==='WRONG'){delete S.answers.passport_domicile;return'Q007'}if(v==='NEVER'){S.route='B1_FIRST_CRDS';return firstCrdsStart()}return'STOP_DOMICILE_UNKNOWN'}})}
+// M-11: "never had a foreign domicile" (Q008) contradicts a CRDS passport. Ask which one is true.
+function q013(){const hasCrds=(S.answers.documents||[]).includes('CRDS_PASSPORT');
+ const opts=[{value:'HAD_CRDS',label:'Am sau am avut un pașaport românesc cu domiciliul în străinătate'},{value:'NEVER',label:'Nu am avut niciodată domiciliul oficial în străinătate'},{value:'UNKNOWN',label:'Nu sunt sigur'}]
+  .filter(o=>!(hasCrds&&o.value==='NEVER'));
+ choose({kicker:'Clarificare',title:'Ai spus că nu ți-ai stabilit niciodată domiciliul oficial în străinătate. Care variantă este corectă?',lead:'Un pașaport românesc cu domiciliul în străinătate înseamnă că domiciliul oficial a fost stabilit în străinătate.',opts,key:'crds_confirm',next:v=>{if(v==='HAD_CRDS'){S.answers.ever_crds='YES';S.route='B5_EXISTING_CRDS';return nextB5Screen()}if(v==='NEVER'){S.route='B1_FIRST_CRDS';return firstCrdsStart()}return'STOP_DOMICILE_UNKNOWN'}})}
 function q020(){choose({kicker:'Locația actuală',title:'Ești în acest moment în România?',lead:'Țara în care locuiești și locul în care te afli acum pot fi diferite.',opts:[{value:'YES',label:'Da, sunt în România'},{value:'NO',label:'Nu, sunt în străinătate'}],key:'physical',next:v=>{if(S.answers.goal==='URGENT_TRAVEL')return'Q030';if(S.answers.goal==='CEI'){const dom=domicileState();if(dom==='UNKNOWN')return'Q008';S.answers.cei_case=existingCEIProblem();if(dom==='ABROAD'){S.route='C3_CEI_NO_RO_DOMICILE';return'Q040'}if(v==='YES'){S.route=S.answers.cei_case?'C5_CEI_REPLACEMENT':'C1_CEI_ROMANIA';return'Q202'}return'Q301'}return'RESULT'}})}
-function q030(){choose({kicker:'Călătorie urgentă',title:'Unde trebuie să ajungi urgent?',lead:'Destinația schimbă tipul de document care poate fi folosit.',opts:[{value:'ROMANIA',label:'În România'},{value:'OTHER',label:'În altă țară'},{value:'NONE',label:'Nu mai este urgent'}],key:'travel_dest',next:v=>{if(v==='ROMANIA'){if(S.answers.physical==='YES')return'STOP_TRAVEL_ALREADY_RO';S.route='TRAVEL_TITLE_RETURN_RO';return'RESULT'}if(v==='OTHER'){S.route='URGENT_OTHER_COUNTRY';return'Q031'}return'STOP_GOAL_UNKNOWN'}})}
+function q030(){choose({kicker:'Călătorie urgentă',title:'Unde trebuie să ajungi urgent?',lead:'Destinația schimbă tipul de document care poate fi folosit.',opts:[{value:'ROMANIA',label:'În România'},{value:'OTHER',label:'În altă țară'},{value:'NONE',label:'Nu mai este urgent'}],key:'travel_dest',next:v=>{if(v==='ROMANIA'){if(S.answers.physical==='YES')return'STOP_TRAVEL_ALREADY_RO';S.route='TRAVEL_TITLE_RETURN_RO';return urgentCardStep()}if(v==='OTHER'){S.route='URGENT_OTHER_COUNTRY';return'Q031'}return'STOP_GOAL_UNKNOWN'}})}
 function q031(){choose({kicker:'Motivul urgenței',title:'De ce trebuie să continui urgent călătoria într-un alt stat?',lead:'Pașaportul simplu temporar se eliberează numai în situațiile prevăzute de lege. Motivele exclusiv turistice nu sunt suficiente.',opts:[
  {value:'CONTINUE_JOURNEY',label:'Nu mai am document de călătorie valabil și trebuie să-mi continui urgent călătoria / să-mi reglementez șederea'},
  {value:'OBJECTIVE_URGENT',label:'Am un motiv obiectiv și urgent',sub:'De exemplu medical, familial sau profesional.'},
  {value:'PASSPORT_AT_VISA',label:'Pașaportul electronic este depus pentru obținerea unei vize și trebuie să călătoresc urgent'},
  {value:'TOURISM',label:'Este doar o călătorie turistică'},
  {value:'UNKNOWN',label:'Nu sunt sigur dacă motivul meu se încadrează'}
- ],key:'travel_urgent_basis',next:v=>v==='TOURISM'?'RESULT':domicileState()==='UNKNOWN'?'Q032':'RESULT'})}
-function q032(){choose({kicker:'Domiciliul oficial',title:'Ai domiciliul oficial în România sau în străinătate?',lead:'Lista de documente pentru pașaportul temporar diferă în funcție de domiciliul oficial, nu de locul în care te afli acum.',opts:[{value:'YES',label:'În străinătate',sub:'Am avut / am pașaport CRDS.'},{value:'NO',label:'În România'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ever_crds',next:'RESULT'})}
+ ],key:'travel_urgent_basis',next:v=>v==='TOURISM'?'RESULT':domicileState()==='UNKNOWN'?'Q032':urgentCardStep()})}
+function q032(){choose({kicker:'Domiciliul oficial',title:'Ai domiciliul oficial în România sau în străinătate?',lead:'Lista de documente pentru pașaportul temporar diferă în funcție de domiciliul oficial, nu de locul în care te afli acum.',opts:[{value:'YES',label:'În străinătate',sub:'Am avut / am pașaport CRDS.'},{value:'NO',label:'În România'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ever_crds',next:()=>urgentCardStep()})}
+// M-04 / decision 3: a document that is still valid ("aproape de expirare" included) means no travel title or
+// temporary passport is sold. Only the CEI and the old-model identity card are travel documents in the EU, EEA and
+// Switzerland (PRADO ROU-BO-03001; Legea 248/2005, art. 6^1); the simple identity card is not (carteadeidentitate.gov.ro/utile).
+// LEGAL-UNVERIFIED (needs human confirmation against the current statute and carrier/border practice): the
+// citations above live only in this comment; the CIS=not-a-travel-document rule actively drives a travel-title
+// offer, and the UK entry premise (ID_CARD_UK_CHECK) is uncited. Confirm before relying on the conclusion.
+function travelCardOf(a,docs){a=a||{};docs=docs||{};
+ if(docValid(docs.CEI))return'TRAVEL';
+ if(!docValid(docs.ROMANIAN_ID))return'NONE';
+ const t=a.id_card_type;return t==='OLD_MODEL'||t==='CEI'?'TRAVEL':(t===undefined||t==='UNKNOWN')?'UNKNOWN':'NONE'}
+function urgentCardStep(){const a=S.answers,docs=S.docs||{};
+ if(a.physical==='YES')return'RESULT'; // M-05: decided at the result, nothing else to ask
+ if(docValid(docs.PASSPORT)||docValid(docs.CRDS_PASSPORT))return'RESULT';
+ if(!docValid(docs.CEI)&&docValid(docs.ROMANIAN_ID)&&a.id_card_type===undefined)return'Q033';
+ if(travelCardOf(a,docs)==='TRAVEL'&&a.id_card_area===undefined)return'Q034';
+ return'RESULT'}
+function q033(){choose({kicker:'Cartea de identitate',title:'Ce fel de carte de identitate românească ai?',lead:'Unele cărți de identitate românești sunt și document de călătorie în UE, SEE și Elveția. Altele nu sunt.',opts:[
+ {value:'OLD_MODEL',label:'Cartea de identitate de model vechi',sub:'Cardul fără cip, emis înainte de cartea electronică.'},
+ {value:'CEI',label:'Cartea electronică de identitate (CEI)',sub:'Cardul cu cip.'},
+ {value:'CIS',label:'Cartea de identitate simplă',sub:'Varianta nouă fără cip, care nu este document de călătorie.'},
+ {value:'CIP',label:'Cartea de identitate provizorie'},
+ {value:'UNKNOWN',label:'Nu știu ce tip este'}],key:'id_card_type',next:v=>v==='OLD_MODEL'||v==='CEI'?'Q034':'RESULT'})}
+function q034(){const toRo=S.answers.travel_dest==='ROMANIA';
+ choose({kicker:'Cartea de identitate',title:toRo?'Te afli acum într-un stat din UE, din SEE sau în Elveția?':'Și țara în care te afli, și țara în care trebuie să ajungi sunt în UE, SEE sau Elveția?',
+  lead:'Cu o carte de identitate valabilă poți călători între aceste state. Regatul Unit are reguli separate.',
+  opts:toRo?[{value:'YES',label:'Da'},{value:'UK',label:'Sunt în Regatul Unit'},{value:'NO',label:'Nu, sunt în alt stat'},{value:'UNKNOWN',label:'Nu sunt sigur'}]
+   :[{value:'YES',label:'Da, amândouă'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],
+  key:'id_card_area',next:'RESULT'})}
 function q101(){choose({kicker:'Domiciliu în străinătate',title:`Ce situație îți permite să locuiești legal în ${S.answers.residence_country_name||'țara respectivă'}?`,lead:'Este suficient să identificăm o bază relevantă; nu te întrebăm despre toate variantele posibile.',opts:[{value:'RESIDENCE',label:'Am permis / drept de ședere'},{value:'PERMANENT',label:'Am rezidență permanentă / pe termen lung'},{value:'EU',label:'Am document oficial de rezidență ca cetățean UE'},{value:'WORK',label:'Am drept de muncă'},{value:'STUDY',label:'Studiez / urmez pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Am și cetățenia țării'},{value:'OTHER',label:'Altă situație'},{value:'UNKNOWN',label:'Nu știu'}],key:'foreign_basis',next:v=>{if(v==='OTHER'){S.answers.foreign_basis='UNCLASSIFIED_DOCUMENT';return'Q105'}return v==='UNKNOWN'?'Q105':'Q102'}})}
-function q102(){choose({kicker:'Dovadă',title:'Ai un document oficial care dovedește această situație?',lead:'Nu trebuie să îl încarci aici. Verificăm doar dacă îl ai.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>{if(v==='YES'&&S.answers.residence_country==='CH'&&S.answers.foreign_basis!=='CITIZEN')return'Q109';return'Q103'}})}
+function q102(){choose({kicker:'Dovadă',title:'Ai un document oficial care dovedește această situație?',lead:'Nu trebuie să îl încarci aici. Verificăm doar dacă îl ai.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>{if(v==='YES'&&S.answers.residence_country==='CH'&&S.answers.foreign_basis!=='CITIZEN')return'Q109';if(v==='YES'&&needsLocalProof(S.answers,S.route))return'Q126';return'Q103'}})}
 function q103(){choose({kicker:'Documente',title:'Ai certificatul românesc de naștere în original și neplastifiat?',lead:'Întrebarea apare doar pentru această procedură.',opts:[{value:'READY',label:'Da'},{value:'PLASTIFIED',label:'Este plastifiat'},{value:'MISSING',label:'Nu îl mai am'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'birth_cert',next:'Q040'})}
 function q105(){choose({kicker:'Document din străinătate',title:`Ai în ${S.answers.residence_country_name||'țara în care locuiești'} un document oficial legat de rezidență, ședere, muncă, studii sau cetățenie?`,lead:'E în regulă dacă nu știi denumirea exactă. Încercăm mai întâi să aflăm dacă există un document relevant.',opts:[{value:'YES',label:'Da, am un astfel de document'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_document_generic',next:v=>{if(v==='YES'){S.answers.foreign_proof='YES';return'Q108'}if(v==='NO'){S.answers.foreign_proof='NO';return'Q103'}S.answers.foreign_proof='UNKNOWN';return'Q103'}})}
-function q108(){choose({kicker:'Tipul documentului',title:'La ce se referă documentul pe care îl ai?',lead:'Nu trebuie să știi denumirea juridică. Alege varianta care îl descrie cel mai bine.',opts:[{value:'RESIDENCE',label:'Drept de ședere / rezidență'},{value:'PERMANENT',label:'Rezidență permanentă / pe termen lung'},{value:'WORK',label:'Drept de muncă'},{value:'STUDY',label:'Studii / pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Cetățenia țării în care locuiesc'},{value:'UNKNOWN',label:'Tot nu sunt sigur'}],key:'foreign_basis',next:v=>S.answers.residence_country==='CH'&&v!=='CITIZEN'?'Q109':'Q103'})}
+function q108(){choose({kicker:'Tipul documentului',title:'La ce se referă documentul pe care îl ai?',lead:'Nu trebuie să știi denumirea juridică. Alege varianta care îl descrie cel mai bine.',opts:[{value:'RESIDENCE',label:'Drept de ședere / rezidență'},{value:'PERMANENT',label:'Rezidență permanentă / pe termen lung'},{value:'WORK',label:'Drept de muncă'},{value:'STUDY',label:'Studii / pregătire profesională'},{value:'FAMILY',label:'Reunificare familială'},{value:'CITIZEN',label:'Cetățenia țării în care locuiesc'},{value:'UNKNOWN',label:'Tot nu sunt sigur'}],key:'foreign_basis',next:v=>S.answers.residence_country==='CH'&&v!=='CITIZEN'?'Q109':needsLocalProof(S.answers,S.route)?'Q126':'Q103'})}
 
 function q109(){choose({
   kicker:'Document din Elveția',
@@ -937,14 +997,22 @@ function q109(){choose({
 function q106(){choose({kicker:'Cetățenie română',title:'După ce ai dobândit sau redobândit cetățenia română, ai avut vreodată un pașaport sau act de identitate românesc?',lead:'Întrebarea contează pentru documentele cerute în cazul primului pașaport cu domiciliul în străinătate.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'post_citizenship_romanian_id',next:v=>{if(v==='YES'){S.answers.citizenship_cert_required='NO';delete S.answers.citizenship_cert_available;return'Q101'}if(v==='NO'){S.answers.citizenship_cert_required='YES';if((S.answers.documents||[]).includes('CITIZENSHIP_CERT')){S.answers.citizenship_cert_available='YES';return'Q101'}return'Q107'}S.answers.citizenship_cert_required='POSSIBLE';return'Q107'}})}
 function q107(){choose({kicker:'Certificat de cetățenie',title:'Ai certificatul sau cardul de cetățenie română?',lead:'Dacă nu ai avut acte românești după dobândirea/redobândirea cetățeniei, acest document poate fi necesar pentru procedura ta.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'citizenship_cert_available',next:v=>{if(S.answers.citizenship_cert_required==='POSSIBLE'&&v==='YES')S.answers.citizenship_cert_required='YES';return'Q101'}})}
 function existingCEIProblem(){const st=S.docs.CEI;return ['EXPIRED','EXPIRING','LOST','STOLEN','DAMAGED'].includes(st)?st:null}
-function existingCRDSStatus(){return S.docs.CRDS_PASSPORT || (domicileState()==='ABROAD'?S.docs.PASSPORT:null) || null}
-function nextB5Screen(){const st=existingCRDSStatus();if(st==='EXPIRED'||st==='EXPIRING'){S.answers.b5case='RENEWAL';return'Q121'}if(st==='STOLEN'){S.answers.b5case='STOLEN';return'Q122'}if(st==='LOST'){S.answers.b5case='LOST';return'Q121'}if(st==='DAMAGED'){S.answers.b5case='DAMAGED';return'Q121'}return'Q120'}
-function nextD1Screen(){const st=existingCRDSStatus();if(st==='VALID'){S.answers.d1_crds='VALID';return'Q411'}if(st==='EXPIRED'||st==='EXPIRING'){S.answers.d1_crds='EXPIRED';return'Q411'}if(st==='LOST'||st==='STOLEN'||st==='MISSING'||st==='DAMAGED'){S.answers.d1_crds='LOST';return'Q411'}return'Q410'}
-function q120(){choose({kicker:'Pașaport cu domiciliul în străinătate',title:'Ce vrei să rezolvi?',lead:'Întrebarea apare numai dacă nu am putut deduce deja problema din răspunsurile tale.',opts:[{value:'RENEWAL',label:'A expirat / expiră'},{value:'LOST',label:'L-am pierdut'},{value:'STOLEN',label:'Mi-a fost furat'},{value:'DAMAGED',label:'Este deteriorat'},{value:'DATA_CHANGE',label:'Mi-am schimbat numele sau datele'},{value:'COUNTRY_CHANGE',label:'Locuiesc acum în altă țară'},{value:'MOVE_RO',label:'Vreau să-mi mut domiciliul în România'}],key:'b5case',next:v=>{if(v==='MOVE_RO'){S.route='D2_PERMANENT_RETURN';return'Q420'}if(v==='STOLEN')return'Q122';if(v==='COUNTRY_CHANGE'){S.answers.same_country='NO';return'Q123'}if(['RENEWAL','LOST','DAMAGED','DATA_CHANGE'].includes(v))return'Q121';return'Q040'}})}
+function existingCRDSStatus(){return crdsStatusOf(S.answers,S.docs)}
+function crdsStatusOf(a,docs){docs=docs||{};return docs.CRDS_PASSPORT||(domicileOf(a)==='ABROAD'?docs.PASSPORT:null)||null}
+// "Aceeași țară" follows from the country printed on the latest passport; Q121 only when that is unknown (M-02).
+function sameCountryStep(){const pd=S.answers.passport_domicile;if(pd==='CURRENT'){S.answers.same_country='YES';return'Q124'}if(pd==='OTHER'){S.answers.same_country='NO';return'Q123'}return'Q121'}
+function nextB5Screen(){const st=existingCRDSStatus();if(st==='EXPIRED'||st==='EXPIRING'){S.answers.b5case='RENEWAL';return sameCountryStep()}if(st==='STOLEN'){S.answers.b5case='STOLEN';return'Q122'}if(st==='LOST'){S.answers.b5case='LOST';return sameCountryStep()}if(st==='DAMAGED'){S.answers.b5case='DAMAGED';return sameCountryStep()}return'Q120'}
+function nextD1Screen(){const st=existingCRDSStatus();if(docValid(st)){S.answers.d1_crds='VALID';return'Q411'}if(st==='EXPIRED'){S.answers.d1_crds='EXPIRED';return'Q411'}if(st==='LOST'||st==='STOLEN'||st==='MISSING'||st==='DAMAGED'){S.answers.d1_crds='LOST';return'Q411'}return'Q410'}
+function q120(){const st=existingCRDSStatus(),pd=S.answers.passport_domicile;
+ // Only answers compatible with what was already declared (M-11): a passport declared valid was not
+ // lost or stolen, and a passport showing the current country does not mean the client moved (M-02).
+ const opts=[{value:'RENEWAL',label:'A expirat / expiră'},{value:'LOST',label:'L-am pierdut'},{value:'STOLEN',label:'Mi-a fost furat'},{value:'DAMAGED',label:'Este deteriorat'},{value:'DATA_CHANGE',label:'Mi-am schimbat numele sau datele'},{value:'COUNTRY_CHANGE',label:'Locuiesc acum în altă țară'},{value:'MOVE_RO',label:'Vreau să-mi mut domiciliul în România'}]
+  .filter(o=>!(docValid(st)&&['LOST','STOLEN'].includes(o.value))&&!(pd==='CURRENT'&&o.value==='COUNTRY_CHANGE'));
+ choose({kicker:'Pașaport cu domiciliul în străinătate',title:'Ce vrei să rezolvi?',lead:'Întrebarea apare numai dacă nu am putut deduce deja problema din răspunsurile tale.',opts,key:'b5case',next:v=>{if(v==='MOVE_RO'){S.route='D2_PERMANENT_RETURN';return'Q420'}if(v==='STOLEN')return'Q122';if(v==='COUNTRY_CHANGE'){S.answers.same_country='NO';return'Q123'}if(['RENEWAL','LOST','DAMAGED','DATA_CHANGE'].includes(v))return sameCountryStep();return'Q040'}})}
 function q121(){choose({kicker:'Țara de domiciliu',title:'Mai locuiești în aceeași țară trecută în pașaport?',lead:'Dacă țara s-a schimbat, trebuie verificată situația pentru noua țară.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'same_country',next:v=>v==='NO'?'Q123':v==='YES'?'Q124':'Q040'})}
-function q124(){const caseLead=S.answers.b5case==='LOST'?'La înlocuirea unui CRDS pierdut trebuie verificat că domiciliul tău actual din străinătate este în continuare susținut de un document relevant.':S.answers.b5case==='STOLEN'?'La înlocuirea unui CRDS furat trebuie verificată atât dovada furtului, cât și dovada actuală a domiciliului din străinătate.':S.answers.b5case==='DAMAGED'?'La înlocuirea unui CRDS deteriorat verificăm și dovada actuală a domiciliului din străinătate.':S.answers.b5case==='DATA_CHANGE'?'Pentru un nou CRDS cu date actualizate verificăm și dovada actuală a domiciliului din străinătate.':'La reînnoire verificăm situația actuală, nu doar faptul că ai avut CRDS în trecut.';choose({kicker:'Dovada domiciliului',title:`Ai un document oficial actual care dovedește că locuiești legal în ${S.answers.residence_country_name||'țara de domiciliu'}?`,lead:caseLead,opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'current_foreign_proof',next:v=>v==='YES'&&S.answers.residence_country==='CH'?'Q125':'Q040'})}
-function q122(){choose({kicker:'Furt',title:'Ai dovada eliberată de poliție pentru furt?',lead:'Furtul este tratat separat de pierdere. După dovada furtului verificăm și dacă domiciliul tău actual din străinătate este încă susținut de un document relevant.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'theft_proof',next:'Q121'})}
-function q123(){choose({kicker:'Noua țară',title:`Ai un document oficial care dovedește rezidența / dreptul de ședere în ${S.answers.residence_country_name||'țara în care locuiești'}?`,lead:'Dovada trebuie să corespundă țării în care vrei domiciliul actualizat.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>v==='YES'&&S.answers.residence_country==='CH'?'Q125':'Q040'})}
+function q124(){const caseLead=S.answers.b5case==='LOST'?'La înlocuirea unui CRDS pierdut trebuie verificat că domiciliul tău actual din străinătate este în continuare susținut de un document relevant.':S.answers.b5case==='STOLEN'?'La înlocuirea unui CRDS furat trebuie verificată atât dovada furtului, cât și dovada actuală a domiciliului din străinătate.':S.answers.b5case==='DAMAGED'?'La înlocuirea unui CRDS deteriorat verificăm și dovada actuală a domiciliului din străinătate.':S.answers.b5case==='DATA_CHANGE'?'Pentru un nou CRDS cu date actualizate verificăm și dovada actuală a domiciliului din străinătate.':'La reînnoire verificăm situația actuală, nu doar faptul că ai avut CRDS în trecut.';choose({kicker:'Dovada domiciliului',title:`Ai un document oficial actual care dovedește că locuiești legal în ${S.answers.residence_country_name||'țara de domiciliu'}?`,lead:caseLead,opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'current_foreign_proof',next:v=>v==='YES'&&S.answers.residence_country==='CH'?'Q125':v==='YES'&&needsLocalProof(S.answers,S.route)?'Q126':'Q040'})}
+function q122(){choose({kicker:'Furt',title:'Ai dovada eliberată de poliție pentru furt?',lead:'Furtul este tratat separat de pierdere. După dovada furtului verificăm și dacă domiciliul tău actual din străinătate este încă susținut de un document relevant.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'theft_proof',next:()=>sameCountryStep()})}
+function q123(){choose({kicker:'Noua țară',title:`Ai un document oficial care dovedește rezidența / dreptul de ședere în ${S.answers.residence_country_name||'țara în care locuiești'}?`,lead:'Dovada trebuie să corespundă țării în care vrei domiciliul actualizat.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'foreign_proof',next:v=>v==='YES'&&S.answers.residence_country==='CH'?'Q125':v==='YES'&&needsLocalProof(S.answers,S.route)?'Q126':'Q040'})}
 
 function q125(){choose({
   kicker:'Document din Elveția',
@@ -962,6 +1030,40 @@ function q125(){choose({
   key:'swiss_current_permit',
   next:v=>v==='G'?'STOP_CH_G_RENEW':v==='OTHER'?'STOP_CH_OTHER':'Q040'
 })}
+// Belgium, the Netherlands, Ireland (decision of 15.10). DGP asks for a registration certificate or a document
+// attesting residence; official local sources do not say which local document Romania accepts. Only documents
+// that match that wording are "accepted"; anything else blocks payment until a Romanian authority confirms it.
+// Evidence: cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json.
+// LEGAL-UNVERIFIED (needs Romanian consular confirmation): the accepted[] lists below encode which local
+// BE/NL/IE documents are treated as sufficient. Official Belgian/Dutch/Irish sources describe local evidence
+// categories, NOT which exact documents the Romanian consulate accepts for a CRDS passport. Do NOT treat a
+// document as accepted by Romanian authorities merely because it exists in that country's law. These
+// classifications are not confirmed (cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json: overall_sale_approval=NO,
+// romanian_consular_acceptance_confirmed=false); paymentDecisionFor flags BE/NL/IE as legalBasisConfirmed=false.
+function localProofRule(c){return ({
+ BE:{name:'Belgia',accepted:['EU_CARD','PERMANENT','CITIZEN'],opts:[
+   {value:'EU_CARD',label:'Cardul EU sau vechiul card E',sub:'Documentul de ședere pentru cetățenii UE, primit după decizia privind dreptul de ședere.'},
+   {value:'PERMANENT',label:'Cardul EU+ sau vechiul card E+',sub:'Ședere permanentă.'},
+   {value:'ANNEX19',label:'Doar Anexa 19',sub:'Dovada că ai depus cererea de înregistrare la comună.'},
+   {value:'CITIZEN',label:'Am cetățenia belgiană'},
+   {value:'OTHER',label:'Alt document'},
+   {value:'UNKNOWN',label:'Nu sunt sigur'}]},
+ NL:{name:'Țările de Jos',accepted:['PERMANENT','CITIZEN'],opts:[
+   {value:'PERMANENT',label:'Document de ședere permanentă de la IND',sub:'„Duurzaam verblijf”, de regulă după cel puțin 5 ani.'},
+   {value:'BRP',label:'Extras din registrul BRP',sub:'Înregistrarea ca rezident la municipalitate.'},
+   {value:'BSN',label:'Doar numărul BSN sau înscrierea RNI'},
+   {value:'CITIZEN',label:'Am cetățenia olandeză'},
+   {value:'OTHER',label:'Alt document'},
+   {value:'UNKNOWN',label:'Nu sunt sigur'}]},
+ IE:{name:'Irlanda',accepted:['PERMANENT','CITIZEN'],opts:[
+   {value:'PERMANENT',label:'Certificat de rezidență permanentă',sub:'Pentru cetățenii UE, de regulă după cel puțin 5 ani.'},
+   {value:'CITIZEN',label:'Am cetățenia irlandeză'},
+   {value:'UNDER5',label:'Nu am niciunul dintre acestea',sub:'De exemplu, locuiesc în Irlanda de mai puțin de 5 ani.'},
+   {value:'UNKNOWN',label:'Nu sunt sigur'}]}
+})[c]||null}
+function needsLocalProof(a,route){a=a||{};return !!localProofRule(a.residence_country)&&!(route==='B1_FIRST_CRDS'&&a.foreign_basis==='CITIZEN')}
+function q126(){const lp=localProofRule(S.answers.residence_country)||{name:'țara în care locuiești',opts:[{value:'OTHER',label:'Alt document'},{value:'UNKNOWN',label:'Nu sunt sigur'}]};
+ choose({kicker:'Documentul local',title:`Ce document oficial ai din ${lp.name}?`,lead:'Autoritățile române cer un certificat de înregistrare sau un document care atestă rezidența. Alege documentul pe care îl ai efectiv.',opts:lp.opts,key:'local_proof_type',next:()=>S.route==='B1_FIRST_CRDS'?'Q103':'Q040'})}
 
 function q201(){choose({kicker:'Depunere',title:'Dacă procedura cere prezența ta, poți veni în România?',lead:'Alege varianta realistă pentru perioada următoare. O poți modifica ulterior.',opts:[{value:'YES',label:'Da, pot veni'},{value:'NO',label:'Nu pot veni'},{value:'NOT_SOON',label:'Nu pot veni în perioada următoare'}],key:'can_come',next:v=>{if(v==='YES'){S.route='A1_PERSONAL_ROMANIA';return'Q202'}const hadPriorId=(S.answers.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x));if(!hadPriorId){S.route='A3_FIRST_ID_CONSULAR';return'Q202'}S.route='A2_PROXY';return'Q204'}})}
 function q202(){choose({kicker:'Adresa din România',title:'Ai o adresă în România pe care o poți folosi legal ca domiciliu?',lead:'Dacă nu ai o adresă utilizabilă, procedura poate fi diferită.',opts:[{value:'OWN',label:'Da, este locuința mea'},{value:'HOST',label:'Da, pot fi luat în spațiu de cineva'},{value:'PROOF_MISSING',label:'Am o adresă, dar îmi lipsesc documentele'},{value:'NONE',label:'Nu mai am nicio adresă disponibilă'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ro_address',next:v=>v==='HOST'?'Q203':'Q040'})}
@@ -969,7 +1071,7 @@ function q203(){choose({kicker:'Adresa din România',title:'Persoana care te ia 
 function q204(){choose({kicker:'Reprezentant',title:'Ai o persoană în România pe care o poți împuternici?',lead:'Nu cerem datele persoanei în acest moment.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'representative',next:v=>v==='YES'?'Q205':'Q202'})}
 function q205(){choose({kicker:'Procura',title:'Poți merge la un consulat românesc pentru procura necesară?',lead:'Procura este o condiție separată de faptul că ai un reprezentant.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'poa',next:'Q202'})}
 function q301(){choose({kicker:'CEI',title:'Dacă este nevoie de prezența ta, poți veni în România?',lead:'Alege varianta realistă pentru perioada următoare.',opts:[{value:'YES',label:'Da, pot veni'},{value:'NO',label:'Nu pot veni'},{value:'NOT_SOON',label:'Nu pot veni în perioada următoare'}],key:'can_come',next:v=>{if(v==='YES'){S.route=S.answers.cei_case?'C5_CEI_REPLACEMENT':'C1_CEI_ROMANIA';return'Q202'}S.route='C2_CEI_CONSULAR';return'Q040'}})}
-function q401(){const fromId=S.answers.goal==='ID_PROBLEM';choose({kicker:'Domiciliul oficial',title:fromId?'Ai domiciliul în străinătate. Ce vrei să faci cu el?':'Ce vrei să faci cu domiciliul tău oficial?',lead:fromId?'Pentru cine are domiciliul oficial în străinătate, procedura pentru un act în România depinde de faptul că păstrezi sau muți domiciliul.':'Nu contează doar cât timp stai în România, ci ce vrei să se întâmple administrativ cu domiciliul.',opts:[{value:'KEEP',label:'Vreau să păstrez domiciliul din străinătate'},{value:'MOVE',label:'Vreau să-mi mut domiciliul oficial în România'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'domicile_intent',next:v=>{if(v==='KEEP'){S.route='D1_TEMPORARY';return'Q410'}if(v==='MOVE'){S.route='D2_PERMANENT_RETURN';return'Q420'}return'STOP_GOAL_UNKNOWN'}})}
+function q401(){const fromId=S.answers.goal==='ID_PROBLEM';choose({kicker:'Domiciliul oficial',title:fromId?'Ai domiciliul în străinătate. Ce vrei să faci cu el?':'Ce vrei să faci cu domiciliul tău oficial?',lead:fromId?'Pentru cine are domiciliul oficial în străinătate, procedura pentru un act în România depinde de faptul că păstrezi sau muți domiciliul.':'Nu contează doar cât timp stai în România, ci ce vrei să se întâmple administrativ cu domiciliul.',opts:[{value:'KEEP',label:'Vreau să păstrez domiciliul din străinătate'},{value:'MOVE',label:'Vreau să-mi mut domiciliul oficial în România'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'domicile_intent',next:v=>{if(v==='KEEP'){S.route='D1_TEMPORARY';return nextD1Screen()}if(v==='MOVE'){S.route='D2_PERMANENT_RETURN';return'Q420'}return'STOP_GOAL_UNKNOWN'}})}
 function q410(){choose({kicker:'Pașaport',title:'Pașaportul tău cu domiciliul în străinătate este valabil acum?',lead:'Pentru această procedură, valabilitatea documentului contează.',opts:[{value:'VALID',label:'Da, este valabil'},{value:'EXPIRED',label:'Nu, este expirat'},{value:'LOST',label:'Este pierdut / furat'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'d1_crds',next:'Q411'})}
 function q411(){choose({kicker:'Reședința în România',title:'Ai o adresă în România unde vei locui?',lead:'Aici vorbim despre reședință, nu despre schimbarea domiciliului oficial.',opts:[{value:'OWN',label:'Da, locuința mea'},{value:'HOST',label:'Da, la altcineva'},{value:'PROOF_MISSING',label:'Da, dar nu am încă dovada'},{value:'NONE',label:'Nu'},{value:'UNKNOWN',label:'Nu știu'}],key:'ro_residence',next:v=>{if(v==='OWN'||v==='HOST')return'Q412';if(v==='PROOF_MISSING')S.answers.ro_residence_proof='NO';return'Q040'}})}
 function q412(){choose({kicker:'Dovada adresei',title:'Ai un document cu care poți dovedi adresa unde vei locui în România?',lead:'Pentru această procedură, simpla existență a unei adrese nu este suficientă; trebuie verificată și dovada ei.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'ro_residence_proof',next:'Q040'})}
@@ -979,88 +1081,170 @@ function q040(){choose({kicker:'Starea civilă',title:'De când ți-ai făcut ul
 function q041(){choose({kicker:'Starea civilă',title:'Schimbarea este deja înregistrată și în actele de stare civilă românești?',lead:'Dacă nu este înregistrată, poate exista un pas de rezolvat înaintea documentului principal.',opts:[{value:'YES',label:'Da'},{value:'NO',label:'Nu'},{value:'UNKNOWN',label:'Nu știu'}],key:'civil_sync',next:'RESULT'})}
 function q060(){choose({kicker:'Verificarea identității',title:'Ai fizic la tine un document românesc vechi sau expirat cu fotografia ta?',lead:'Nu îl considerăm automat suficient. Întrebarea ne ajută să știm ce variantă de verificare trebuie inclusă în ghid, fără să ghicim.',opts:[{value:'HAS_PHOTO_DOC',label:'Da, am un astfel de document'},{value:'NO_PHOTO_DOC',label:'Nu, nu am un document românesc cu fotografie la mine'},{value:'UNKNOWN',label:'Nu sunt sigur'}],key:'identity_detail',next:'RESULT'})}
 
-function identityKnown(route=S.route){const statuses=Object.values(S.docs);if(route==='D2_PERMANENT_RETURN'&&['VALID','EXPIRED','EXPIRING'].includes(existingCRDSStatus()))return'PASS';if(statuses.some(v=>v==='VALID'))return'PASS';if(S.answers.identity_detail==='HAS_PHOTO_DOC')return'REVIEW_KNOWN';if(S.answers.identity_detail==='NO_PHOTO_DOC')return'OFFICIAL_CHECK_KNOWN';if(S.answers.identity_detail==='UNKNOWN')return'UNKNOWN';if(statuses.some(v=>['EXPIRED','EXPIRING','LOST','STOLEN','DAMAGED'].includes(v)))return'REVIEW';return'UNKNOWN'}
-function computeResult(){S.blockers=[];S.unknowns=[];let status='GREEN';const a=S.answers,r=S.route,dom=domicileState();
- function block(t){S.blockers.push(t);if(status!=='YELLOW_U')status='YELLOW_R'}
- function unknown(t){S.unknowns.push(t);status='YELLOW_U'}
- if(!r){unknown('Nu am putut stabili încă procedura potrivită.');S.status=status;return}
+function identityKnown(route=S.route){return identityOf(S.answers,S.docs,route)}
+function identityOf(a,docs,route){a=a||{};const statuses=Object.values(docs||{});if(route==='D2_PERMANENT_RETURN'&&['VALID','EXPIRED','EXPIRING'].includes(crdsStatusOf(a,docs)))return'PASS';if(statuses.some(docValid))return'PASS';if(a.identity_detail==='HAS_PHOTO_DOC')return'REVIEW_KNOWN';if(a.identity_detail==='NO_PHOTO_DOC')return'OFFICIAL_CHECK_KNOWN';if(a.identity_detail==='UNKNOWN')return'UNKNOWN';if(statuses.some(v=>['EXPIRED','LOST','STOLEN','DAMAGED'].includes(v)))return'REVIEW';return'UNKNOWN'}
+function computeResult(){const ev=evaluateCase({answers:S.answers,docs:S.docs,route:S.route});
+ S.blockers=ev.blockers.map(b=>b.text);S.blockerCodes=ev.blockers.map(b=>b.code);S.unknowns=ev.unknowns;S.notes=ev.notes;S.status=ev.status}
+// M-01: one pure evaluation (reads only its input, never S) with a stable code on every blocker, so the
+// payment policy, the free explanation and, later, the Worker can all use the same decision.
+// Notes are information for the guide, not blockers (M-12, identity with an old photo document).
+function evaluateCase(input){
+ const a=(input&&input.answers)||{},docs=(input&&input.docs)||{},r=(input&&input.route)||null,dom=domicileOf(a);
+ const blockers=[],unknowns=[],notes=[];let status='GREEN';
+ function block(code,t){blockers.push({code,text:t});if(status!=='YELLOW_U')status='YELLOW_R'}
+ function unknown(t){unknowns.push(t);status='YELLOW_U'}
+ function note(code,t){notes.push({code,text:t})}
+ if(!r){unknown('Nu am putut stabili încă procedura potrivită.');return {blockers,unknowns,notes,status}}
  if(dom==='UNKNOWN' && !['TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(r))unknown('Domiciliul oficial trebuie clarificat înainte de a confirma procedura.');
+ const lp=localProofRule(a.residence_country);
+ // Belgium, the Netherlands, Ireland (decision of 15.10): pay only with a local document tied to the DGP criterion.
+ function localProof(){if(!lp)return;const v=a.local_proof_type;
+   if(!v||v==='UNKNOWN')unknown(`Trebuie clarificat ce document oficial ai din ${lp.name}.`);
+   else if(!lp.accepted.includes(v))block('LOCAL_PROOF_UNCONFIRMED',`Nu putem confirma că documentul tău din ${lp.name} este acceptat pentru pașaportul cu domiciliul în străinătate.`)}
+ function swissCurrent(){if(a.residence_country!=='CH')return;
+   if(a.swiss_current_permit==='G')unknown('Permisul G indică faptul că domiciliul principal este într-un alt stat, nu în Elveția.');
+   if(!a.swiss_current_permit||a.swiss_current_permit==='UNKNOWN'||a.swiss_current_permit==='OTHER')unknown('Trebuie clarificat tipul documentului actual din Elveția.')}
  if(r==='B1_FIRST_CRDS'){
-   if(!a.foreign_basis||a.foreign_basis==='UNKNOWN')unknown('Trebuie clarificată baza pentru domiciliul în străinătate.');
-   if(a.foreign_basis==='UNCLASSIFIED_DOCUMENT')unknown('Ai un document relevant, dar trebuie identificat tipul exact înainte de confirmarea procedurii.');
-   else {
-     if(a.foreign_proof==='NO')block('Nu ai confirmat încă o dovadă pentru situația ta de ședere în străinătate.');
-     if(a.foreign_proof==='UNKNOWN'||!a.foreign_proof)unknown('Trebuie clarificat documentul care dovedește situația ta în țara de rezidență.');
-   }
-   if(a.birth_cert==='PLASTIFIED')block('Certificatul de naștere este plastifiat și trebuie rezolvat înainte de procedură.');
-   if(a.birth_cert==='MISSING')block('Certificatul de naștere lipsește și trebuie rezolvat înainte de procedură.');
+   // M-10: without a foreign document there is nothing to classify; say what is missing instead of asking for its type.
+   if(a.foreign_proof==='NO')block('FOREIGN_PROOF_MISSING','Nu ai confirmat încă o dovadă pentru situația ta de ședere în străinătate.');
+   else if(a.foreign_proof==='UNKNOWN'||!a.foreign_proof)unknown('Trebuie clarificat documentul care dovedește situația ta în țara de rezidență.');
+   else if(!a.foreign_basis||a.foreign_basis==='UNKNOWN')unknown('Trebuie clarificată baza pentru domiciliul în străinătate.');
+   else if(a.foreign_basis==='UNCLASSIFIED_DOCUMENT')unknown('Ai un document relevant, dar trebuie identificat tipul exact înainte de confirmarea procedurii.');
+   if(a.foreign_proof==='YES'&&a.foreign_basis!=='CITIZEN')localProof();
+   if(a.birth_cert==='PLASTIFIED')block('BIRTH_CERT_PLASTIFIED','Certificatul de naștere este plastifiat și trebuie rezolvat înainte de procedură.');
+   if(a.birth_cert==='MISSING')block('BIRTH_CERT_MISSING','Certificatul de naștere lipsește și trebuie rezolvat înainte de procedură.');
    if(a.birth_cert==='UNKNOWN'||!a.birth_cert)unknown('Trebuie clarificată situația certificatului de naștere.');
-   if(a.residence_country==='CH'&&a.foreign_basis!=='CITIZEN'){
+   if(a.residence_country==='CH'&&a.foreign_basis!=='CITIZEN'&&a.foreign_proof==='YES'){ // R15: the permit type only matters for a declared document
      if(a.swiss_permit==='G')unknown('Permisul G indică faptul că domiciliul principal este în alt stat, nu în Elveția.');
      if(!a.swiss_permit||a.swiss_permit==='UNKNOWN'||a.swiss_permit==='OTHER')unknown('Trebuie clarificat tipul documentului elvețian înainte să confirmăm ghidul pentru domiciliu în Elveția.');
    }
+   // Decision 2 (16.10), safety net behind Q012: a foreign domicile moved back to Romania is not a first CRDS until DGP confirms it.
+   if(a.crds_history==='RETURNED')block('CRDS_RETURNED_TO_RO','Ai avut deja domiciliul în străinătate și l-ai mutat înapoi în România; procedura pentru un nou domiciliu în străinătate trebuie confirmată de DGP.');
  }
  if(r==='B5_EXISTING_CRDS'){
-   if(a.b5case==='STOLEN'&&a.theft_proof==='NO')block('Trebuie rezolvată dovada privind furtul pașaportului.');
+   const replaced=['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE'].includes(a.b5case);
+   if(a.b5case==='STOLEN'&&a.theft_proof==='NO')block('THEFT_PROOF_MISSING','Trebuie rezolvată dovada privind furtul pașaportului.');
    if(a.b5case==='STOLEN'&&(a.theft_proof==='UNKNOWN'||!a.theft_proof))unknown('Trebuie clarificată dovada privind furtul pașaportului.');
-   if(['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE'].includes(a.b5case)&&(a.same_country==='UNKNOWN'||!a.same_country))unknown('Trebuie clarificat dacă locuiești în aceeași țară trecută în pașaport.');
-   if(['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE'].includes(a.b5case)&&a.same_country==='YES'&&a.current_foreign_proof==='NO')block('Trebuie o dovadă actuală pentru situația ta în țara de domiciliu.');
-   if(['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE'].includes(a.b5case)&&a.same_country==='YES'&&(a.current_foreign_proof==='UNKNOWN'||!a.current_foreign_proof))unknown('Trebuie clarificată dovada actuală pentru domiciliul din străinătate.');
-   if(['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE'].includes(a.b5case)&&a.same_country==='YES'&&a.residence_country==='CH'&&a.current_foreign_proof==='YES'){
-     if(a.swiss_current_permit==='G')unknown('Permisul G indică faptul că domiciliul principal este într-un alt stat, nu în Elveția.');
-     if(!a.swiss_current_permit||a.swiss_current_permit==='UNKNOWN'||a.swiss_current_permit==='OTHER')unknown('Trebuie clarificat tipul documentului actual din Elveția.');
-   }
-   if(a.same_country==='NO'&&a.foreign_proof==='NO')block('Trebuie o dovadă relevantă pentru țara în care locuiești acum.');
+   if(replaced&&(a.same_country==='UNKNOWN'||!a.same_country))unknown('Trebuie clarificat dacă locuiești în aceeași țară trecută în pașaport.');
+   if(replaced&&a.same_country==='YES'&&a.current_foreign_proof==='NO')block('CURRENT_PROOF_MISSING','Trebuie o dovadă actuală pentru situația ta în țara de domiciliu.');
+   if(replaced&&a.same_country==='YES'&&(a.current_foreign_proof==='UNKNOWN'||!a.current_foreign_proof))unknown('Trebuie clarificată dovada actuală pentru domiciliul din străinătate.');
+   if(replaced&&a.same_country==='YES'&&a.current_foreign_proof==='YES'){swissCurrent();localProof()}
+   if(a.same_country==='NO'&&a.foreign_proof==='NO')block('NEW_COUNTRY_PROOF_MISSING','Trebuie o dovadă relevantă pentru țara în care locuiești acum.');
    if(a.same_country==='NO'&&(a.foreign_proof==='UNKNOWN'||!a.foreign_proof))unknown('Trebuie clarificat documentul de rezidență pentru noua țară.');
+   if(a.same_country==='NO'&&a.foreign_proof==='YES'){swissCurrent();localProof()} // M-09: a move to Switzerland needs the same permit check
  }
  if(['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','D2_PERMANENT_RETURN','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT'].includes(r)){
-   if(a.ro_address==='NONE'||a.ro_address==='PROOF_MISSING')block('Adresa din România nu este încă pregătită pentru procedură.');
+   if(a.ro_address==='NONE'||a.ro_address==='PROOF_MISSING')block('RO_ADDRESS_NOT_READY','Adresa din România nu este încă pregătită pentru procedură.');
    if(a.ro_address==='UNKNOWN'||!a.ro_address)unknown('Trebuie clarificată adresa din România.');
-   if(a.ro_address==='HOST'&&a.host_consent==='NO')block('Persoana care te primește în spațiu nu și-a confirmat consimțământul.');
+   if(a.ro_address==='HOST'&&a.host_consent==='NO')block('HOST_REFUSES','Persoana care te primește în spațiu nu și-a confirmat consimțământul.');
    if(a.ro_address==='HOST'&&(a.host_consent==='UNKNOWN'||!a.host_consent))unknown('Trebuie clarificat consimțământul persoanei care te primește în spațiu.');
  }
+ // GN-03 (decision 4, 16.10; made symmetric 16.10 PM): the document list for a FIRST Romanian identity
+ // document (no prior carte de identitate / CEI) is not verified individually for our guide, whether
+ // citizenship is held from birth or was acquired/reacquired. Conservative and symmetric: explain for
+ // free, never sell, until the list is verified. A Romanian passport does not establish the ID-card list,
+ // so it does not lift the block; a prior ID card / CEI does, because that is a renewal, not a first ID.
+ if(['A1_PERSONAL_ROMANIA','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA'].includes(r)&&!(a.documents||[]).some(x=>['ROMANIAN_ID','CEI'].includes(x)))
+   block('FIRST_ID_LIST_UNVERIFIED','Este primul tău act de identitate românesc; lista de documente pentru acest caz nu este verificată separat în ghidul nostru.');
  if(r==='A2_PROXY'){
-   if(a.representative==='NO')block('Nu ai încă o persoană în România pe care să o împuternicești.');
+   if(a.representative==='NO')block('NO_REPRESENTATIVE','Nu ai încă o persoană în România pe care să o împuternicești.');
    if(a.representative==='UNKNOWN'||!a.representative)unknown('Trebuie clarificat dacă ai un reprezentant în România.');
    if(a.representative==='YES'){
-     if(a.poa==='NO')block('Procura necesară nu poate fi pregătită momentan.');
+     if(a.poa==='NO')block('NO_POA','Procura necesară nu poate fi pregătită momentan.');
      if(a.poa==='UNKNOWN'||!a.poa)unknown('Trebuie clarificată procura pentru reprezentant.');
    }
  }
- if(r==='C2_CEI_CONSULAR'||r==='C3_CEI_NO_RO_DOMICILE')block('Disponibilitatea acestei etape trebuie verificată înainte de a confirma procedura.');
+ if(r==='C2_CEI_CONSULAR'||r==='C3_CEI_NO_RO_DOMICILE')block('CEI_NOT_OPERATIONAL','Disponibilitatea acestei etape trebuie verificată înainte de a confirma procedura.');
  if(r==='D1_TEMPORARY'){
-   if(a.d1_crds==='EXPIRED'||a.d1_crds==='LOST')block('Pașaportul cu domiciliul în străinătate nu este în starea necesară pentru această procedură.');
+   if(a.d1_crds==='EXPIRED'||a.d1_crds==='LOST')block('CRDS_NOT_VALID','Pașaportul cu domiciliul în străinătate nu este în starea necesară pentru această procedură.');
    if(a.d1_crds==='UNKNOWN'||!a.d1_crds)unknown('Trebuie clarificată valabilitatea pașaportului cu domiciliul în străinătate.');
-   if(a.ro_residence==='NONE'||a.ro_residence==='PROOF_MISSING')block('Reședința din România nu este încă pregătită.');
+   if(a.ro_residence==='NONE'||a.ro_residence==='PROOF_MISSING')block('RO_RESIDENCE_NOT_READY','Reședința din România nu este încă pregătită.');
    if(a.ro_residence==='UNKNOWN'||!a.ro_residence)unknown('Trebuie clarificată adresa unde vei locui în România.');
-   if(['OWN','HOST'].includes(a.ro_residence)&&a.ro_residence_proof==='NO')block('Trebuie pregătită dovada adresei de reședință din România.');
+   if(['OWN','HOST'].includes(a.ro_residence)&&a.ro_residence_proof==='NO')block('RO_RESIDENCE_PROOF_MISSING','Trebuie pregătită dovada adresei de reședință din România.');
    if(['OWN','HOST'].includes(a.ro_residence)&&(a.ro_residence_proof==='UNKNOWN'||!a.ro_residence_proof))unknown('Trebuie clarificat documentul cu care vei dovedi adresa de reședință.');
  }
  if(r==='B1_FIRST_CRDS'&&a.citizenship_cert_required==='POSSIBLE')unknown('Trebuie clarificat dacă ai avut un pașaport sau act de identitate românesc după dobândirea/redobândirea cetățeniei ori să ai certificatul sau cardul de cetățenie disponibil.');
- if(r==='B1_FIRST_CRDS'&&a.citizenship_cert_required==='YES'){if(a.citizenship_cert_available==='NO')block('Lipsește certificatul sau cardul de cetățenie română necesar pentru acest caz.');if(a.citizenship_cert_available==='UNKNOWN'||!a.citizenship_cert_available)unknown('Trebuie clarificată disponibilitatea certificatului sau cardului de cetățenie română.');}
+ if(r==='B1_FIRST_CRDS'&&a.citizenship_cert_required==='YES'){if(a.citizenship_cert_available==='NO')block('CITIZENSHIP_CERT_MISSING','Lipsește certificatul sau cardul de cetățenie română necesar pentru acest caz.');if(a.citizenship_cert_available==='UNKNOWN'||!a.citizenship_cert_available)unknown('Trebuie clarificată disponibilitatea certificatului sau cardului de cetățenie română.');}
  if(a.civil_change==='UNKNOWN')unknown('Trebuie clarificat dacă au existat schimbări de nume sau stare civilă.');
  if(a.civil_change && !['NO','UNKNOWN'].includes(a.civil_change)){
-   if(a.civil_sync==='NO')block('Schimbarea de nume sau stare civilă nu este încă înregistrată în actele românești.');
+   if(a.civil_sync==='NO')block('CIVIL_NOT_TRANSCRIBED','Schimbarea de nume sau stare civilă nu este încă înregistrată în actele românești.');
    if(a.civil_sync==='UNKNOWN'||!a.civil_sync)unknown('Trebuie clarificat dacă schimbarea este înregistrată în România.');
  }
  if(r==='TRAVEL_TITLE_RETURN_RO'){
-   const hasAnyIdentityClue=!!a.identity_detail||hasRomanianIdentityHistory()||(a.documents||[]).some(x=>['BIRTH_CERT','MARRIAGE_CERT','CITIZENSHIP_CERT'].includes(x));
+   const hasAnyIdentityClue=!!a.identity_detail||hasRomanianIdentityHistoryOf(a)||(a.documents||[]).some(x=>['BIRTH_CERT','MARRIAGE_CERT','CITIZENSHIP_CERT'].includes(x));
    if(!hasAnyIdentityClue)unknown('Trebuie clarificat ce documente românești ai pentru verificarea identității.');
-   else block('Identitatea va fi verificată oficial în cadrul procedurii, pe baza documentelor disponibile și a verificărilor consulare.');
+   else note('TRAVEL_TITLE_IDENTITY','Identitatea va fi verificată oficial în cadrul procedurii, pe baza documentelor disponibile și a verificărilor consulare.'); // M-12
  }
  if(r==='URGENT_OTHER_COUNTRY'){
    const ub=a.travel_urgent_basis;
    if(!ub||ub==='UNKNOWN')unknown('Trebuie clarificat motivul obiectiv și urgent al călătoriei.');
-   if(ub==='TOURISM')block('Pașaportul simplu temporar nu se eliberează pentru o deplasare bazată exclusiv pe motive turistice.');
+   if(ub==='TOURISM')block('TOURISM_ONLY','Pașaportul simplu temporar nu se eliberează pentru o deplasare bazată exclusiv pe motive turistice.');
    if(['CONTINUE_JOURNEY','OBJECTIVE_URGENT','PASSPORT_AT_VISA'].includes(ub)&&dom==='UNKNOWN')unknown('Domiciliul oficial trebuie clarificat pentru a alege lista corectă de documente a pașaportului temporar.');
  }
- const idState=identityKnown();
- if(idState==='UNKNOWN' && ['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r))unknown('Trebuie clarificat cu ce documente poate fi stabilită identitatea.');
- if(idState==='REVIEW' && ['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r))unknown('Actele disponibile nu sunt valabile în prezent; trebuie clarificat ce document vechi sau expirat ai fizic la tine.');
- if(idState==='REVIEW_KNOWN' && ['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r))block('Identitatea va trebui verificată oficial folosind documentul românesc vechi sau expirat pe care ai spus că îl ai.');
- if(idState==='OFFICIAL_CHECK_KNOWN' && ['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r))block('Nu ai confirmat un document românesc cu fotografie disponibil; ghidul trebuie să includă mai întâi verificarea oficială a identității.');
- S.status=status
+ if(r==='TRAVEL_TITLE_RETURN_RO'||r==='URGENT_OTHER_COUNTRY'){
+   const toRo=r==='TRAVEL_TITLE_RETURN_RO',card=travelCardOf(a,docs);
+   if(!toRo&&a.physical==='YES')block('TEMP_PASSPORT_FROM_ROMANIA','Pașaportul temporar cerut din România se depune la serviciul de pașapoarte, iar ghidul nostru acoperă cererea din străinătate.'); // M-05
+   else if(docValid(docs.PASSPORT)||docValid(docs.CRDS_PASSPORT))block(toRo?'PASSPORT_STILL_VALID':'PASSPORT_EXPIRING_OTHER_DEST','Pașaportul tău este încă valabil.'); // M-04, decision 3
+   else if(card==='UNKNOWN')unknown('Trebuie clarificat ce tip de carte de identitate ai.');
+   else if(card==='TRAVEL'){
+     const area=a.id_card_area;
+     if(!area||area==='UNKNOWN')unknown('Trebuie clarificat dacă poți călători cu cartea de identitate.');
+     else if(area==='YES')block(toRo?'ID_CARD_IS_TRAVEL_DOC':'ID_CARD_IS_TRAVEL_DOC_OTHER','Cartea ta de identitate este document de călătorie pentru acest drum.');
+     else if(area==='UK'&&toRo)block('ID_CARD_UK_CHECK','Din Regatul Unit trebuie verificat dacă poți călători doar cu cartea de identitate.');
+   }
+ }
+ const idState=identityOf(a,docs,r);
+ if(['A1_PERSONAL_ROMANIA','A2_PROXY','B1_FIRST_CRDS','B5_EXISTING_CRDS','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D2_PERMANENT_RETURN'].includes(r)){
+   if(idState==='UNKNOWN')unknown('Trebuie clarificat cu ce documente poate fi stabilită identitatea.');
+   if(idState==='REVIEW')unknown('Actele disponibile nu sunt valabile în prezent; trebuie clarificat ce document vechi sau expirat ai fizic la tine.');
+   // Decision of 15.10: an old or expired photo document is a normal case with a note, not a blocker.
+   if(idState==='REVIEW_KNOWN')note('IDENTITY_OLD_DOC','Ai un act românesc vechi sau expirat cu fotografie; ia-l cu tine la depunere, pentru verificarea identității.');
+   if(idState==='OFFICIAL_CHECK_KNOWN')block('NO_PHOTO_ID','Nu ai confirmat un document românesc cu fotografie disponibil; ghidul trebuie să includă mai întâi verificarea oficială a identității.');
+ }
+ return {blockers,unknowns,notes,status}
 }
+// Safety net: answers that cannot all be true never reach payment (M-03, M-11). The questions above
+// normally prevent them (Q012, Q013, filtered Q120); this also covers restored or edited answers.
+function contradictionsOf(input){
+ const a=(input&&input.answers)||{},docs=(input&&input.docs)||{},r=input&&input.route,out=[],declared=a.documents||[];
+ const add=(code,fix)=>{if(!out.some(x=>x.code===code))out.push({code,fix})};
+ if(r==='B5_EXISTING_CRDS'){
+   if(a.passport_domicile==='ROMANIA')add('LATEST_PASSPORT_ROMANIA','Q007');
+   if((a.passport_domicile==='CURRENT'&&a.same_country==='NO')||(a.passport_domicile==='OTHER'&&a.same_country==='YES'))add('PASSPORT_COUNTRY_MISMATCH','Q007');
+   if(docValid(crdsStatusOf(a,docs))&&['LOST','STOLEN'].includes(a.b5case))add('VALID_PASSPORT_LOST','Q120');
+ }
+ if(declared.includes('CRDS_PASSPORT')&&a.ever_crds==='NO')add('CRDS_DOC_BUT_NEVER',['TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(r)?'Q032':'Q008');
+ return out}
+function contradictions(){return contradictionsOf({answers:S.answers,docs:S.docs,route:S.route})}
+// Remedy registry (private D1 review, 16.10): a blocker is "remedied" only when the exact paid guide gives a
+// concrete, sourced way to solve it. Conservative by design; everything else stops payment with a free explanation.
+function remedyInGuide(code,key,a){a=a||{};
+ if(code==='THEFT_PROOF_MISSING')return key==='B5_STOLEN';
+ // LEGAL-UNVERIFIED (needs Romanian consular confirmation): the French "alternative documents" route is
+ // asserted without a cited official source; paymentDecisionFor marks such cases legalBasisConfirmed=false.
+ if(code==='CURRENT_PROOF_MISSING')return a.residence_country==='FR'&&['B5_RENEWAL_FR','B5_LOST_FR','B5_STOLEN'].includes(key);
+ return false}
+// M-01 / decision of 15.10: payment only for a resolved route, a verified guide, no contradiction, nothing unknown,
+// and no blocker that the guide cannot solve.
+// legalBasisConfirmed (16.10 PM): false when a payment-eligible decision rests on a document-acceptance
+// judgment that NO official Romanian source confirms — the BE/NL/IE local-document accept-lists and the
+// France current-proof "remedy". The existence of a document in the foreign country's own law is NOT proof
+// that Romanian authorities accept it for the procedure (see cloudflare/BE_NL_IE_EVIDENCE_GATES_20261014.json,
+// overall_sale_approval=NO). The flag does NOT change `allowed`; it is surfaced so the server-side eligibility
+// gate (cloudflare/ELIGIBILITY_SERVER_CONTRACT.md) and human review can withhold a sale until each is validated.
+function paymentDecisionFor(input){
+ const a=(input&&input.answers)||{},r=(input&&input.route)||null,dom=domicileOf(a);
+ const ev=evaluateCase(input),contra=contradictionsOf(input);
+ const routeResolved=!!r&&(dom!=='UNKNOWN'||['TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(r));
+ const key=guideKeyFor(r,a),validated=!!key&&validatedGuideFor(r,a,dom);
+ const remedied=ev.blockers.filter(b=>remedyInGuide(b.code,key,a)),unremedied=ev.blockers.filter(b=>!remedyInGuide(b.code,key,a));
+ const allowed=routeResolved&&validated&&!contra.length&&!ev.unknowns.length&&!unremedied.length;
+ const legalBasisConfirmed=!(
+   (['BE','NL','IE'].includes(a.residence_country)&&['B1_FIRST_CRDS','B5_EXISTING_CRDS'].includes(r))||
+   (a.residence_country==='FR'&&remedied.some(b=>b.code==='CURRENT_PROOF_MISSING'))
+ );
+ return {allowed,key,validated,legalBasisConfirmed,routeResolved,unknowns:ev.unknowns,contradictions:contra,unremedied,remedied,notes:ev.notes,status:ev.status}}
+function paymentDecision(){return paymentDecisionFor({answers:S.answers,docs:S.docs,route:S.route})}
 function humanSummary(){const items=[];if(S.answers.residence_country_name)items.push(`Locuiești în ${S.answers.residence_country_name}.`);if(S.answers.goal)items.push(`Ai nevoie de ajutor pentru ${goalNames[S.answers.goal]||'situația descrisă'}.`);if(S.answers.cei_case){const fs={EXPIRED:'expirată',EXPIRING:'aproape de expirare',LOST:'pierdută',STOLEN:'furată',DAMAGED:'deteriorată'};items.push(`CEI existentă: ${fs[S.answers.cei_case]||S.answers.cei_case}.`);}const dom=domicileState();if(dom==='ROMANIA')items.push('Din răspunsurile tale, domiciliul oficial este în România.');if(dom==='ABROAD')items.push('Din răspunsurile tale, ai domiciliul oficial în străinătate.');for(const [k,v] of Object.entries(S.docs)){if(v&&v!=='UNKNOWN'){let st=statusLabels[v]||v;if(k==='CEI')st=({VALID:'valabilă',EXPIRED:'expirată',EXPIRING:'aproape de expirare',LOST:'pierdută',STOLEN:'furată',DAMAGED:'deteriorată',MISSING:'nu o mai ai'}[v]||st);items.push(`${docLabels[k]||k}: ${st}.`)}}return items.slice(0,5)}
 function unknownish(v){return v===undefined||v===null||v===''||v==='UNKNOWN'}
 function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerCase();
@@ -1071,12 +1255,15 @@ function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerC
  if(u.includes('certificatului de naștere')&&unknownish(a.birth_cert))return'Q103';
  if(u.includes('motivul obiectiv')&&unknownish(a.travel_urgent_basis))return'Q031';
  if(u.includes('lista corectă de documente a pașaportului temporar')&&domicileState()==='UNKNOWN')return'Q032';
+ if(u.includes('ce tip de carte de identitate')&&unknownish(a.id_card_type))return'Q033';
+ if(u.includes('cu cartea de identitate')&&unknownish(a.id_card_area))return'Q034';
  if(u.includes('furtul pașaportului')&&unknownish(a.theft_proof))return'Q122';
  if(u.includes('aceeași țară')&&unknownish(a.same_country))return'Q121';
  if((u.includes('documentului actual din elveția')||u.includes('permisul g'))&&a.residence_country==='CH')return'Q125';
  if(u.includes('dovada actuală')&&unknownish(a.current_foreign_proof))return'Q124';
- if(u.includes('documentul care dovedește situația ta')&&unknownish(a.foreign_proof))return'Q102';
+ if(u.includes('documentul care dovedește situația ta')&&unknownish(a.foreign_proof))return a.foreign_basis===undefined?'Q101':(unknownish(a.foreign_basis)||a.foreign_basis==='UNCLASSIFIED_DOCUMENT')?'Q105':'Q102';
  if(u.includes('noua țară')&&unknownish(a.foreign_proof))return'Q123';
+ if(u.includes('ce document oficial ai din')&&unknownish(a.local_proof_type))return'Q126';
  if(u.includes('adresa din românia')&&unknownish(a.ro_address))return S.route==='D2_PERMANENT_RETURN'?'Q420':'Q202';
  if(u.includes('consimțământul')&&unknownish(a.host_consent))return'Q203';
  if(u.includes('reprezentant')&&unknownish(a.representative))return'Q204';
@@ -1092,9 +1279,10 @@ function clarificationTarget(){const a=S.answers,u=S.unknowns.join(' ').toLowerC
 // An unknown the user already answered "Nu știu" to is accepted instead of being asked again.
 function clarificationTargetFor(list){const keep=S.unknowns;S.unknowns=list;try{return clarificationTarget()}finally{S.unknowns=keep}}
 function pendingUnknowns(){return [...S.unknowns]}
-function hasValidatedPaidGuide(){
-  const a=S.answers||{},c=a.residence_country;
-  if(S.route==='B1_FIRST_CRDS'){
+function hasValidatedPaidGuide(){return validatedGuideFor(S.route,S.answers||{},domicileState())}
+function validatedGuideFor(route,a,dom){
+  a=a||{};const c=a.residence_country;
+  if(route==='B1_FIRST_CRDS'){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH'){
       if(a.foreign_basis==='CITIZEN')return true;
@@ -1102,28 +1290,28 @@ function hasValidatedPaidGuide(){
     }
     return false;
   }
-  if(S.route==='B5_EXISTING_CRDS'&&a.b5case==='RENEWAL'&&a.same_country==='YES'){
+  if(route==='B5_EXISTING_CRDS'&&a.b5case==='RENEWAL'&&a.same_country==='YES'){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH')return ['B','C','L','SWISS_CITIZEN'].includes(a.swiss_current_permit);
   }
-  if(S.route==='B5_EXISTING_CRDS'&&a.b5case==='LOST'&&a.same_country==='YES'){
+  if(route==='B5_EXISTING_CRDS'&&a.b5case==='LOST'&&a.same_country==='YES'){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH')return ['B','C','L','SWISS_CITIZEN'].includes(a.swiss_current_permit);
   }
-  if(S.route==='B5_EXISTING_CRDS'&&a.b5case==='STOLEN'&&a.same_country==='YES'){
+  if(route==='B5_EXISTING_CRDS'&&a.b5case==='STOLEN'&&a.same_country==='YES'){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH')return ['B','C','L','SWISS_CITIZEN'].includes(a.swiss_current_permit);
   }
-  if(S.route==='B5_EXISTING_CRDS'&&['DAMAGED','DATA_CHANGE'].includes(a.b5case)&&a.same_country==='YES'){
+  if(route==='B5_EXISTING_CRDS'&&['DAMAGED','DATA_CHANGE'].includes(a.b5case)&&a.same_country==='YES'){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH')return ['B','C','L','SWISS_CITIZEN'].includes(a.swiss_current_permit);
   }
-  if(S.route==='B5_EXISTING_CRDS'&&a.same_country==='NO'&&a.foreign_proof==='YES'&&['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE','COUNTRY_CHANGE'].includes(a.b5case)){
+  if(route==='B5_EXISTING_CRDS'&&a.same_country==='NO'&&a.foreign_proof==='YES'&&['RENEWAL','LOST','STOLEN','DAMAGED','DATA_CHANGE','COUNTRY_CHANGE'].includes(a.b5case)){
     if(['ES','IT','DE','AT','FR','GB','BE','NL','IE'].includes(c))return true;
     if(c==='CH')return ['B','C','L','SWISS_CITIZEN'].includes(a.swiss_current_permit);
   }
-  if(['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO'].includes(S.route))return true;
-  if(S.route==='URGENT_OTHER_COUNTRY'&&['CONTINUE_JOURNEY','OBJECTIVE_URGENT','PASSPORT_AT_VISA'].includes(a.travel_urgent_basis)&&domicileState()!=='UNKNOWN')return true;
+  if(['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO'].includes(route))return true;
+  if(route==='URGENT_OTHER_COUNTRY'&&['CONTINUE_JOURNEY','OBJECTIVE_URGENT','PASSPORT_AT_VISA'].includes(a.travel_urgent_basis)&&dom!=='UNKNOWN')return true;
   return false;
 }
 
@@ -1138,7 +1326,7 @@ function showCurrentStatusResult(kind){
   const alt=isCRDS
     ?'Dacă ai nevoie acum de un document românesc de călătorie/identificare, folosește procedura pentru pașaport CRDS. Dacă vrei să-ți muți domiciliul în România, refă evaluarea alegând revenirea cu domiciliul în România.'
     :'Dacă ai nevoie acum de un act de identitate și nu poți veni în România, refă evaluarea alegând „buletin / carte de identitate”; în funcție de istoricul tău poate exista varianta prin procură specială. Dacă poți veni în România, CEI se poate solicita la orice SPCLEP.';
-  screen.innerHTML=`<div class="result"><span class="status-pill yellow">Status oficial verificat</span><h1>${title}</h1><p class="sub">${body}</p><div class="result-story"><div class="big"><strong>Nu îți cerem plată pentru acest rezultat.</strong> Nu există încă o procedură consulară operațională pe care ActeRO să o poată transforma într-un ghid executabil.</div><div class="small">Verificat la 5 octombrie 2026 pe pagina oficială DGEP dedicată CEI.</div></div><div class="nextbox"><h3>Ce poți face acum</h3><p>${alt}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn primary" href="https://dgep.mai.gov.ro/in-domeniul-evidentei-persoanelor-cartea-electronica-de-identitate/" target="_blank" rel="noopener">Vezi statusul oficial DGEP</a><button id="statusBack" class="btn secondary">Modifică răspunsurile</button></div></div></div>`;
+  screen.innerHTML=`<div class="result" data-result="status"><span class="status-pill yellow">Status oficial</span><h1>${title}</h1><p class="sub">${body}</p><div class="result-story"><div class="big"><strong>Nu îți cerem plată pentru acest rezultat.</strong> Nu există încă o procedură consulară operațională pe care ActeRO să o poată transforma într-un ghid executabil.</div><div class="small">${isCRDS?'Reverificat pe 16 octombrie 2026: calendarul oficial MAI de pe <a href="https://carteadeidentitate.gov.ro/" target="_blank" rel="noopener">carteadeidentitate.gov.ro</a> (actualizat la 7 octombrie 2026) nu are încă o dată pentru CEI fără domiciliu în România, nici în țară, nici la misiunile diplomatice.':'Verificat la 5 octombrie 2026 pe pagina oficială DGEP. Pe 16 octombrie 2026, calendarul MAI de pe <a href="https://carteadeidentitate.gov.ro/" target="_blank" rel="noopener">carteadeidentitate.gov.ro</a> nu avea încă o dată pentru eliberarea CEI la misiunile diplomatice.'}</div></div><div class="nextbox"><h3>Ce poți face acum</h3><p>${alt}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn primary" href="https://dgep.mai.gov.ro/in-domeniul-evidentei-persoanelor-cartea-electronica-de-identitate/" target="_blank" rel="noopener">Vezi statusul oficial DGEP</a><button id="statusBack" class="btn secondary">Modifică răspunsurile</button></div></div></div>`;
   $('statusBack').onclick=back;updateDebug();
 }
 function showTourismUrgentResult(){
@@ -1146,17 +1334,77 @@ function showTourismUrgentResult(){
   screen.innerHTML=`<div class="result"><span class="status-pill yellow">Nu se încadrează la pașaport temporar</span><h1>Urgența exclusiv turistică nu este un motiv legal pentru pașaportul simplu temporar.</h1><p class="sub">eConsulat precizează că situațiile obiective și urgente pentru pașaportul temporar exclud deplasările bazate exclusiv pe rațiuni turistice.</p><div class="result-story"><div class="big"><strong>Nu îți cerem plată.</strong> Pentru o călătorie turistică trebuie verificată procedura normală pentru pașaport simplu electronic și timpul real disponibil până la plecare.</div><div class="small">Dacă există de fapt un motiv medical, familial, profesional ori necesitatea urgentă de a continua o călătorie fără document valabil, modifică răspunsul și ActeRO verifică procedura pentru pașaport temporar.</div></div><div class="nextbox"><h3>Ce faci mai departe</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn primary" href="https://www.econsulat.ro/PasaportSimpluElectronicRomaniMajoriRO/DescriereServiciu/203000001" target="_blank" rel="noopener">Vezi pașaportul electronic</a><button id="statusBack" class="btn secondary">Modifică răspunsurile</button></div></div></div>`;
   $('statusBack').onclick=back;updateDebug();
 }
+const CONTRADICTION_TEXT={
+ LATEST_PASSPORT_ROMANIA:['Cel mai recent pașaport are domiciliul în România','Un pașaport cu domiciliul în străinătate se reînnoiește doar dacă domiciliul a rămas în străinătate. Verifică rubrica de domiciliu din cel mai recent pașaport.'],
+ PASSPORT_COUNTRY_MISMATCH:['Țara din pașaport nu se potrivește cu țara în care locuiești','Ai indicat o țară în pașaport și alta ca domiciliu actual. Verifică ce țară apare în rubrica de domiciliu din cel mai recent pașaport.'],
+ VALID_PASSPORT_LOST:['Pașaportul nu poate fi și valabil, și pierdut sau furat','Ai marcat pașaportul ca valabil, apoi ai spus că l-ai pierdut sau că ți-a fost furat. Alege situația reală.'],
+ CRDS_DOC_BUT_NEVER:['Ai spus că nu ai avut niciodată domiciliul în străinătate','Ai indicat însă și un pașaport românesc cu domiciliul în străinătate. Unul dintre cele două răspunsuri nu este corect.']
+};
+function showContradictionResult(list){
+  S.current='RESULT';const appEl=document.querySelector('.app');if(appEl)appEl.classList.remove('guide-mode');setChrome();
+  const first=list[0],text=CONTRADICTION_TEXT[first.code]||['Două răspunsuri se contrazic','Corectează răspunsul care nu este corect ca să putem continua.'];
+  screen.innerHTML=`<div class="result" data-result="contradiction"><span class="status-pill yellow">Răspunsurile se contrazic</span><h1>${text[0]}</h1><p class="sub">${text[1]}</p><div class="result-story"><div class="big"><strong>Nu îți cerem plata</strong> până nu corectăm răspunsul. Celelalte răspunsuri rămân salvate.</div></div><div class="nextbox"><h3>Corectezi un singur răspuns</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="fixAnswer" class="btn primary">Corectează răspunsul</button><button id="resultBack" class="btn secondary">Vezi răspunsurile anterioare</button></div></div></div>`;
+  $('fixAnswer').onclick=()=>{S.autoSkip=true;S.skipTarget=first.fix;push(first.fix)};
+  $('resultBack').onclick=back;updateDebug();
+}
+// Decision of 15.10: when something is missing and the guide has no concrete solution, the client gets the
+// explanation for free and checkout stays closed for that case.
+function noPaymentText(code,a){a=a||{};
+ const here=(localProofRule(a.residence_country)||{}).name||a.residence_country_name||'țara în care locuiești';
+ const redo='apoi refă evaluarea; răspunsurile tale rămân salvate';
+ return ({
+  FOREIGN_PROOF_MISSING:['Îți lipsește dovada șederii din străinătate','Pentru primul pașaport cu domiciliul în străinătate trebuie un document oficial din țara în care locuiești, care arată că locuiești acolo.',`Obține mai întâi documentul de la autoritatea locală competentă, ${redo}.`],
+  LOCAL_PROOF_UNCONFIRMED:[`Nu putem confirma documentul tău din ${here}`,`Autoritățile române cer un certificat de înregistrare sau un document care atestă rezidența. Nu am găsit o sursă oficială care să confirme că documentul pe care îl ai din ${here} este acceptat.`,`Întreabă consulatul României dacă acceptă documentul tău. Dacă îl acceptă sau obții alt document, ${redo}.`],
+  BIRTH_CERT_PLASTIFIED:['Certificatul de naștere este plastifiat','La depunere se cere certificatul de naștere în original, neplastifiat.',`Cere un certificat nou de la starea civilă din România (se poate cere și prin consulat), ${redo}.`],
+  BIRTH_CERT_MISSING:['Îți lipsește certificatul de naștere','La depunere se cere certificatul de naștere românesc în original.',`Cere un certificat nou de la starea civilă din România (se poate cere și prin consulat), ${redo}.`],
+  CITIZENSHIP_CERT_MISSING:['Îți lipsește certificatul de cetățenie','Pentru primul act românesc după dobândirea sau redobândirea cetățeniei, certificatul sau cardul de cetățenie face parte din dosar.',`Cere un duplicat de la Autoritatea Națională pentru Cetățenie, ${redo}.`],
+  CIVIL_NOT_TRANSCRIBED:['Schimbarea de nume sau de stare civilă nu e înregistrată în România','Actele românești se emit pe datele din registrele de stare civilă românești. O căsătorie, un divorț sau o schimbare de nume din străinătate trebuie mai întâi înregistrată în România.',`Fă mai întâi transcrierea sau mențiunea (la consulat sau la starea civilă din România), ${redo}.`],
+  NO_PHOTO_ID:['Nu ai un act românesc cu fotografie','Fără un act românesc cu fotografie, chiar expirat, autoritatea face mai întâi o verificare separată a identității. Ghidul nostru nu acoperă încă această verificare.',`Întreabă consulatul sau serviciul de evidență a persoanelor cum se face verificarea în cazul tău. Dacă găsești un act vechi cu fotografie, ${redo}.`],
+  CURRENT_PROOF_MISSING:['Îți lipsește dovada actuală a domiciliului din străinătate','Pentru un pașaport nou cu domiciliul în străinătate trebuie să arăți că locuiești în continuare în țara trecută în pașaport, cu un document actual.',`Obține documentul actual de la autoritatea locală competentă, ${redo}.`],
+  NEW_COUNTRY_PROOF_MISSING:['Îți lipsește dovada din noua țară','Ca să schimbi țara din pașaport, trebuie un document oficial din țara în care locuiești acum.',`Obține documentul de la autoritatea locală competentă, ${redo}.`],
+  THEFT_PROOF_MISSING:['Îți lipsește dovada furtului','Pentru un pașaport furat este nevoie de dovada că ai declarat furtul la poliție.',`Declară furtul la poliție și păstrează dovada, ${redo}.`],
+  RO_ADDRESS_NOT_READY:['Adresa din România nu este pregătită','Pentru actul de identitate ai nevoie de o adresă în România și de documentul care o dovedește.',`Pregătește dovada adresei (act de proprietate sau acordul persoanei care te primește), ${redo}.`],
+  HOST_REFUSES:['Persoana care te primește nu și-a dat acordul','Fără acordul ei nu poți folosi adresa respectivă pentru actul de identitate.',`Obține acordul sau alege altă adresă, ${redo}.`],
+  NO_REPRESENTATIVE:['Nu ai pe cine să împuternicești în România','Procedura prin procură are nevoie de o persoană care să depună cererea în numele tău.',`Găsește un împuternicit sau verifică dacă poți veni personal, ${redo}.`],
+  NO_POA:['Procura nu poate fi pregătită acum','Fără procura specială, persoana împuternicită nu poate depune cererea în numele tău.',`Fă procura la consulat, ${redo}.`],
+  CRDS_NOT_VALID:['Pașaportul cu domiciliul în străinătate nu este valabil','Cartea de identitate provizorie se cere pe baza pașaportului valabil cu domiciliul în străinătate.',`Reînnoiește sau înlocuiește mai întâi pașaportul, ${redo}.`],
+  RO_RESIDENCE_NOT_READY:['Nu ai încă o adresă în România','Pentru această procedură trebuie să ai o adresă în România unde locuiești.',`Pregătește adresa și dovada ei, ${redo}.`],
+  RO_RESIDENCE_PROOF_MISSING:['Îți lipsește dovada adresei din România','Adresa trebuie dovedită cu un document, nu doar declarată.',`Pregătește dovada adresei, ${redo}.`],
+  FIRST_ID_LIST_UNVERIFIED:['Primul act de identitate românesc — listă de documente neconfirmată','Pentru primul tău act de identitate românesc (nu o reînnoire) se aplică o listă de documente pe care nu am verificat-o încă pentru ghidul nostru. Acest lucru este valabil fie că ai cetățenia de la naștere, fie că ai dobândit-o sau redobândit-o.','Verifică lista pe pagina oficială a serviciului de evidență a persoanelor sau întreabă consulatul.'],
+  TEMP_PASSPORT_FROM_ROMANIA:['Ești în România: pașaportul temporar se cere aici','Pentru o plecare urgentă din România, pașaportul temporar se cere la serviciul de pașapoarte din România, nu la consulat. Ghidul nostru acoperă doar cererea făcută din străinătate.','Programează-te la serviciul de pașapoarte; lista documentelor este pe pasapoarte.mai.gov.ro.'],
+  PASSPORT_STILL_VALID:['Pașaportul tău este încă valabil','Un pașaport „aproape de expirare” rămâne valabil până la data scrisă în el. Cu el poți călători în România fără titlu de călătorie.',`Verifică data expirării înainte de plecare. Dacă expiră înainte să ajungi, ${redo}.`],
+  PASSPORT_EXPIRING_OTHER_DEST:['Pașaportul tău este încă valabil','Un pașaport „aproape de expirare” rămâne valabil, dar unele țări cer ca pașaportul să mai fie valabil o perioadă după intrare. Nu avem un ghid care să verifice regula țării în care mergi.','Verifică cerința țării de destinație la ambasada ei sau la compania de transport. Dacă nu poți călători cu pașaportul, întreabă consulatul României despre pașaportul temporar.'],
+  ID_CARD_IS_TRAVEL_DOC:['Poți călători în România cu cartea de identitate','Cartea electronică de identitate și cartea de identitate de model vechi, valabile, sunt documente de călătorie în UE, SEE și Elveția. Din țara în care ești nu ai nevoie de titlu de călătorie.',`Ia cartea de identitate la drum. Dacă afli că nu o poți folosi, ${redo}.`],
+  ID_CARD_IS_TRAVEL_DOC_OTHER:['Poți călători cu cartea de identitate','Cartea electronică de identitate și cartea de identitate de model vechi, valabile, sunt documente de călătorie între statele UE, SEE și Elveția. Pentru drumul tău nu ai nevoie de pașaport temporar.',`Ia cartea de identitate la drum. Dacă afli că nu o poți folosi, ${redo}.`],
+  ID_CARD_UK_CHECK:['Din Regatul Unit, întreabă mai întâi compania de transport','Cartea de identitate valabilă îți permite intrarea în România, dar nu am verificat dacă o companie de transport te îmbarcă din Regatul Unit doar cu ea.','Întreabă compania de transport. Dacă nu te îmbarcă doar cu cartea de identitate, întreabă consulatul României despre titlul de călătorie.'],
+  CRDS_RETURNED_TO_RO:['Ai mutat deja domiciliul înapoi în România','Nu am găsit o sursă oficială care să spună dacă un nou domiciliu în străinătate se cere ca primul pașaport cu domiciliul în străinătate.','Întreabă consulatul sau Direcția Generală de Pașapoarte ce procedură se aplică în cazul tău.']
+ })[code]||null}
+function showNoPaymentResult(decision){
+  S.current='RESULT';const appEl=document.querySelector('.app');if(appEl)appEl.classList.remove('guide-mode');setChrome();
+  const a=S.answers||{};
+  const items=decision.unremedied.map(b=>{const t=noPaymentText(b.code,a)||['O condiție nu este îndeplinită',b.text,'Rezolvă condiția, apoi refă evaluarea; răspunsurile tale rămân salvate.'];
+    return `<div class="summary" data-code="${escapeHtmlText(b.code)}"><h3>${escapeHtmlText(t[0])}</h3><p>${escapeHtmlText(t[1])}</p><p><strong>Ce poți face:</strong> ${escapeHtmlText(t[2])}</p></div>`}).join('');
+  const open=decision.unknowns.length?`<div class="summary"><h3>Mai rămâne de lămurit</h3><ul>${decision.unknowns.map(x=>`<li>${escapeHtmlText(x)}</li>`).join('')}</ul></div>`:'';
+  screen.innerHTML=`<div class="result" data-result="no-payment"><span class="status-pill yellow">Fără plată</span><h1>Nu îți cerem plata pentru această situație.</h1><p class="sub">${decision.unremedied.length>1?'Din răspunsurile tale lipsesc câteva lucruri':'Din răspunsurile tale lipsește ceva'} fără de care cererea nu poate fi depusă acum, iar ghidul nostru nu îți poate oferi o soluție concretă pentru asta. Îți explicăm gratuit ce lipsește.</p><div class="summary-grid">${items}${open}</div><div class="nextbox"><h3>După ce rezolvi</h3><p>Răspunsurile tale rămân salvate în această sesiune. Modifici doar răspunsul care s-a schimbat.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="resultBack" class="btn primary">Modifică răspunsurile</button><button id="resultRestart" class="btn secondary">Începe o evaluare nouă</button></div></div></div>`;
+  $('resultBack').onclick=back;$('resultRestart').onclick=reset;updateDebug();
+  if(paymentApiConfigured())maybeAutoUnlockPaidGuide(); // a purchase made before this rule still opens its guide
+}
 
 function paywallDeclaredContext(){
  const a=S.answers||{},country=a.residence_country_name||a.residence_country||'',goal=goalNames[a.goal]||'';
  const parts=[country,goal].filter(Boolean).map(escapeHtmlText);
  return parts.length?'<div class="paywall-case-context"><span>Evaluarea ta</span><strong>'+parts.join(' · ')+'</strong></div>':'';
 }
+const REMEDY_TEXT={
+ THEFT_PROOF_MISSING:'Nu ai încă dovada furtului de la poliție. Ghidul îți arată cum o obții înainte de depunere.',
+ CURRENT_PROOF_MISSING:'Nu ai încă un document actual de rezidență. Pentru Franța, ghidul îți arată și documentele alternative și când se folosesc.'
+};
 function paywallDeclaredBlockers(){
- if(!Array.isArray(S.blockers)||!S.blockers.length)return '';
- const items=S.blockers.slice(0,3).map(x=>'<li>'+escapeHtmlText(x)+'</li>').join('');
- const extra=S.blockers.length>3?'<p>Mai există și alte condiții de verificat.</p>':'';
- return '<div class="paywall-blocker-notice" role="note"><strong>Înainte de plată: ai aspecte de clarificat</strong><p>Unele condiții trebuie rezolvate înainte să depui actele. Ghidul explică procedura, dar nu garantează că poți depune cererea imediat.</p><ul>'+items+'</ul>'+extra+'</div>';
+ const d=paymentDecision(),list=[...d.remedied.map(b=>REMEDY_TEXT[b.code]||b.text),...d.notes.map(n=>n.text)];
+ if(!list.length)return '';
+ const items=list.slice(0,3).map(x=>'<li>'+escapeHtmlText(x)+'</li>').join('');
+ const extra=list.length>3?'<p>Mai există și alte lucruri de reținut, explicate în ghid.</p>':'';
+ return '<div class="paywall-blocker-notice" role="note"><strong>De reținut înainte de plată</strong><p>Ghidul nu garantează că cererea va fi aprobată; decizia aparține autorității.</p><ul>'+items+'</ul>'+extra+'</div>';
 }
 function showResult(forcePreview=false){
  computeResult();
@@ -1165,6 +1413,12 @@ function showResult(forcePreview=false){
  const appEl=document.querySelector('.app');
  if(appEl)appEl.classList.remove('guide-mode');
  setChrome();
+ const contra=contradictions();
+ if(contra.length)return showContradictionResult(contra);
+ // M-13: the official status of the CEI abroad is the answer; nothing else needs clarifying first.
+ if(S.route==='C2_CEI_CONSULAR')return showCurrentStatusResult('C2');
+ if(S.route==='C3_CEI_NO_RO_DOMICILE')return showCurrentStatusResult('C3');
+ const decision=paymentDecision();
  const routeResolved=!!S.route && (domicileState()!=='UNKNOWN' || ['TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(S.route));
  const issues=[...S.blockers,...S.unknowns];
  const title=routeNames[S.route]||'Evaluarea ta ActeRO';
@@ -1174,6 +1428,8 @@ function showResult(forcePreview=false){
 
  if(!routeResolved||hasCriticalUnknowns){
    const target=pending.map(u=>clarificationTargetFor([u])).find(t=>t&&!(S.clarified&&S.clarified[t]))||null;
+   // Nothing left to ask: a missing document without a solution is explained, not left as "în verificare".
+   if(!target&&routeResolved&&decision.unremedied.length)return showNoPaymentResult(decision);
    const routeText=routeResolved
      ? `Am restrâns situația la <strong>${title}</strong>, dar un răspuns rămas neclar poate schimba ghidul pe care ți l-am da.`
      : `Încă există un răspuns care poate schimba procedura. Preferăm să-l clarificăm decât să-ți dăm un ghid greșit.`;
@@ -1201,14 +1457,13 @@ function showResult(forcePreview=false){
    return;
  }
 
- if(S.route==='C2_CEI_CONSULAR')return showCurrentStatusResult('C2');
- if(S.route==='C3_CEI_NO_RO_DOMICILE')return showCurrentStatusResult('C3');
  if(S.route==='URGENT_OTHER_COUNTRY'&&S.answers.travel_urgent_basis==='TOURISM')return showTourismUrgentResult();
+ if(decision.unremedied.length)return showNoPaymentResult(decision);
 
  // V1.0.1: the evaluation result itself is paid content.
  // Before payment we confirm that the evaluation is complete, but we do NOT reveal
  // the exact route, procedural result, document list or steps.
- const validated=hasValidatedPaidGuide();
+ const validated=decision.allowed; // M-01: a verified guide, nothing unknown, no blocker the guide cannot solve
  const live=paymentApiConfigured();
  const pwIcon={
    fresh:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4v4.5h-4.5"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg>',
@@ -1259,7 +1514,7 @@ function showResult(forcePreview=false){
        <div class="paywall-pending">
          <span class="status-pill yellow">Evaluare finalizată</span>
          <h2>Ghidul pentru această situație este încă în verificare.</h2>
-         <p>Nu îți cerem nicio plată pentru această situație. Un ghid cu plată este disponibil doar pentru situațiile pe care le-am verificat deja pe surse oficiale. Răspunsurile tale rămân păstrate în sesiunea curentă.</p>
+         <p>Nu îți cerem nicio plată pentru această situație. Un ghid cu plată este disponibil doar pentru situațiile acoperite complet de ghidurile noastre, pe baza surselor oficiale. Răspunsurile tale rămân păstrate în sesiunea curentă.</p>
          <div class="paywall-actions"><button id="resultBack" class="btn secondary paywall-secondary">Modifică răspunsurile</button></div>
        </div>
      `}
@@ -1628,10 +1883,11 @@ function miniFormPreview(title,anexa){
 
 
 // A paid purchase grants exactly one verified guide variant, never an entire route family.
-function guideKeyForCurrent(){
-  const a=S.answers||{}, c=a.residence_country;
-  if(S.route==='B1_FIRST_CRDS')return ['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'].includes(c)?'B1_'+c:null;
-  if(S.route==='B5_EXISTING_CRDS'){
+function guideKeyForCurrent(){return guideKeyFor(S.route,S.answers||{})}
+function guideKeyFor(route,a){
+  a=a||{};const c=a.residence_country;
+  if(route==='B1_FIRST_CRDS')return ['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'].includes(c)?'B1_'+c:null;
+  if(route==='B5_EXISTING_CRDS'){
     if(a.same_country==='NO')return 'B5_MOVED';
     if(a.same_country!=='YES')return null;
     if(a.b5case==='STOLEN')return 'B5_STOLEN';
@@ -1640,7 +1896,7 @@ function guideKeyForCurrent(){
     if(a.b5case==='RENEWAL'||a.b5case==='LOST')return ['ES','IT','DE','AT','FR','GB','BE','NL','IE','CH'].includes(c)?'B5_'+a.b5case+'_'+c:null;
     return null;
   }
-  return ['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(S.route)?S.route:null;
+  return ['A1_PERSONAL_ROMANIA','A2_PROXY','A3_FIRST_ID_CONSULAR','C1_CEI_ROMANIA','C5_CEI_REPLACEMENT','D1_TEMPORARY','D2_PERMANENT_RETURN','TRAVEL_TITLE_RETURN_RO','URGENT_OTHER_COUNTRY'].includes(route)?route:null;
 }
 let loadedPaidGuideKey=null,loadedPaidCaseId=null;
 async function loadProtectedPaidGuide(){
@@ -1790,7 +2046,7 @@ async function startShopifyCheckout(button){
 }
 // One click on the paywall: Shopify checkout when payments are live, otherwise the free preview.
 function unlockGuide(button){
-  if(!hasValidatedPaidGuide())return showResult(true);
+  if(!paymentDecision().allowed)return showResult(true); // the click re-checks the policy behind the screen
   if(paymentApiConfigured()){startShopifyCheckout(button);return}
   const box=$('checkoutError');if(box){box.classList.remove('hidden');box.textContent='Plata online nu este încă disponibilă.'}
 }
@@ -1809,6 +2065,8 @@ async function verifyPaymentNow(button){
 function coreChecklistItem(title,status,note,tone='ok'){
   return `<div class="personal-check"><div class="pc-top"><strong>${title}</strong><span class="pc-status ${tone==='ok'?'ok':'warn'}">${status}</span></div><p>${note}</p></div>`;
 }
+// PC-01 / decision 5 (16.10): no guide is approved for sale yet (sale_approved=NO), so the shared guide page
+// makes no "verified" claim and shows no verification date.
 function showValidatedCoreGuide(cfg){
   S.current='PAID_GUIDE';
   const appEl=document.querySelector('.app');if(appEl)appEl.classList.add('guide-mode');
@@ -1824,10 +2082,10 @@ function showValidatedCoreGuide(cfg){
     return `<div class="final-official-doc"><div class="final-official-body"><span class="final-official-type">${x.type||'SERVICIU OFICIAL'}</span><h4>${x.title}</h4><p>${x.desc||''}</p><div class="final-doc-actions"><a class="primary" href="${x.url}" target="_blank" rel="noopener">${x.label||'Deschide'}</a></div></div></div>`;
   }).join('');
   screen.innerHTML=`<div class="guide-shell final-guide-wrap">
-    <div class="guide-hero"><span class="validated-route-badge"><i></i> Procedură verificată</span><h1>${cfg.title}</h1><p>${cfg.hero}</p><div class="guide-meta"><span>${cfg.meta1||'România'}</span><span>${cfg.meta2||'Adult'}</span><span>Verificat · 5 octombrie 2026</span></div></div>
+    <div class="guide-hero"><span class="validated-route-badge"><i></i> Ghid informativ</span><h1>${cfg.title}</h1><p>${cfg.hero}</p><div class="guide-meta"><span>${cfg.meta1||'România'}</span><span>${cfg.meta2||'Adult'}</span></div></div>
     <section class="final-guide-intro"><div class="guide-eyebrow">Pe scurt</div><h2>${cfg.introTitle}</h2><p>${cfg.intro}</p>${cfg.outcome?`<div class="outcome-card"><b>Rezultatul urmărit</b><span>${cfg.outcome}</span></div>`:''}</section>
     <div class="final-guide-main"><section class="final-steps-panel"><div class="final-steps-head"><div class="guide-eyebrow">Pașii tăi</div><h2>Ce ai de făcut, în ordine</h2><p>Pașii sunt separați de documente ca să poți executa procedura fără să amesteci etapele.</p></div>${steps}${warnings}</section>
-    <aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist</div><h3>Documente și condiții</h3><div class="personal-checklist">${docs}</div></section>${forms?`<section class="final-side-section"><div class="guide-eyebrow">Servicii / formulare</div><h3>Unde intri efectiv</h3>${forms}</section>`:''}<section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Surse oficiale verificate</h3><div class="source-list">${sources}</div></section></aside></div>
+    <aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist</div><h3>Documente și condiții</h3><div class="personal-checklist">${docs}</div></section>${forms?`<section class="final-side-section"><div class="guide-eyebrow">Servicii / formulare</div><h3>Unde intri efectiv</h3>${forms}</section>`:''}<section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Surse oficiale</h3><div class="source-list">${sources}</div></section></aside></div>
     <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
   hydrateOfficialDocPreviews(screen);
   document.querySelectorAll('[data-doc-open]').forEach(el=>{if(el.dataset.viewerBound!=='1'){el.dataset.viewerBound='1';el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||'',route:S.route}))}});
@@ -1949,12 +2207,15 @@ const officialDocObserver=new MutationObserver(()=>hydrateOfficialDocPreviews(sc
 officialDocObserver.observe(screen,{childList:true,subtree:true});
 function render(id){S.current=id;const appEl=document.querySelector('.app');if(appEl)appEl.classList.toggle('guide-mode',id==='PAID_GUIDE');switch(id){
  case'WELCOME':return welcome();
- case'Q001':return q001();case'Q002':return q002();case'Q003':return q003();case'Q004':return q004();case'Q005':return q005();case'Q006':return q006();case'AFTER_DOCS':return afterDocs();case'Q007':return q007();case'Q008':return q008();case'ROUTE_COMMON':return routeCommon();case'Q010':return q010();case'Q011':return q011();case'Q050':return q050();case'Q051':return q051();case'Q052':return q052();case'Q020':return q020();case'Q030':return q030();case'Q031':return q031();case'Q032':return q032();case'Q060':return q060();case'Q101':return q101();case'Q102':return q102();case'Q103':return q103();case'Q105':return q105();case'Q106':return q106();case'Q108':return q108();case'Q109':return q109();case'Q107':return q107();case'Q120':return q120();case'Q121':return q121();case'Q122':return q122();case'Q123':return q123();case'Q124':return q124();case'Q125':return q125();case'Q201':return q201();case'Q202':return q202();case'Q203':return q203();case'Q204':return q204();case'Q205':return q205();case'Q301':return q301();case'Q401':return q401();case'Q410':return q410();case'Q411':return q411();case'Q412':return q412();case'Q420':return q420();case'Q421':return q421();case'Q040':return q040();case'Q041':return q041();case'RESULT':return showResult();case'CHECKOUT':return showResult(true);case'PAID_GUIDE':return showPaidGuide();
+ case'Q001':return q001();case'Q002':return q002();case'Q003':return q003();case'Q004':return q004();case'Q005':return q005();case'Q006':return q006();case'AFTER_DOCS':return afterDocs();case'Q007':return q007();case'Q008':return q008();case'ROUTE_COMMON':return routeCommon();case'Q010':return q010();case'Q011':return q011();case'Q012':return q012();case'Q013':return q013();case'Q050':return q050();case'Q051':return q051();case'Q052':return q052();case'Q020':return q020();case'Q030':return q030();case'Q031':return q031();case'Q032':return q032();case'Q033':return q033();case'Q034':return q034();case'Q060':return q060();case'Q101':return q101();case'Q102':return q102();case'Q103':return q103();case'Q105':return q105();case'Q106':return q106();case'Q108':return q108();case'Q109':return q109();case'Q107':return q107();case'Q120':return q120();case'Q121':return q121();case'Q122':return q122();case'Q123':return q123();case'Q124':return q124();case'Q125':return q125();
+ case'Q126':return q126();case'Q201':return q201();case'Q202':return q202();case'Q203':return q203();case'Q204':return q204();case'Q205':return q205();case'Q301':return q301();case'Q401':return q401();case'Q410':return q410();case'Q411':return q411();case'Q412':return q412();case'Q420':return q420();case'Q421':return q421();case'Q040':return q040();case'Q041':return q041();case'RESULT':return showResult();case'CHECKOUT':return showResult(true);case'PAID_GUIDE':return showPaidGuide();
  case'STOP_MINOR':return showStop('red','ActeRO este momentan disponibil pentru persoane de 18 ani sau peste','Procedurile pentru minori nu sunt încă incluse. Oprim evaluarea aici pentru a nu indica o procedură care s-ar putea să nu se aplice.');
  case'STOP_NONCITIZEN':return showStop('red','Momentan, ActeRO te poate ajuta doar dacă ești cetățean român.','Extindem treptat situațiile acoperite.');
  case'STOP_COUNTRY_UNSUPPORTED':return showStop('yellow','Țara ta nu este încă acoperită de ActeRO','ActeRO acoperă în prezent Italia, Germania, Spania, Regatul Unit, Austria, Belgia, Franța, Țările de Jos, Irlanda și Elveția.','Extindem lista treptat, pe baza cererii reale.');
  case'STOP_CITIZENSHIP_UNKNOWN':return showStop('yellow','Trebuie să clarificăm cetățenia înainte să continuăm','Nu are sens să îți arătăm un „rezultat” când încă nu știm dacă procedurile ActeRO ți se aplică.','Dacă ai pașaport românesc, carte de identitate românească sau certificat de cetățenie, asta poate ajuta la clarificare.');
  case'STOP_DOMICILE_UNKNOWN':return showStop('yellow','Trebuie să clarificăm domiciliul oficial','Domiciliul oficial schimbă procedura, iar ActeRO nu va presupune răspunsul.');
+ case'STOP_CRDS_RETURNED':return showStop('yellow','Nu îți cerem plata pentru această situație','Ai avut domiciliul în străinătate, apoi l-ai mutat înapoi în România. Ghidurile ActeRO sunt scrise pentru prima stabilire a domiciliului în străinătate, nu pentru o nouă stabilire după revenire. Până nu confirmă DGP procedura pentru acest caz, nu îți vindem un ghid.','Întreabă consulatul ce acte îți cere pentru a-ți stabili din nou domiciliul în străinătate.');
+ case'STOP_CRDS_STATUS_UNCLEAR':return showStop('yellow','Trebuie să lămurim ce pașaport ai','Ai spus că cel mai recent pașaport are domiciliul în străinătate. De obicei, asta înseamnă că ai deja un pașaport cu domiciliul în străinătate și că procedura este reînnoirea lui, nu prima stabilire a domiciliului. Verifică rubrica de domiciliu din pașaport și alege din nou.','Nu îți cerem plata până nu știm ce procedură ți se aplică.');
  case'STOP_TRAVEL_ALREADY_RO':return showStop('yellow','Ești deja în România','Ai ales că trebuie să ajungi urgent în România, dar apoi ai indicat că te afli deja în România. Modifică unul dintre răspunsuri ca să continuăm.');
  case'STOP_GOAL_UNKNOWN':return showStop('yellow','Mai avem nevoie de o clarificare','Răspunsurile de până acum nu sunt suficiente pentru a stabili în siguranță ce procedură trebuie verificată.');
  case'STOP_ORIENTATION':return showStop('yellow','Încă nu avem destule informații','Am încercat să restrângem situația prin câteva întrebări simple, dar încă nu putem alege o procedură fără să ghicim.','Poți modifica răspunsurile sau relua evaluarea după ce verifici ce document ori rezultat urmărești.');
