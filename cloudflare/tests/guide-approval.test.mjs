@@ -5,6 +5,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import worker from '../worker.js';
+import {state} from './helpers/payment-harness.mjs';
 const ORIGIN='https://mypape-dot.github.io';
 const APPROVED_SCRIPT='window.acteroReviewed=true;';
 const hash=value=>createHash('sha256').update(value,'utf8').digest('hex');
@@ -36,8 +37,15 @@ function harness(guideKey='B1_ES',guideRoute='B1_FIRST_CRDS'){
  async function checkout(){
    const sess=await request('/session');
    assert.equal(sess.status,200);
+   const caseState=structuredClone(state);
+   if(guideRoute==='B5_EXISTING_CRDS'){
+     const scenario=guideKey==='B5_STOLEN'?'STOLEN':guideKey==='B5_DAMAGED'?'DAMAGED':guideKey==='B5_MOVED'?'COUNTRY_CHANGE':'DATA_CHANGE';
+     caseState.route=guideRoute;
+     Object.assign(caseState.answers,{goal:'EXISTING_CRDS_PROBLEM',documents:['CRDS_PASSPORT'],passport_domicile:scenario==='COUNTRY_CHANGE'?'OTHER':'CURRENT',b5case:scenario,same_country:scenario==='COUNTRY_CHANGE'?'NO':'YES',current_foreign_proof:'YES',theft_proof:'YES',identity_detail:'HAS_PHOTO_DOC'});
+     caseState.docs={CRDS_PASSPORT:['STOLEN','DAMAGED'].includes(scenario)?scenario:'VALID'};
+   }
    return request('/checkout',{case_id:sess.data.case_id,route:guideRoute,
-     guide_key:guideKey},sess.data.session_token);
+     guide_key:guideKey,case_state:caseState},sess.data.session_token);
  }
  const approve=(status='approved',script=APPROVED_SCRIPT,route=guideRoute)=>
    sql.prepare('INSERT INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES(?,?,?,?,?,?)')

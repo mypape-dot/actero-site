@@ -5,18 +5,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {loadEngine} from './helpers/engine-harness.mjs';
+import {checkoutDecisionFor} from '../../shared/eligibility.mjs';
+import {harness,syntheticScript} from './helpers/payment-harness.mjs';
+import {createHash} from 'node:crypto';
 
 const html=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
 const catalog=JSON.parse(readFileSync(new URL('../guide-catalog.json',import.meta.url),'utf8'));
 const fns=[...html.matchAll(/(?:^|\n)function\s+([A-Za-z0-9_$]+)\s*\(/g)]
   .map(m=>({name:m[1],start:m.index+(m[0].startsWith('\n')?1:0)}));
-const sourceByName=new Map(fns.map((f,i)=>[f.name,html.slice(f.start,fns[i+1]?.start??html.length)]));
+const realEngine=loadEngine().ctx;
+const sourceByName=new Map(fns.map(f=>[f.name,realEngine[f.name]?.toString()]));
 const selected=[
   ...fns.filter(f=>/^q\d+$/.test(f.name)).map(f=>f.name),
   'afterDocs','routeCommon','domicileState','hasRomanianIdentityHistory',
   'existingCEIProblem','existingCRDSStatus','nextB5Screen','nextD1Screen',
   'identityKnown','computeResult','guideKeyForCurrent','hasValidatedPaidGuide',
-  'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish'
+  'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish',
+  // Pure engine helpers behind the wrappers above (one validity model, explicit inputs).
+  'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf',
+  'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions',
+  // Payment policy (16.10): one pure evaluation, a remedy registry and the decision the paywall uses.
+  'evaluateCase','paymentDecisionFor','paymentDecision','remedyInGuide','localProofRule','needsLocalProof',
+  'guideKeyFor','validatedGuideFor','travelCardOf','urgentCardStep',
+  'checkoutDecisionFor','eligibilityAnswerEnums','routeFromAnswers'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
@@ -32,7 +44,7 @@ const base={
   current_foreign_proof:'YES',same_country:'YES',theft_proof:'YES',
   can_come:'YES',ro_address:'OWN',host_consent:'YES',representative:'YES',
   poa:'YES',physical:'NO',ro_residence:'OWN',ro_residence_proof:'YES',
-  dependents:'NO',identity_detail:'HAS_PHOTO_DOC',
+  dependents:'NO',identity_detail:'HAS_PHOTO_DOC',local_proof_type:'PERMANENT',
   travel_dest:'ROMANIA',travel_urgent_basis:'OBJECTIVE_URGENT',ever_crds:'NO'
 };
 
@@ -77,7 +89,10 @@ function walk({country='IT',goal,documents=[],docStatuses={},choices={},expected
         }
         return {S,current:'UNRESOLVED',history,unknowns,offer:false,key:ctx.guideKeyForCurrent()};
       }
-      return {S,current,history,unknowns,offer:ctx.hasValidatedPaidGuide(),key:ctx.guideKeyForCurrent()};
+      // The paywall now opens only on the full payment decision, not on the guide catalogue alone.
+      const decision=ctx.paymentDecision();
+      assert.deepEqual(JSON.parse(JSON.stringify(decision)),checkoutDecisionFor(S),'client/server parity on complete questionnaire journey');
+      return {S,current,history,unknowns,decision,offer:decision.allowed,catalogued:ctx.hasValidatedPaidGuide(),key:ctx.guideKeyForCurrent()};
     }
     next=null;config=null;optionClick=null;
     if(current==='Q003'){
@@ -141,15 +156,20 @@ function fixtureFor(entry){
       common.choices.b5case='DATA_CHANGE';
     }else if(which==='new_country'){
       common.choices.b5case='COUNTRY_CHANGE';
+      // M-02/M-11 (16.10): a move is declared by a passport that shows ANOTHER country;
+      // "CURRENT" plus "I now live elsewhere" is a contradiction the engine no longer offers.
+      common.choices.passport_domicile='OTHER';
     }
     if(which==='new_country')common.choices.same_country='NO';
     return common;
   }
   const rest={
-    A1_PERSONAL_ROMANIA:{goal:'ID_PROBLEM',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA'}},
+    // A1 is a renewal and C1 a CEI replacement: both carry a prior Romanian ID card, so they are not
+    // first-identity-document cases (GN-03) and stay payable.
+    A1_PERSONAL_ROMANIA:{goal:'ID_PROBLEM',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA'}},
     A2_PROXY:{goal:'ID_PROBLEM',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',can_come:'NO'}},
     A3_FIRST_ID_CONSULAR:{goal:'ID_PROBLEM',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',can_come:'NO'}},
-    C1_CEI_ROMANIA:{goal:'CEI',documents:['PASSPORT'],docStatuses:{PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
+    C1_CEI_ROMANIA:{goal:'CEI',documents:['ROMANIAN_ID','PASSPORT'],docStatuses:{ROMANIAN_ID:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
     C5_CEI_REPLACEMENT:{goal:'CEI',documents:['CEI','PASSPORT'],docStatuses:{CEI:'EXPIRED',PASSPORT:'VALID'},choices:{passport_domicile:'ROMANIA',physical:'YES'}},
     D1_TEMPORARY:{goal:'KEEP_FOREIGN_DOMICILE',documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'VALID'},choices:{passport_domicile:'CURRENT'}},
     D2_PERMANENT_RETURN:{goal:'MOVE_DOMICILE_TO_RO',documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'VALID'},choices:{passport_domicile:'CURRENT'}},
@@ -160,6 +180,10 @@ function fixtureFor(entry){
   return {country:c,...rest[entry.key]};
 }
 
+// A3_FIRST_ID_CONSULAR is always a first Romanian identity document from abroad (q201 routes to it only
+// when there is no prior ID card), so GN-03 makes it a free explanation, never an eligible paywall, until
+// its document list is verified. The route and key are still produced; only the sale is withheld.
+const CONSERVATIVE_FREE=new Set(['A3_FIRST_ID_CONSULAR']);
 test('all 43 catalog keys are produced by complete questionnaire journeys',()=>{
   const found=new Set();
   for(const entry of catalog.guides){
@@ -167,11 +191,33 @@ test('all 43 catalog keys are produced by complete questionnaire journeys',()=>{
     assert.equal(result.current,'RESULT',entry.key+' ended '+result.current+' via '+result.history.join(' > '));
     assert.equal(result.S.route,entry.route,entry.key+' wrong route');
     assert.equal(result.key,entry.key,entry.key+' wrong guide after complete journey');
-    assert.equal(result.offer,true,entry.key+' never reaches eligible paywall');
     assert.ok(!result.unknowns?.length,entry.key+' has unresolved information');
+    if(CONSERVATIVE_FREE.has(entry.key)){
+      assert.equal(result.offer,false,entry.key+' first-ID document list is unverified: must be explained, not sold');
+      assert.ok(result.S.blockerCodes.includes('FIRST_ID_LIST_UNVERIFIED'),entry.key+' missing first-ID blocker');
+    }else{
+      assert.equal(result.offer,true,entry.key+' never reaches eligible paywall');
+    }
     found.add(result.key);
   }
   assert.equal(found.size,43);
+});
+
+test('Worker independently enforces eligibility and legal confirmation for all 43 questionnaire journeys',async()=>{
+ const hash=createHash('sha256').update(syntheticScript).digest('hex');
+ for(const entry of catalog.guides){
+  const result=walk(fixtureFor(entry)),s=result.S,d=checkoutDecisionFor(s),h=harness({stagingSchema:true});
+  try{
+   h.sql.prepare('INSERT OR REPLACE INTO guide_scripts(guide_key,route,title,script_js) VALUES(?,?,?,?)').run(entry.key,entry.route,'SYNTHETIC ONLY',syntheticScript);
+   h.sql.prepare("INSERT OR REPLACE INTO guide_approvals(guide_key,route,script_sha256,status,reviewer_reference,approved_at) VALUES(?,?,?,'approved','synthetic-only',datetime('now'))").run(entry.key,entry.route,hash);
+   for(const country of countryCodes)h.sql.prepare("INSERT OR REPLACE INTO guide_country_approvals(guide_key,route,country,script_sha256,status,reviewer_reference,approved_at) VALUES(?,?,?,?,'approved','synthetic-only',datetime('now'))").run(entry.key,entry.route,country,hash);
+   const session=await h.api('/session');assert.equal(session.status,200);
+   const response=await h.api('/checkout',{body:{case_id:session.data.case_id,route:entry.route,guide_key:entry.key,case_state:s},headers:{'X-Actero-Session-Token':session.data.session_token}});
+   assert.equal(response.status,d.allowed&&d.legalBasisConfirmed?200:409,entry.key+': '+JSON.stringify(response));
+   if(response.status===409)assert.equal(response.data.error,d.allowed?'legal_basis_unconfirmed':'not_eligible',entry.key);
+   assert.equal(h.sql.prepare('SELECT COUNT(*) n FROM checkout_intents').get().n,d.allowed&&d.legalBasisConfirmed?1:0,entry.key);
+  }finally{h.close()}
+ }
 });
 
 test('unknown Swiss permit and a cross-border G permit do not present checkout',()=>{
@@ -230,11 +276,14 @@ test('critical unknowns never allow checkout across 10 countries',()=>{
       choices:{passport_domicile:'ROMANIA',birth_cert:'UNKNOWN'}
     });
     assert.equal(b1.offer,false,country+' B1 unknown birth certificate');
+    // M-02 (16.10): a passport that shows the current country already answers "aceeași țară",
+    // so the same-country question is only asked when the passport country is unknown.
     const lost=walk({
       country,goal:'EXISTING_CRDS_PROBLEM',
       documents:['CRDS_PASSPORT'],docStatuses:{CRDS_PASSPORT:'LOST'},
-      choices:{passport_domicile:'CURRENT',same_country:'UNKNOWN'}
+      choices:{passport_domicile:'UNKNOWN',ever_crds:'YES',same_country:'UNKNOWN'}
     });
+    assert.ok(lost.history.includes('Q121'),country+' same-country question must be asked: '+lost.history.join(' > '));
     assert.equal(lost.offer,false,country+' B5 ambiguous domicile');
     const proof=walk({
       country,goal:'EXISTING_CRDS_PROBLEM',
@@ -280,5 +329,8 @@ test('urgent journey from Romania to another country is never mistaken for alrea
   });
   assert.equal(result.S.route,'URGENT_OTHER_COUNTRY');
   assert.equal(result.key,'URGENT_OTHER_COUNTRY');
-  assert.equal(result.offer,true);
+  // M-05 (16.10): the URGENT_OTHER_COUNTRY guide covers an application made abroad; from Romania the
+  // temporary passport is requested at a Romanian passport office, so the case is explained, not sold.
+  assert.equal(result.offer,false);
+  assert.ok(result.S.blockerCodes.includes('TEMP_PASSPORT_FROM_ROMANIA'));
 });

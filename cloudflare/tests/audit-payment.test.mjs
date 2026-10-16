@@ -2,6 +2,7 @@ import {DatabaseSync} from 'node:sqlite';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import worker from '../worker.js';
+import {state} from './helpers/payment-harness.mjs';
 const ORIGIN='https://mypape-dot.github.io',SHOP='gyfu4v-5q.myshopify.com',SECRET='test-secret';
 const db=new DatabaseSync(':memory:');
 db.exec('CREATE TABLE access_grants(case_id TEXT PRIMARY KEY,status TEXT NOT NULL,route TEXT,shopify_order_id TEXT,shopify_order_name TEXT,paid_at TEXT,created_at TEXT,updated_at TEXT); CREATE TABLE guides(route TEXT PRIMARY KEY,title TEXT,guide_json TEXT,updated_at TEXT)');
@@ -18,7 +19,7 @@ const env={DB,SHOPIFY_CHECKOUT_ENABLED:'true',SHOPIFY_WEBHOOK_SECRET:SECRET,PAYM
 async function api(method,path,body,headers={}){const res=await worker.fetch(new Request('https://worker.test'+path,{method,headers:{Origin:ORIGIN,'Content-Type':'application/json','CF-Connecting-IP':'198.51.100.'+(body?.case_id?(parseInt(body.case_id.slice(3,5),16)%200+1):4),...headers},body:body?JSON.stringify(body):undefined}),env);return {status:res.status,data:await res.json()}};
 const sessions=new Map();
 const makeCase=async()=>{const s=await api('POST','/session');if(s.status!==200)throw Error(JSON.stringify(s));sessions.set(s.data.case_id,s.data.session_token);return s.data.case_id};
-const checkout=(case_id,token)=>api('POST','/checkout',{case_id,route:'B1_FIRST_CRDS',guide_key:'B1_IT'},token?{'X-Actero-Access-Token':token}:{'X-Actero-Session-Token':sessions.get(case_id)});
+const checkout=(case_id,token)=>api('POST','/checkout',{case_id,route:'B1_FIRST_CRDS',guide_key:'B1_IT',case_state:{...state,answers:{...state.answers,residence_country:'IT'}}},token?{'X-Actero-Access-Token':token}:{'X-Actero-Session-Token':sessions.get(case_id)});
 const checkoutId=url=>JSON.parse(Buffer.from(new URL(url).searchParams.get('properties').replace(/-/g,'+').replace(/_/g,'/'),'base64').toString())._actero_checkout_id;
 function order(cid,id='123456',extra={}){return {id,name:'#'+id,test:true,financial_status:'paid',currency:'RON',total_price:'49.00',line_items:[{variant_id:67640764400007,quantity:1,price:'49.00',total_discount:0,properties:cid?[{name:'_actero_checkout_id',value:cid}]:[]}],...extra}}
 async function webhook(body,eventId=crypto.randomUUID(),badSecret=false){const raw=JSON.stringify(body);const mac=crypto.createHmac('sha256',badSecret?'wrong':SECRET).update(raw).digest('base64');const response=await worker.fetch(new Request('https://worker.test/webhooks/shopify/orders-paid',{method:'POST',headers:{'X-Shopify-Hmac-Sha256':mac,'X-Shopify-Shop-Domain':SHOP,'X-Shopify-Topic':'orders/paid','X-Shopify-Webhook-Id':eventId},body:raw}),env);return {status:response.status,data:await response.json()}}

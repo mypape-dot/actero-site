@@ -37,12 +37,13 @@ export async function buyerEmailHash(env,email){
 async function tokenHash(t){const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(t)));return [...bytes].map(n=>n.toString(16).padStart(2,'0')).join('')}
 function acceptableString(s,max=220){return typeof s==='string'&&s.length<=max&&!/[<>\u0000-\u001f]/.test(s)}
 function simpleDict(o,maxEntries=90){return safeObj(o)&&Object.keys(o).length<=maxEntries&&Object.entries(o).every(([k,v])=>
-  acceptableString(k,80)&&(acceptableString(v)||typeof v==='boolean'||(Number.isInteger(v)&&v>=0&&v<=10)||(Array.isArray(v)&&v.length<=16&&v.every(x=>acceptableString(x)))));
+  acceptableString(k,80)&&(v===null||acceptableString(v)||typeof v==='boolean'||(Number.isInteger(v)&&v>=0&&v<=10)||(Array.isArray(v)&&v.length<=16&&v.every(x=>acceptableString(x)))));
 }
 export function serializeCaseState(raw,route){
   if(!safeObj(raw)||raw.route!==route||!simpleDict(raw.answers)||!simpleDict(raw.docs,12)||!simpleDict(raw.clarified||{},50))return null;
   if(raw.status!=null&&!acceptableString(raw.status,70))return null;
-  // Do not store browser history, access tokens or free-form messages. The frontend recalculates blockers.
+  // Shape/size validation only, never authorization. /checkout independently
+  // normalizes answers and recomputes eligibility before persisting a snapshot.
   const payload={answers:raw.answers,docs:raw.docs,route,status:raw.status||null,clarified:raw.clarified||{}};
   const out=JSON.stringify(payload);
   return out.length<=16000?out:null;
