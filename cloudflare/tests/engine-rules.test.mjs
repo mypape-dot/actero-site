@@ -435,3 +435,13 @@ test('M-13: the CEI status abroad is shown before any clarification question',()
     answers:{goal:'CEI',passport_domicile:'ROMANIA',physical:'NO',can_come:'NO',civil_change:'UNKNOWN'}});
   assert.equal(c2.route,'C2_CEI_CONSULAR');assert.equal(c2.kind,'STATUS',c2.kind);
 });
+
+// ---------- (g) the shared guide page makes no verification claim (PC-01, decision 5) ----------
+test('PC-01: the nine general guides are labelled informative, without a verification date',()=>{
+  const {ctx,$el}=loadEngine();
+  vm.runInContext(`hydrateOfficialDocPreviews=function(){};S.route='A1_PERSONAL_ROMANIA';
+    showValidatedCoreGuide({title:'T',hero:'H',introTitle:'I',intro:'X',steps:[{title:'s',body:'b'}],docs:[],sources:[{title:'Sursa',url:'https://example.gov.ro/'}]})`,ctx);
+  const html=$el('screen').innerHTML;
+  assert.ok(html.includes('Ghid informativ'));
+  assert.ok(!/Procedură verificată|Verificat ·|5 octombrie 2026|Surse oficiale verificate/.test(html),html.slice(0,400));
+});

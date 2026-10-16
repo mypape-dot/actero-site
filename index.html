@@ -2040,6 +2040,8 @@ async function verifyPaymentNow(button){
 function coreChecklistItem(title,status,note,tone='ok'){
   return `<div class="personal-check"><div class="pc-top"><strong>${title}</strong><span class="pc-status ${tone==='ok'?'ok':'warn'}">${status}</span></div><p>${note}</p></div>`;
 }
+// PC-01 / decision 5 (16.10): no guide is approved for sale yet (sale_approved=NO), so the shared guide page
+// makes no "verified" claim and shows no verification date.
 function showValidatedCoreGuide(cfg){
   S.current='PAID_GUIDE';
   const appEl=document.querySelector('.app');if(appEl)appEl.classList.add('guide-mode');
@@ -2055,10 +2057,10 @@ function showValidatedCoreGuide(cfg){
     return `<div class="final-official-doc"><div class="final-official-body"><span class="final-official-type">${x.type||'SERVICIU OFICIAL'}</span><h4>${x.title}</h4><p>${x.desc||''}</p><div class="final-doc-actions"><a class="primary" href="${x.url}" target="_blank" rel="noopener">${x.label||'Deschide'}</a></div></div></div>`;
   }).join('');
   screen.innerHTML=`<div class="guide-shell final-guide-wrap">
-    <div class="guide-hero"><span class="validated-route-badge"><i></i> Procedură verificată</span><h1>${cfg.title}</h1><p>${cfg.hero}</p><div class="guide-meta"><span>${cfg.meta1||'România'}</span><span>${cfg.meta2||'Adult'}</span><span>Verificat · 5 octombrie 2026</span></div></div>
+    <div class="guide-hero"><span class="validated-route-badge"><i></i> Ghid informativ</span><h1>${cfg.title}</h1><p>${cfg.hero}</p><div class="guide-meta"><span>${cfg.meta1||'România'}</span><span>${cfg.meta2||'Adult'}</span></div></div>
     <section class="final-guide-intro"><div class="guide-eyebrow">Pe scurt</div><h2>${cfg.introTitle}</h2><p>${cfg.intro}</p>${cfg.outcome?`<div class="outcome-card"><b>Rezultatul urmărit</b><span>${cfg.outcome}</span></div>`:''}</section>
     <div class="final-guide-main"><section class="final-steps-panel"><div class="final-steps-head"><div class="guide-eyebrow">Pașii tăi</div><h2>Ce ai de făcut, în ordine</h2><p>Pașii sunt separați de documente ca să poți executa procedura fără să amesteci etapele.</p></div>${steps}${warnings}</section>
-    <aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist</div><h3>Documente și condiții</h3><div class="personal-checklist">${docs}</div></section>${forms?`<section class="final-side-section"><div class="guide-eyebrow">Servicii / formulare</div><h3>Unde intri efectiv</h3>${forms}</section>`:''}<section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Surse oficiale verificate</h3><div class="source-list">${sources}</div></section></aside></div>
+    <aside class="final-sidebar"><section class="final-side-section"><div class="guide-eyebrow">Checklist</div><h3>Documente și condiții</h3><div class="personal-checklist">${docs}</div></section>${forms?`<section class="final-side-section"><div class="guide-eyebrow">Servicii / formulare</div><h3>Unde intri efectiv</h3>${forms}</section>`:''}<section class="final-side-section"><div class="guide-eyebrow">Surse</div><h3>Surse oficiale</h3><div class="source-list">${sources}</div></section></aside></div>
     <div class="guide-actions" style="margin-top:18px"><button class="btn primary" id="backToPreview">Înapoi la evaluare</button><button class="btn secondary" id="newGuideEval">Evaluare nouă</button></div></div>`;
   hydrateOfficialDocPreviews(screen);
   document.querySelectorAll('[data-doc-open]').forEach(el=>{if(el.dataset.viewerBound!=='1'){el.dataset.viewerBound='1';el.addEventListener('click',()=>openOfficialDocViewer({title:el.dataset.docTitle||'Document oficial',url:el.dataset.docUrl||'',route:S.route}))}});
