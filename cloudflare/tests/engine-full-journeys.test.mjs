@@ -19,7 +19,10 @@ const selected=[
   'pendingUnknowns','clarificationTarget','clarificationTargetFor','unknownish',
   // Pure engine helpers behind the wrappers above (one validity model, explicit inputs).
   'docState','docValid','domicileOf','hasRomanianIdentityHistoryOf','crdsStatusOf','identityOf',
-  'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions'
+  'sameCountryStep','firstCrdsStart','contradictionsOf','contradictions',
+  // Payment policy (16.10): one pure evaluation, a remedy registry and the decision the paywall uses.
+  'evaluateCase','paymentDecisionFor','paymentDecision','remedyInGuide','localProofRule','needsLocalProof',
+  'guideKeyFor','validatedGuideFor'
 ];
 const definitions=selected.map(name=>{
   const body=sourceByName.get(name);
@@ -35,7 +38,7 @@ const base={
   current_foreign_proof:'YES',same_country:'YES',theft_proof:'YES',
   can_come:'YES',ro_address:'OWN',host_consent:'YES',representative:'YES',
   poa:'YES',physical:'NO',ro_residence:'OWN',ro_residence_proof:'YES',
-  dependents:'NO',identity_detail:'HAS_PHOTO_DOC',
+  dependents:'NO',identity_detail:'HAS_PHOTO_DOC',local_proof_type:'PERMANENT',
   travel_dest:'ROMANIA',travel_urgent_basis:'OBJECTIVE_URGENT',ever_crds:'NO'
 };
 
@@ -80,7 +83,8 @@ function walk({country='IT',goal,documents=[],docStatuses={},choices={},expected
         }
         return {S,current:'UNRESOLVED',history,unknowns,offer:false,key:ctx.guideKeyForCurrent()};
       }
-      return {S,current,history,unknowns,offer:ctx.hasValidatedPaidGuide(),key:ctx.guideKeyForCurrent()};
+      // The paywall now opens only on the full payment decision, not on the guide catalogue alone.
+      return {S,current,history,unknowns,offer:ctx.paymentDecision().allowed,catalogued:ctx.hasValidatedPaidGuide(),key:ctx.guideKeyForCurrent()};
     }
     next=null;config=null;optionClick=null;
     if(current==='Q003'){

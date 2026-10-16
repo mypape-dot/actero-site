@@ -105,9 +105,10 @@ export function run(c,{maxClarifications=3}={}){
 export function evaluate(input){
   const {ctx}=loadEngine();
   ctx.__input=JSON.parse(JSON.stringify(input));
+  // JSON round-trip: plain host objects, so deepEqual does not trip over the vm realm.
   return {
-    ev:vm.runInContext('evaluateCase(__input)',ctx),
-    decision:vm.runInContext('paymentDecisionFor(__input)',ctx),
+    ev:JSON.parse(vm.runInContext('JSON.stringify(evaluateCase(__input))',ctx)),
+    decision:JSON.parse(vm.runInContext('JSON.stringify(paymentDecisionFor(__input))',ctx)),
     ctx
   };
 }
