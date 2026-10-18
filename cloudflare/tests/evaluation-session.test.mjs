@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {randomUUID,createHash} from 'node:crypto';
 import worker from '../worker.js';
+import {state} from './helpers/payment-harness.mjs';
 const ORIGIN='https://mypape-dot.github.io';
 function harness(){
  const sql=new DatabaseSync(':memory:');
@@ -19,7 +20,7 @@ function harness(){
    const response=await worker.fetch(new Request('https://worker.invalid'+path,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','CF-Connecting-IP':ip,...(sessionToken?{'X-Actero-Session-Token':sessionToken}:{}),...(accessToken?{'X-Actero-Access-Token':accessToken}:{})},body:JSON.stringify(body??{})}),env);
    return {status:response.status,data:await response.json()};
  }
- const checkout=(caseId,opts={})=>api('/checkout',{body:{case_id:caseId,route:'B1_FIRST_CRDS',guide_key:'B1_IT'},...opts});
+ const checkout=(caseId,opts={})=>api('/checkout',{body:{case_id:caseId,route:'B1_FIRST_CRDS',guide_key:'B1_IT',case_state:{...state,answers:{...state.answers,residence_country:'IT'}}},...opts});
  return {sql,env,api,checkout};
 }
 test('server issues a unique case with hashed session secret',async()=>{

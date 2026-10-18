@@ -1,5 +1,6 @@
 import {appOrigin,shopifyConfig,originAllowed,corsHeaders} from './environment.js';
 import {recoverRequest,recoverConsume,buyerEmail,buyerEmailHash,serializeCaseState,recoveryConfigured} from './recovery.js';
+import {checkoutDecisionFor} from '../shared/eligibility.mjs';
 import {quota} from './quota.js';
 import {issueEvaluationSession,ownsEvaluationSession} from './evaluation-session.js';
 // ActeRO payment integration staging. Shopify test orders only until merchant review.
@@ -170,8 +171,17 @@ export default {
       const caseId=data?.case_id,route=data?.route,guideKey=data?.guide_key;
       if(!isCase(caseId)||!isRoute(route)||!isKey(guideKey))return reply(request,env,{ok:false,error:'invalid_case'},400);
       if(!(env.DB && env.SHOPIFY_WEBHOOK_SECRET && env.PAYMENT_ALERT_WEBHOOK_URL))return reply(request,env,{ok:false,error:'payment_not_configured'},503);
-      const caseState=serializeCaseState(data?.case_state,route);
-      if(data?.case_state && !caseState)return reply(request,env,{ok:false,error:'invalid_case_state'},400);
+      const submitted=serializeCaseState(data?.case_state,route);
+      if(!submitted)return reply(request,env,{ok:false,error:'invalid_case_state'},400);
+      const decision=checkoutDecisionFor(JSON.parse(submitted));
+      if(decision.route && (decision.route!==route||decision.key!==guideKey))
+        return reply(request,env,{ok:false,error:'case_route_changed'},409);
+      if(decision.allowed!==true)return reply(request,env,{ok:false,error:'not_eligible'},409);
+      if(decision.legalBasisConfirmed!==true)return reply(request,env,{ok:false,error:'legal_basis_unconfirmed'},409);
+      // Persist only independently normalized inputs and recomputed status.
+      // Clarification counters are bounded UI hints, never evidence of eligibility.
+      const caseState=serializeCaseState({...decision.caseState,clarified:JSON.parse(submitted).clarified},decision.route);
+      if(!caseState)return reply(request,env,{ok:false,error:'invalid_case_state'},400);
       if(env.RECOVERY_REQUIRED==='true'&&(!recoveryConfigured(env)||!caseState))
         return reply(request,env,{ok:false,error:'recovery_not_ready'},503);
       try{

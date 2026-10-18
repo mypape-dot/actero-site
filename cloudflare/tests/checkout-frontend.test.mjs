@@ -22,6 +22,7 @@ function harness({access='',session='',sessionReply={ok:true,case_id:serverCase,
   S:{caseId:oldCase,route:'B1_FIRST_CRDS',answers:{residence_country:'IT'},docs:{},clarified:{},status:'GREEN'},
   paymentApiConfigured:()=>configured,paymentApiBase:()=> 'https://api.example.test',
   guideKeyForCurrent:()=> 'B1_IT',
+  paymentDecision:()=>({allowed:true,legalBasisConfirmed:true,route:'B1_FIRST_CRDS',key:'B1_IT'}),
   caseStorageKey:id=>'actero_case_'+id,
   accessTokenForCase:()=>store.get('actero_access_'+context.S.caseId)||'',
   acteroReturnUrl:()=> 'https://example.test/confirmare.html?case_id='+context.S.caseId,
@@ -59,6 +60,10 @@ test('first purchase obtains backend session, persists case, then sends authenti
  assert.equal(JSON.parse(h.requests[1].options.body).case_id,serverCase);
  assert.equal(h.store.get('actero_access_'+serverCase),'new-access-token');
  assert.equal(h.redirects.length,1);
+});
+for(const bad of [{allowed:false},{legalBasisConfirmed:false},{legalBasisConfirmed:undefined},{route:'B5_EXISTING_CRDS'},{key:'B1_ES'}])test('client blocks checkout before a session request: '+JSON.stringify(bad),async()=>{
+ const h=harness();h.context.paymentDecision=()=>({allowed:true,legalBasisConfirmed:true,route:'B1_FIRST_CRDS',key:'B1_IT',...bad});
+ await h.run();assert.equal(h.requests.length,0);assert.equal(h.redirects.length,0);assert.ok(h.box.textContent);
 });
 test('retry with access token skips session creation and rotates paid-access token',async()=>{
  const h=harness({access:'old-access'});await h.run();

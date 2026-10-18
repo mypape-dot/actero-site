@@ -6,7 +6,7 @@ import worker from '../../worker.js';
 export const ORIGIN='https://mypape-dot.github.io';
 export const SHOP='gyfu4v-5q.myshopify.com';
 export const VARIANT=67640764400007;
-export const state={route:'B1_FIRST_CRDS',answers:{residence_country:'ES'},docs:{PASSPORT:'VALID'},status:'GREEN',clarified:{}};
+export const state={route:'B1_FIRST_CRDS',answers:{age:'YES',citizenship:'YES',residence_country:'ES',goal:'ESTABLISH_FOREIGN_DOMICILE',documents:['PASSPORT'],passport_domicile:'ROMANIA',foreign_basis:'RESIDENCE',foreign_proof:'YES',birth_cert:'READY',civil_change:'NO'},docs:{PASSPORT:'VALID'},status:'GREEN',clarified:{}};
 export const syntheticScript="window.acteroSyntheticGuide=true;";
 export const migrations=()=>readdirSync(new URL('../../',import.meta.url)).filter(n=>/^\d{3}-.*\.sql$/.test(n)).sort();
 export const migrationSQL=name=>readFileSync(new URL('../../'+name,import.meta.url),'utf8');

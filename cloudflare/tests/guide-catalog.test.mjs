@@ -4,13 +4,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {guideKeyFor,validatedGuideFor} from '../../shared/eligibility.mjs';
 const html=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
 const catalog=JSON.parse(readFileSync(new URL('../guide-catalog.json',import.meta.url),'utf8'));
 function extract(startAnchor,endAnchor,name,answers,route){
   const start=html.indexOf(startAnchor),end=html.indexOf(endAnchor,start);
   assert.ok(start>=0&&end>start, 'Missing router function '+name);
   return vm.runInNewContext(html.slice(start,end)+'\n'+name+';',{
-    S:{route,answers},domicileState:()=> 'ABROAD'
+    S:{route,answers},domicileState:()=> 'ABROAD',guideKeyFor,validatedGuideFor
   });
 }
 function example(entry){
